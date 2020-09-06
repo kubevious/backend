@@ -42,7 +42,7 @@ steps:
     stage: build
     image: codefresh/cli
     shell: bash
-    working_directory: "${{CICD_REPO_PATH}}/${{PRODUCT_NAME}}"
+    working_directory: "${{CICD_REPO_PATH}}/${{REPO_NAME}}"
     commands:
       - pwd
       - ls -la
@@ -78,4 +78,4 @@ steps:
     commands:
       - pwd
       - ls -la
-      - /codefresh/volume/cicd.git/git-commit-push.sh "Version bump for ${PRODUCT_NAME} to ${PRODUCT_VERSION}"
+      - /codefresh/volume/cicd.git/git-commit-push.sh "Version bump for ${REPO_NAME} to ${PRODUCT_VERSION}"
