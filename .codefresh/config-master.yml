@@ -11,6 +11,8 @@ steps:
     image: codefresh/cli
     shell: bash
     commands:
+      - export REPO_NAME="backend"
+      - cf_export REPO_NAME="${REPO_NAME}"
       - export PRODUCT_NAME="kubevious"
       - cf_export PRODUCT_NAME="${PRODUCT_NAME}"
       - cf_export GITHUB_TOKEN=$(codefresh get context github --decrypt -o yaml | yq -y .spec.data.auth.password)
@@ -40,14 +42,14 @@ steps:
     stage: build
     image: codefresh/cli
     shell: bash
-    working_directory: "${{CICD_REPO_PATH}}/${{PRODUCT_NAME}}"
+    working_directory: "${{CICD_REPO_PATH}}/${{REPO_NAME}}"
     commands:
       - pwd
       - ls -la
       - ../process-version-bump.sh
       - source version.sh
-      - echo "module.exports = \"${PRODUCT_VERSION}\";" > /codefresh/volume/${PRODUCT_NAME}/src/version.js
-      - cat /codefresh/volume/${PRODUCT_NAME}/src/version.js
+      - echo "module.exports = \"${PRODUCT_VERSION}\";" > /codefresh/volume/${REPO_NAME}/src/version.js
+      - cat /codefresh/volume/${REPO_NAME}/src/version.js
       - cf_export PRODUCT_VERSION="${PRODUCT_VERSION}"
       - cf_export DOCKER_TAG="${PRODUCT_VERSION}"
   build:
