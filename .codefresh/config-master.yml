@@ -42,7 +42,7 @@ steps:
     stage: build
     image: codefresh/cli
     shell: bash
-    working_directory: "${{CICD_REPO_PATH}}/${{REPO_NAME}}"
+    working_directory: "${{CICD_REPO_PATH}}/${{PRODUCT_NAME}}"
     commands:
       - pwd
       - ls -la
