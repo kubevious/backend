@@ -2,7 +2,7 @@ const Promise = require('the-promise');
 const _ = require('the-lodash');
 const DataStore = require("kubevious-helpers").DataStore;
 
-const TARGET_DB_VERSION = 4;
+const TARGET_DB_VERSION = 5;
 
 class Database
 {

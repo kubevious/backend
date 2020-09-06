@@ -18,7 +18,8 @@ class HistoryProcessor
         this._currentState = null;
         this._interation = 0;
         this._isDbReady = false;
-        this._usedHashesDict = {};
+        this._configHashesDict = {};
+        this._configHashesPartition = null;
         this._statesQueue = [];
 
         this._isLocked = false;
@@ -134,7 +135,9 @@ class HistoryProcessor
 
                 this._interation += 1;
                 var partition = HistoryPartitioning.calculateDatePartition(snapshot.date);
-                var configHashes = this._produceConfigHashes(snapshot);
+                var configHashes = this._produceConfigHashes(snapshot, partition);
+                this._prepareConfigHashesCache(partition);
+
                 var itemsDelta = this._produceDelta(snapshot, this._latestSnapshot);
                 var deltaSummary = this._constructDeltaSummary(snapshot, itemsDelta);
                 this._cleanupSnapshot(snapshot);
@@ -149,7 +152,7 @@ class HistoryProcessor
                         return this._dbAccessor.executeInTransaction(() => {
                             return Promise.resolve()
                                 .then(() => this._prepareSnapshotPartitions(partition))
-                                .then(() => this._persistConfigHashes(configHashes))
+                                .then(() => this._persistConfigHashes(configHashes, partition))
                                 .then(() => this._persistSnapshot(snapshot, partition))
                                 .then(() => this._persistDiff(snapshot, partition, itemsDelta, deltaSummary))
                                 .then(() => this._persistConfig())
@@ -166,20 +169,27 @@ class HistoryProcessor
             });
     }
 
-    _produceConfigHashes(snapshot)
+    _prepareConfigHashesCache(partition)
+    {
+        if (this._configHashesPartition != partition)
+        {
+            this._configHashesDict = {};
+            this._configHashesPartition = partition;
+        }
+    }
+
+    _produceConfigHashes(snapshot, partition)
     {
         var configHashes = [];
         for(var item of snapshot.getItems())
         {
             var hash = this._calculateObjectHash(item.config);
-            var hashPartition = HistoryPartitioning.calculateConfigHashPartition(hash);
             configHashes.push({ 
+                part: partition,
                 config_hash: hash,
-                config_hash_part: hashPartition,
                 config: item.config
             })
             item.config_hash = hash;
-            item.config_hash_part = hashPartition;
         }
         return configHashes;
     }
@@ -208,7 +218,8 @@ class HistoryProcessor
 
     _persistConfigHashes(configHashes)
     {
-        var newHashes = configHashes.filter(x => !this._usedHashesDict[x.config_hash]);
+        var newHashes = configHashes.filter(x => !this._configHashesDict[x.config_hash]);
+        this.logger.info('[_persistConfigHashes] current hash count: %s', _.keys(this._configHashesDict).length);
         this.logger.info('[_persistConfigHashes] new hash count: %s', newHashes.length);
         return Promise.resolve()
             .then(() => {
@@ -217,7 +228,7 @@ class HistoryProcessor
             .then(() => {
                 for(var x of newHashes)
                 {
-                    this._usedHashesDict[x.config_hash] = true;
+                    this._configHashesDict[x.config_hash] = true;
                 }
             });
     }
@@ -250,6 +261,7 @@ class HistoryProcessor
     _prepareSnapshotPartitions(partition)
     {
         var tables = [
+            'config_hashes',
             'snapshots',
             'snap_items',
             'diffs',
@@ -277,33 +289,6 @@ class HistoryProcessor
                     this._partitionName(partition),
                     value);
             });
-    }
-
-    _prepareConfigHashPartitions()
-    {
-        this.logger.info("[_prepareConfigHashPartitions]");
-
-        var tableName = 'config_hashes';
-        var ids = _.range(1, HistoryPartitioning.CONFIG_HASH_PARTITION_COUNT + 1);
-        return this._database.queryPartitions(tableName)
-            .then(partitions => {
-
-                var partitionDict = _.makeDict(partitions, x => x.value, x => true);
-
-                return Promise.serial(ids, id => {
-
-                    var value = id + 1;
-                    if (!partitionDict[value])
-                    {
-                        return this._database.createPartition(tableName, 
-                            this._partitionName(id),
-                            value);
-                    }
-
-                });
-
-            });
-
     }
 
     _partitionName(partition)
@@ -468,8 +453,7 @@ class HistoryProcessor
                     config_kind: targetItem.config_kind,
                     name: targetItem.name,
                     config: targetItem.config,
-                    config_hash: targetItem.config_hash,
-                    config_hash_part: targetItem.config_hash_part
+                    config_hash: targetItem.config_hash
                 });
             }
         }
@@ -493,16 +477,11 @@ class HistoryProcessor
         if (!item) {
             return null;
         }
-        if (!item.config_hash_part) {
-            this.logger.error("[_sanitizeSnapshotItem] missing config_hash_part", item);
-            throw new Error("missing config_hash_part")
-        }
         var config = {
             dn: item.dn,
             kind: item.kind,
             config_kind: item.config_kind,
-            config_hash: item.config_hash,
-            config_hash_part: item.config_hash_part
+            config_hash: item.config_hash
         }
         if (item.name) {
             config.name = item.name;
@@ -576,10 +555,7 @@ class HistoryProcessor
                 this._currentState = config.value || {};
                 this._logger.info("[_onDbConnected] state: ", this._currentState);
             })
-            .then(() => {
-                return this._prepareConfigHashPartitions();
-            })
-            .then(() => this._dbAccessor.snapshotReader.reconstructRecentShaphot(true))
+            .then(() => this._dbAccessor.snapshotReader.reconstructRecentShapshot())
             .then(snapshot => {
                 this._logger.info("[_onDbConnected] reconstructed snapshot item count: %s",
                     snapshot.count);
@@ -622,7 +598,7 @@ class HistoryProcessor
     setUsedHashesDict(dict)
     {
         this.logger.info("[setUsedHashesDict] size: %s", _.keys(dict).length);
-        this._usedHashesDict = dict;
+        this._configHashesDict = dict;
     }
 
     _resetSnapshotState()

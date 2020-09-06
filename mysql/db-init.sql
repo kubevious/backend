@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `config` (
 
 CREATE TABLE IF NOT EXISTS `config_hashes` (
   `key` binary(32) NOT NULL DEFAULT '',
-  `part` smallint unsigned NOT NULL,
+  `part` int unsigned NOT NULL,
   `value` json NOT NULL,
   PRIMARY KEY (`key`, `part`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1
@@ -39,14 +39,12 @@ CREATE TABLE IF NOT EXISTS `snap_items` (
   `kind` varchar(128) NOT NULL DEFAULT '',
   `config_kind` varchar(128) NOT NULL DEFAULT '',
   `name` varchar(128) NULL DEFAULT '',
-  `config_hash_part` smallint unsigned NOT NULL,
   `config_hash` binary(32) NOT NULL,
   PRIMARY KEY (`id`, `part`),
   KEY `snapshot_id` (`snapshot_id`),
   KEY `dn` (`dn`),
   KEY `kind` (`kind`),
-  KEY `config_kind` (`config_kind`),
-  KEY `config_hash_part` (`config_hash_part`)
+  KEY `config_kind` (`config_kind`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1
 PARTITION BY RANGE (part) (
   PARTITION p0 VALUES LESS THAN (0)
@@ -76,14 +74,12 @@ CREATE TABLE IF NOT EXISTS `diff_items` (
   `config_kind` varchar(128) NOT NULL DEFAULT '',
   `name` varchar(128) NULL DEFAULT '',
   `present` tinyint(1) NOT NULL,
-  `config_hash_part` smallint unsigned NOT NULL,
   `config_hash` binary(32) NULL,
   PRIMARY KEY (`id`, `part`),
   KEY `diff_id` (`diff_id`),
   KEY `dn` (`dn`),
   KEY `kind` (`kind`),
-  KEY `config_kind` (`config_kind`),
-  KEY `config_hash_part` (`config_hash_part`)
+  KEY `config_kind` (`config_kind`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1
 PARTITION BY RANGE (part) (
   PARTITION p0 VALUES LESS THAN (0)
@@ -150,4 +146,4 @@ CREATE TABLE IF NOT EXISTS `marker_items` (
 
 
 INSERT IGNORE INTO `config`(`key`, `value`)
-VALUES('DB_SCHEMA', '{ "version": 4 }');
+VALUES('DB_SCHEMA', '{ "version": 5 }');
