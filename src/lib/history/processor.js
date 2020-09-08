@@ -136,10 +136,11 @@ class HistoryProcessor
 
                 this._interation += 1;
                 var partition = HistoryPartitioning.calculateDatePartition(snapshot.date);
-                var configHashes = null;
                 var tablesPartitionsData = null;
 
                 this.logger.info("[_processSnapshot] Date: %s, Partition: %s", snapshot.date, partition);
+
+                var configHashes = this._produceConfigHashes(snapshot);
 
                 var itemsDelta = this._produceDelta(snapshot, this._latestSnapshot);
                 var deltaSummary = this._constructDeltaSummary(snapshot, itemsDelta);
@@ -155,9 +156,7 @@ class HistoryProcessor
 
                         var list = _.values(tablesPartitionsData.byTable);
                         if (!_.every(list, x => x[partition])) {
-                            var maxPartition = _.max(list);
                             this.logger.info("[_processSnapshot] maxPartition: %s", tablesPartitionsData.maxPartition);
-
                             if (partition < tablesPartitionsData.maxPartition) {
                                 this.logger.warn("[_processSnapshot] Existing partitions found. Reporting to latest partition. (%s -> %s)", partition, tablesPartitionsData.maxPartition);
                                 partition = tablesPartitionsData.maxPartition;
@@ -165,7 +164,6 @@ class HistoryProcessor
                         }
                     })
                     .then(() => {
-                        configHashes = this._produceConfigHashes(snapshot, partition);
                         this._prepareConfigHashesCache(partition);
                     })
                     .then(() => this.debugObjectLogger.dump("history-diff-snapshot-", this._interation, snapshot))
@@ -201,15 +199,14 @@ class HistoryProcessor
         }
     }
 
-    _produceConfigHashes(snapshot, partition)
+    _produceConfigHashes(snapshot)
     {
         var configHashes = [];
         for(var item of snapshot.getItems())
         {
-            this.logger.info("[_produceConfigHashes] %s...", item.dn, item);
+            // this.logger.info("[_produceConfigHashes] %s...", item.dn, item);
             var hash = this._calculateObjectHash(item.config);
             configHashes.push({ 
-                part: partition,
                 config_hash: hash,
                 config: item.config
             })
@@ -229,8 +226,7 @@ class HistoryProcessor
     _calculateObjectHash(obj)
     {
         if (_.isNullOrUndefined(obj)) {
-            obj = {};
-            // throw new Error('NO Object');
+            throw new Error('NO Object');
         }
 
         var str = _.stableStringify(obj);
@@ -241,14 +237,14 @@ class HistoryProcessor
         return value;
     }
 
-    _persistConfigHashes(configHashes)
+    _persistConfigHashes(configHashes, partition)
     {
         var newHashes = configHashes.filter(x => !this._configHashesDict[x.config_hash]);
         this.logger.info('[_persistConfigHashes] current hash count: %s', _.keys(this._configHashesDict).length);
         this.logger.info('[_persistConfigHashes] new hash count: %s', newHashes.length);
         return Promise.resolve()
             .then(() => {
-                return this._dbAccessor.persistConfigHashes(newHashes);
+                return this._dbAccessor.persistConfigHashes(newHashes, partition);
             })
             .then(() => {
                 for(var x of newHashes)

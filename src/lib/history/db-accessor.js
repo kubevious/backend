@@ -127,7 +127,7 @@ class HistoryDbAccessor
         return snapshot;
     }
 
-    persistConfigHashes(configHashes)
+    persistConfigHashes(configHashes, partition)
     {
         this.logger.info("[persistConfigHashes] BEGIN, count: %s", configHashes.length);
 
@@ -135,13 +135,11 @@ class HistoryDbAccessor
             .then(() => {
 
                 var statements = configHashes.map(x => {
-                    // this.logger.info("[persistConfigHashes] ZZZZ ", x);
-
                     return { 
                         id: 'INSERT_CONFIG_HASH',
                         params: [
                             x.config_hash,
-                            x.part,
+                            partition,
                             x.config
                         ]
                     };
