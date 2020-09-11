@@ -133,7 +133,10 @@ class HistoryDbAccessor
 
         return Promise.resolve()
             .then(() => {
+
                 var statements = configHashes.map(x => {
+                    // this.logger.info("[persistConfigHashes] ZZZZ ", x);
+
                     return { 
                         id: 'INSERT_CONFIG_HASH',
                         params: [
@@ -155,7 +158,7 @@ class HistoryDbAccessor
     {
         this.logger.info("[syncSnapshotItems] BEGIN, partition: %s, item count: %s", partition, snapshot.count);
 
-        return this._snapshotReader.querySnapshotItems(snapshotId)
+        return this._snapshotReader.querySnapshotItems(partition, snapshotId)
             .then(dbItems => {
                 var dbSnapshot = this._makeDbSnapshotFromItems(dbItems);
                 this.logger.info("[syncSnapshotItems] dbSnapshot count: %s", dbSnapshot.count);
@@ -256,7 +259,7 @@ class HistoryDbAccessor
     {
         this.logger.info("[syncDiffItems] partition: %s, item count: %s", partition, diffSnapshot.count);
 
-        return this._snapshotReader.queryDiffItems(diffId)
+        return this._snapshotReader.queryDiffItems(partition, diffId)
             .then(dbItems => {
                 var dbSnapshot = this._makeDbSnapshotFromItems(dbItems);
 

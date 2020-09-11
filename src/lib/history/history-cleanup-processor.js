@@ -3,25 +3,7 @@ const Promise = require('the-promise');
 const moment = require('moment')
 const CronJob = require('cron').CronJob
 const HistoryPartitioning = require("kubevious-helpers").History.Partitioning;
-
-const MY_TABLES_TO_PROCESS = [
-    {
-        name: 'snapshots',
-        id: 'id'
-    },
-    {
-        name: 'diffs',
-        id: 'id'
-    },
-    {
-        name: 'diff_items',
-        id: 'id'
-    },
-    {
-        name: 'snap_items',
-        id: 'id'
-    }
-];
+const { HISTORY_TABLES } = require('./metadata');
 
 class HistoryCleanupProcessor {
     constructor(context)
@@ -64,7 +46,7 @@ class HistoryCleanupProcessor {
     _setupCronJob()
     {
         // TODO: Temporarity disabled cleanup scheduling.
-        return;
+        // return;
         var schedule = '* 0/15 0-2 * * *';
         // schedule = '*/1 * * * *';
         const cleanupJob = new CronJob(schedule, () => {
@@ -157,7 +139,7 @@ class HistoryCleanupProcessor {
         this._logger.info('[_cleanupHistoryTables] Running...');
 
         return tracker.scope("_cleanupHistoryTables", (childTracker) => {
-            return Promise.serial(MY_TABLES_TO_PROCESS, x => this._cleanupHistoryTable(x.name));
+            return Promise.serial(HISTORY_TABLES, x => this._cleanupHistoryTable(x));
         });
     }
 
@@ -177,7 +159,7 @@ class HistoryCleanupProcessor {
                 }
 
                 var partitionsToDelete = partitions.filter(x => (x.id <= cutoffPartition));
-                this._logger.info('[_cleanupHistoryTable] partitionsToDelete:', partitionsToDelete);
+                this._logger.info('[_cleanupHistoryTable] table: %s, partitionsToDelete:', tableName, partitionsToDelete);
 
                 return Promise.serial(partitionsToDelete, x => this._deletePartition(tableName, x));
             });

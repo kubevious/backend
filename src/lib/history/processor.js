@@ -5,6 +5,7 @@ const HistoryAccessor = require("./db-accessor");
 const Snapshot = require("kubevious-helpers").History.Snapshot;
 const BufferUtils = require("kubevious-helpers").BufferUtils;
 const HistoryPartitioning = require("kubevious-helpers").History.Partitioning;
+const { HISTORY_TABLES } = require('./metadata');
 
 class HistoryProcessor
 {
@@ -135,23 +136,45 @@ class HistoryProcessor
 
                 this._interation += 1;
                 var partition = HistoryPartitioning.calculateDatePartition(snapshot.date);
-                var configHashes = this._produceConfigHashes(snapshot, partition);
-                this._prepareConfigHashesCache(partition);
+                var configHashes = null;
+                var tablesPartitionsData = null;
+
+                this.logger.info("[_processSnapshot] Date: %s, Partition: %s", snapshot.date, partition);
 
                 var itemsDelta = this._produceDelta(snapshot, this._latestSnapshot);
                 var deltaSummary = this._constructDeltaSummary(snapshot, itemsDelta);
                 this._cleanupSnapshot(snapshot);
 
-                this.logger.info("[_processSnapshot] Date: %s, Partition: %s", snapshot.date, partition);
-
                 return Promise.resolve()
+                    .then(() => {
+                    })
+                    .then(() => this._queryDatabasePartitions())
+                    .then(result => {
+                        tablesPartitionsData = result;
+                        this.logger.info("[_processSnapshot] tablesPartitionsData:", tablesPartitionsData);
+
+                        var list = _.values(tablesPartitionsData.byTable);
+                        if (!_.every(list, x => x[partition])) {
+                            var maxPartition = _.max(list);
+                            this.logger.info("[_processSnapshot] maxPartition: %s", tablesPartitionsData.maxPartition);
+
+                            if (partition < tablesPartitionsData.maxPartition) {
+                                this.logger.warn("[_processSnapshot] Existing partitions found. Reporting to latest partition. (%s -> %s)", partition, tablesPartitionsData.maxPartition);
+                                partition = tablesPartitionsData.maxPartition;
+                            }
+                        }
+                    })
+                    .then(() => {
+                        configHashes = this._produceConfigHashes(snapshot, partition);
+                        this._prepareConfigHashesCache(partition);
+                    })
                     .then(() => this.debugObjectLogger.dump("history-diff-snapshot-", this._interation, snapshot))
                     .then(() => this.debugObjectLogger.dump("history-diff-latest-snapshot-", this._interation, this._latestSnapshot))
                     .then(() => this.debugObjectLogger.dump("history-diff-items-delta-", this._interation, itemsDelta))
                     .then(() => {
                         return this._dbAccessor.executeInTransaction(() => {
                             return Promise.resolve()
-                                .then(() => this._prepareSnapshotPartitions(partition))
+                                .then(() => this._prepareDatabasePartitions(partition, tablesPartitionsData.byTable))
                                 .then(() => this._persistConfigHashes(configHashes, partition))
                                 .then(() => this._persistSnapshot(snapshot, partition))
                                 .then(() => this._persistDiff(snapshot, partition, itemsDelta, deltaSummary))
@@ -183,6 +206,7 @@ class HistoryProcessor
         var configHashes = [];
         for(var item of snapshot.getItems())
         {
+            this.logger.info("[_produceConfigHashes] %s...", item.dn, item);
             var hash = this._calculateObjectHash(item.config);
             configHashes.push({ 
                 part: partition,
@@ -205,7 +229,8 @@ class HistoryProcessor
     _calculateObjectHash(obj)
     {
         if (_.isNullOrUndefined(obj)) {
-            throw new Error('NO Object');
+            obj = {};
+            // throw new Error('NO Object');
         }
 
         var str = _.stableStringify(obj);
@@ -258,42 +283,44 @@ class HistoryProcessor
             });
     }
 
-    _prepareSnapshotPartitions(partition)
+    _queryDatabasePartitions()
     {
-        var tables = [
-            'config_hashes',
-            'snapshots',
-            'snap_items',
-            'diffs',
-            'diff_items'
-        ]
-        return Promise.serial(tables, x => this._prepareTablePartitions(x, partition));
+        var tablesPartitionsData = {
+            maxPartition: 0,
+            byTable: {}
+        };
+        return Promise.serial(HISTORY_TABLES, tableName => {
+            return this._database.queryPartitions(tableName)
+                .then(partitions => {
+                    partitions = _.filter(partitions, x => x.value != 0);
+                    
+                    tablesPartitionsData.byTable[tableName] = {};
+                    for(var partitionInfo of partitions)
+                    {
+                        var partitionId = partitionInfo.value - 1;
+                        tablesPartitionsData.byTable[tableName][partitionId] = true;
+
+                        tablesPartitionsData.maxPartition = Math.max(partitionId, tablesPartitionsData.maxPartition);
+                    }
+                });
+        })
+        .then(() => tablesPartitionsData);
     }
 
-    _prepareTablePartitions(tableName, partition)
+    _prepareDatabasePartitions(partition, tablePartitions)
     {
-        this.logger.info("[_prepareTablePartitions] %s :: %s", tableName, partition)
-        return this._database.queryPartitions(tableName)
-            .then(partitions => {
-                // this.logger.info("[_prepareTablePartitions] %s partitions: ", tableName, partitions)
-
-                var value = partition + 1;
-                // this.logger.info("[_prepareTablePartitions] %s value: %s", tableName, value)
-
-                var myPartition = _.find(partitions, x => x.value == value);
-                if (myPartition) {
-                    return;
-                }
-
-                return this._database.createPartition(tableName, 
-                    this._partitionName(partition),
-                    value);
-            });
+        return Promise.serial(HISTORY_TABLES, x => this._prepareTablePartitions(x, partition, tablePartitions[x]));
     }
 
-    _partitionName(partition)
+    _prepareTablePartitions(tableName, partition, myPartitions)
     {
-        return 'p' + partition;
+        this.logger.info("[_prepareTablePartitions] %s :: %s", tableName, partition, myPartitions)
+        if (myPartitions[partition]) {
+            return;
+        }
+        return this._database.createPartition(tableName, 
+            HistoryPartitioning.partitionName(partition),
+            partition + 1);
     }
 
     _shouldCreateNewDbSnapshot(snapshot, partition)
@@ -414,6 +441,7 @@ class HistoryProcessor
     {
         for(var item of snapshot.getItems())
         {
+            // this.logger.info("[_constructAlertsSummary] ", item);
             if (item.config_kind == 'alerts')
             {
                 if (_.isNullOrUndefined(alertsDict[item.dn])) {
