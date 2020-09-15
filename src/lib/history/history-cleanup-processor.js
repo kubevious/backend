@@ -16,8 +16,6 @@ class HistoryCleanupProcessor {
 
         this._startupDate = null;
         this._lastCleanupDate = null;
-
-        context.database.onConnect(this._onDbConnected.bind(this));
     }
 
     get logger() {
@@ -26,21 +24,8 @@ class HistoryCleanupProcessor {
 
     init()
     {
-        return;
         this._startupDate = moment();
         this._setupCronJob();
-    }
-
-    _onDbConnected()
-    {
-        this._logger.info("[_onDbConnected] ...");
-        this._latestSnapshot = null;
-
-        this._registerStatements()
-    }
-
-    _registerStatements()
-    {
     }
 
     _setupCronJob()
@@ -204,25 +189,10 @@ class HistoryCleanupProcessor {
                 }
             });
     }
-    
-    _registerStatement(name, sql)
-    {
-        return this._database.registerStatement(name, sql);
-    }
-
-    _execute(name, params)
-    {
-        return this._database.executeStatement(name, params);
-    }
 
     _executeSql(sql)
     {
         return this._database.executeSql(sql);
-    }
-
-    _executeInTransaction(cb)
-    {
-        return this._database.executeInTransaction(cb);
     }
 }
 
