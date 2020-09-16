@@ -10,7 +10,9 @@ module.exports = {
                 reportUserError('Missing date');
             }
             var date = new Date(req.body.date);
-            return context.collector.newSnapshot(date, req.body.version);
+            var parserVersion = req.body.version;
+            logger.info("New snapshot reporting started. Date %s. ParserVersion: %s.", date.toISOString(), parserVersion);
+            return context.collector.newSnapshot(date, parserVersion);
         })
 
         router.post('/snapshot/items', function (req, res) {

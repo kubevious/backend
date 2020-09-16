@@ -20,6 +20,7 @@ class Collector
         this._parserVersion = null;
         this._currentMetric = null;
         this._latestMetric = null;
+        this._recentDurations = [];
     }
 
     get logger() {
@@ -31,29 +32,54 @@ class Collector
         let metrics = [];
 
         metrics.push({
-            name: 'Collector :: Parser Version',
+            category: 'Collector',
+            name: 'Parser Version',
             value: this._parserVersion ? this._parserVersion : 'unknown'
         })
 
         metrics.push({
-            name: 'Collector :: Latest Report Date',
-            value: this._currentMetric ? this._currentMetric.dateStart : ''
+            category: 'Collector',
+            name: 'Recent Durations',
+            value: JSON.stringify(this._recentDurations)
         })
 
-        if (this._currentMetric) {
-            if (!this._currentMetric.dateEnd)
-            {
-                let durationSeconds = DateUtils.diffSeconds(new Date(), this._currentMetric.dateStart);
-                metrics.push({
-                    name: 'Collector :: Current Report Duration(sec)',
-                    value: durationSeconds
-                })
-            }
+        if (this._currentMetric && !this._currentMetric.dateEnd) {
+            metrics.push({
+                category: 'Collector',
+                name: 'Current Report Date',
+                value: this._currentMetric.dateStart
+            })
+    
+            metrics.push({
+                category: 'Collector',
+                name: 'Current Report Kind',
+                value: this._currentMetric.kind
+            })
+
+            let durationSeconds = DateUtils.diffSeconds(new Date(), this._currentMetric.dateStart);
+            metrics.push({
+                category: 'Collector',
+                name: 'Current Report Duration(sec). Still collecting...',
+                value: durationSeconds
+            })
         }
 
         if (this._latestMetric) {
             metrics.push({
-                name: 'Collector :: Latest Report Duration(sec)',
+                category: 'Collector',
+                name: 'Latest Report Date',
+                value: this._latestMetric.dateStart
+            })
+
+            metrics.push({
+                category: 'Collector',
+                name: 'Latest Report Kind',
+                value: this._latestMetric.kind
+            })
+
+            metrics.push({
+                category: 'Collector',
+                name: 'Latest Report Duration(sec)',
                 value: this._latestMetric.durationSeconds
             })
         }
@@ -78,6 +104,8 @@ class Collector
     {
         metric.dateEnd = new Date();
         metric.durationSeconds = DateUtils.diffSeconds(metric.dateEnd, metric.dateStart);
+        this._recentDurations.push(metric.durationSeconds);
+        this._recentDurations = _.takeRight(this._recentDurations, 10);
         this._latestMetric = metric;
         return metric;
     }
