@@ -3,7 +3,7 @@ const Promise = require('the-promise');
 module.exports = function(logger, driver, executeSql) {
     logger.info("MIGRATING v3");
 
-    var queryies = [
+    var queries = [
 
     "CREATE TABLE IF NOT EXISTS `rules` (" +
         "`name` varchar(128) NOT NULL," +
@@ -75,5 +75,5 @@ module.exports = function(logger, driver, executeSql) {
 
     ];
 
-    return Promise.serial(queryies, x => executeSql(x));
+    return Promise.serial(queries, x => executeSql(x));
 }

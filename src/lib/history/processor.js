@@ -152,11 +152,11 @@ class HistoryProcessor
                     .then(() => this._queryDatabasePartitions())
                     .then(result => {
                         tablesPartitionsData = result;
-                        this.logger.info("[_processSnapshot] tablesPartitionsData:", tablesPartitionsData);
+                        this.logger.debug("[_processSnapshot] tablesPartitionsData:", tablesPartitionsData);
 
                         var list = _.values(tablesPartitionsData.byTable);
                         if (!_.every(list, x => x[partition])) {
-                            this.logger.info("[_processSnapshot] maxPartition: %s", tablesPartitionsData.maxPartition);
+                            this.logger.debug("[_processSnapshot] maxPartition: %s", tablesPartitionsData.maxPartition);
                             if (partition < tablesPartitionsData.maxPartition) {
                                 this.logger.warn("[_processSnapshot] Existing partitions found. Reporting to latest partition. (%s -> %s)", partition, tablesPartitionsData.maxPartition);
                                 partition = tablesPartitionsData.maxPartition;

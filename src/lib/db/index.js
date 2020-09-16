@@ -177,15 +177,30 @@ class Database
 
     _getDbVersion()
     {
-        return this.driver.executeSql('SELECT `value` FROM `config` WHERE `key` = "DB_SCHEMA"')
-            .then(result => {
-                var value = _.head(result);
-                if (value) {
-                    return value.value.version || 0;
+        return this._tableExists('config')
+            .then(configExists => {
+                if (!configExists) {
+                    this.logger.warn('[_getDbVersion] Config table does not exist.');
+                    return 0;
                 }
-                return 0;
+                return this.driver.executeSql('SELECT `value` FROM `config` WHERE `key` = "DB_SCHEMA"')
+                    .then(result => {
+                        var value = _.head(result);
+                        if (value) {
+                            return value.value.version || 0;
+                        }
+                        return 0;
+                    })
             })
             ;
+    }
+
+    _tableExists(name)
+    {
+        return this.driver.executeSql(`SHOW TABLES LIKE '${name}';`)
+            .then(result => {
+                return result.length > 0;
+            })
     }
 
     _setDbVersion(version)
