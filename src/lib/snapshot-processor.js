@@ -53,10 +53,6 @@ class SnapshotProcessor
 
     process(snapshotInfo, tracker, extraParams)
     {
-        if (!tracker) {
-            tracker = this._context.tracker;
-        }
-
         return tracker.scope("SnapshotProcessor::process", (tracker) => {
 
             var registryState = null;
