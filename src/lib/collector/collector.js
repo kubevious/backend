@@ -1,6 +1,7 @@
 const Promise = require('the-promise');
 const _ = require('lodash');
 const { v4: uuidv4 } = require('uuid');
+const DateUtils = require('kubevious-helpers').DateUtils;
 
 class Collector
 {
@@ -15,17 +16,83 @@ class Collector
         this._diffs = {};
 
         this._iteration = 0;
+
+        this._parserVersion = null;
+        this._currentMetric = null;
+        this._latestMetric = null;
     }
 
     get logger() {
         return this._logger;
     }
-    
-    newSnapshot(date)
+
+    extractMetrics()
     {
+        let metrics = [];
+
+        metrics.push({
+            name: 'Collector :: Parser Version',
+            value: this._parserVersion ? this._parserVersion : 'unknown'
+        })
+
+        metrics.push({
+            name: 'Collector :: Latest Report Date',
+            value: this._currentMetric ? this._currentMetric.dateStart : ''
+        })
+
+        if (this._currentMetric) {
+            if (!this._currentMetric.dateEnd)
+            {
+                let durationSeconds = DateUtils.diffSeconds(new Date(), this._currentMetric.dateStart);
+                metrics.push({
+                    name: 'Collector :: Current Report Duration(sec)',
+                    value: durationSeconds
+                })
+            }
+        }
+
+        if (this._latestMetric) {
+            metrics.push({
+                name: 'Collector :: Latest Report Duration(sec)',
+                value: this._latestMetric.durationSeconds
+            })
+        }
+
+        return metrics;
+    }
+
+    _newMetric(date)
+    {
+        let metric = {
+            origDate: date,
+            dateStart: new Date(),
+            dateEnd: null,
+            kind: null,
+            durationSeconds: null
+        };
+        this._currentMetric = metric;
+        return metric;
+    }
+
+    _endMetric(metric)
+    {
+        metric.dateEnd = new Date();
+        metric.durationSeconds = DateUtils.diffSeconds(metric.dateEnd, metric.dateStart);
+        this._latestMetric = metric;
+        return metric;
+    }
+    
+    newSnapshot(date, parserVersion)
+    {
+        this._parserVersion = parserVersion;
+
+        let metric = this._newMetric(date);
+        metric.kind = 'snapshot';
+
         var id = uuidv4();
         this._snapshots[id] = {
             date: date,
+            metric: metric,
             items: {}
         };
 
@@ -70,9 +137,13 @@ class Collector
             return RESPONSE_NEED_NEW_SNAPSHOT;
         }
 
+        let metric = this._newMetric(date);
+        metric.kind = 'diff';
+
         var id = uuidv4();
         this._diffs[id] = {
             date: date,
+            metric: metric,
             snapshotId: snapshotId,
             items: []
         };
@@ -113,6 +184,7 @@ class Collector
             var newSnapshotId = uuidv4();
             var newSnapshotInfo = {
                 date: new Date(diffInfo.date),
+                metric: diffInfo.metric,
                 items: _.clone(snapshotInfo.items)
             };
             this._snapshots[newSnapshotId] = newSnapshotInfo;
@@ -141,7 +213,10 @@ class Collector
 
     _acceptSnapshot(snapshotInfo)
     {
+        this._endMetric(snapshotInfo.metric);
+
         this.logger.info("[_acceptSnapshot] item count: %s", _.keys(snapshotInfo.items).length);
+        this.logger.info("[_acceptSnapshot] metric: ", snapshotInfo.metric);
         var safeSnapshot = _.cloneDeep(snapshotInfo);
         this._context.facadeRegistry.acceptCurrentSnapshot(safeSnapshot);
     }

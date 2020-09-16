@@ -10,7 +10,7 @@ module.exports = {
                 reportUserError('Missing date');
             }
             var date = new Date(req.body.date);
-            return context.collector.newSnapshot(date);
+            return context.collector.newSnapshot(date, req.body.version);
         })
 
         router.post('/snapshot/items', function (req, res) {
