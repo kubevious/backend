@@ -12,4 +12,8 @@ export MYSQL_PORT=4033
 export MYSQL_USER=root
 export MYSQL_PASS=
 export MYSQL_DB=kubevious
+
+export WORLDVIOUS_URL=http://localhost:4501/api/v1/oss
+export WORLDVIOUS_ID=123e4567-e89b-12d3-a456-426614174000
+
 node src/

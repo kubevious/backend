@@ -17,14 +17,18 @@ const RuleProcessor = require('./rule/rule-processor')
 const HistorySnapshotReader = require("kubevious-helpers").History.SnapshotReader;
 const WebSocketServer = require('./websocket/server');
 const SnapshotProcessor = require('./snapshot-processor');
+const { WorldviousClient } = require('kubevious-worldvious-client');
 
 const SERVER_PORT = 4001;
+const VERSION = require('../version');
 
 class Context
 {
     constructor(logger)
     {
         this._logger = logger.sublogger("Context");
+        this._logger.info("Version: %s", VERSION);
+        
         this._tracker = new ProcessingTracker(logger.sublogger("Tracker"));
         this._database = new Database(logger);
         this._searchEngine = new SearchEngine(this);
@@ -49,6 +53,8 @@ class Context
         this._snapshotProcessor = new SnapshotProcessor(this);
 
         this._historyCleanupProcessor = new HistoryCleanupProcessor(this);
+
+        this._worldvious = new WorldviousClient(logger, 'backend', VERSION);
 
         this._server = null;
         this._k8sClient = null;
@@ -131,6 +137,10 @@ class Context
         return this._historyCleanupProcessor;
     }
 
+    get worldvious() {
+        return this._worldvious;
+    }
+
     setupServer()
     {
         const Server = require("./server");
@@ -158,6 +168,7 @@ class Context
         }
 
         return Promise.resolve()
+            .then(() => this._worldvious.init())
             .then(() => this._database.init())
             .then(() => this._runServer())
             .then(() => this._setupWebSocket())

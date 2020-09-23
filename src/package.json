@@ -28,6 +28,7 @@
     "k8s-super-client": "^1.1.3",
     "kubevious-helpers": "git+https://github.com/kubevious/helpers.git",
     "kubevious-kubik": "git+https://github.com/kubevious/kubik.git",
+    "kubevious-worldvious-client": "git+https://github.com/kubevious/worldvious-client.git",
     "kubik.git": "git+https://github.com/kubevious/kubik.git",
     "moment": "^2.24.0",
     "morgan": "^1.10.0",
