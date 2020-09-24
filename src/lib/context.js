@@ -158,14 +158,7 @@ class Context
 
     run()
     {
-        if (process.env.NODE_ENV == 'development')
-        {
-            this.tracker.enablePeriodicDebugOutput(10);
-        }
-        else
-        {
-            this.tracker.enablePeriodicDebugOutput(30);
-        }
+        this._setupTracker();
 
         return Promise.resolve()
             .then(() => this._worldvious.init())
@@ -177,8 +170,28 @@ class Context
                 console.log("***** ERROR *****");
                 console.log(reason);
                 this.logger.error(reason);
-                process.exit(1);
-            });
+                return Promise.resolve(this.worldvious.acceptError(reason))
+                    .then(() => {
+                        process.exit(1);
+                    })
+            })
+            ;
+    }
+
+    _setupTracker()
+    {
+        if (process.env.NODE_ENV == 'development')
+        {
+            this.tracker.enablePeriodicDebugOutput(10);
+        }
+        else
+        {
+            this.tracker.enablePeriodicDebugOutput(30);
+        }
+
+        this.tracker.registerListener(extractedData => {
+            this._worldvious.acceptMetrics(extractedData);
+        })
     }
 
     _runServer()

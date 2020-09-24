@@ -16,6 +16,10 @@ class FacadeRegistry
         return this._logger;
     }
 
+    get debugObjectLogger() {
+        return this._context.debugObjectLogger;
+    }
+
     acceptCurrentSnapshot(snapshotInfo)
     {
         this._latestSnapshot = snapshotInfo;
@@ -71,6 +75,10 @@ class FacadeRegistry
     _runFinalize(registryState, bundle, tracker)
     {
         return Promise.resolve()
+            .then(() => this.debugObjectLogger.dump("latest-bundle", 0, bundle))
+            .then(() => {
+                this._produceCounters(bundle);
+            })
             .then(() => {
                 return tracker.scope("websocket-update", () => {
                     return this._updateWebsocket(bundle);
@@ -91,6 +99,41 @@ class FacadeRegistry
                     return this._context.historyProcessor.accept(registryState);
                 });
             })
+    }
+
+    _produceCounters(bundle)
+    {
+        const counters = this._extractCounters(bundle);
+        this.logger.info("[COUNTERS] BEGIN");
+        for(let counter of counters)
+        {
+            this.logger.info("[COUNTERS] %s => %s", counter.name, counter.count);
+        }
+        this.logger.info("[COUNTERS] END");
+        this._context.worldvious.acceptCounters(counters);
+    }
+
+    _extractCounters(bundle)
+    {
+        let nodeCountDict = {};
+        for(let node of bundle.nodes)
+        {
+            if (!nodeCountDict[node.config.kind])
+            {
+                nodeCountDict[node.config.kind] = 1;
+            }
+            else
+            {
+                nodeCountDict[node.config.kind]++;
+            }
+        }
+
+        let nodeCounters = _.keys(nodeCountDict).map(x => ({
+            name: x,
+            count: nodeCountDict[x]
+        }))
+
+        return nodeCounters;
     }
 
     _updateWebsocket(bundle)
