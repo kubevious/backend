@@ -166,6 +166,7 @@ class Context
             .then(() => this._runServer())
             .then(() => this._setupWebSocket())
             .then(() => this.historyCleanupProcessor.init())
+            .then(() => this._setupVersionChecker())
             .catch(reason => {
                 console.log("***** ERROR *****");
                 console.log(reason);
@@ -192,6 +193,13 @@ class Context
         this.tracker.registerListener(extractedData => {
             this._worldvious.acceptMetrics(extractedData);
         })
+    }
+
+    _setupVersionChecker()
+    {
+        this._worldvious.onVersionChanged(version => {
+            this.websocket.update({ kind: 'new-version' }, version);
+        });
     }
 
     _runServer()
