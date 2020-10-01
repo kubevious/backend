@@ -47,6 +47,13 @@ class HistoryDbAccessor
         this._registerStatement('UPDATE_DIFF_ITEM', 'UPDATE `diff_items` SET `dn` = ?, `kind` = ?, `config_kind` = ?, `name` = ?, `present` = ?, `config_hash` = ? WHERE `part` = ? && `id` = ?;');
         this._registerStatement('DELETE_DIFF_ITEM', 'DELETE FROM `diff_items` WHERE `part` = ? && `id` = ?;');
 
+        this._registerStatement('INSERT_TIMELINE_ITEM', 'INSERT INTO `timeline` (`part`, `date`, `changes`, `error`, `warn`) VALUES (?, ?, ?, ?, ?);');
+        
+        this._registerStatement('INSERT_SUMMARY_COUNTERS_ITEM', 'INSERT INTO `summary_counters` (`part`, `date`, `counter_kind`, `counter`) VALUES (?, ?, ?, ?);');
+        this._registerStatement('INSERT_SUMMARY_COUNTERS_BY_KIND_ITEM', 'INSERT INTO `summary_counters_by_kind` (`part`, `date`, `counter_kind`, `item_kind`, `counter`) VALUES (?, ?, ?, ?, ?);');
+        this._registerStatement('INSERT_SUMMARY_DELTA_COUNTERS_ITEM', 'INSERT INTO `summary_delta_counters` (`part`, `date`, `counter_kind`, `counter`) VALUES (?, ?, ?, ?);');
+        this._registerStatement('INSERT_SUMMARY_DELTA_COUNTERS_BY_KIND_ITEM', 'INSERT INTO `summary_delta_counters_by_kind` (`part`, `date`, `counter_kind`, `item_kind`, `counter`) VALUES (?, ?, ?, ?, ?);');
+
         this._registerStatement('GET_DIFFS', 'SELECT * FROM `diffs`;');
 
         this._registerStatement('GET_CONFIG', 'SELECT * FROM `config` WHERE `key` = ?;');
@@ -319,6 +326,112 @@ class HistoryDbAccessor
     }
 
     /* DIFF ITEMS END */
+
+    /* TIMELINE BEGIN */
+
+    syncTimelineItems(partition, date, deltaSummary)
+    {
+        this.logger.info("[syncTimelineItems] partition: %s, date: %s", partition, date);
+        this.logger.debug("[syncTimelineItems] partition: %s, date: %s, deltaSummary: ", partition, date, deltaSummary);
+
+        let params = [
+            partition, 
+            date, 
+            deltaSummary.delta.items,
+            deltaSummary.snapshot.alerts.error,
+            deltaSummary.snapshot.alerts.warn
+        ];
+
+        return this._execute('INSERT_TIMELINE_ITEM', params);
+    }
+
+    /* TIMELINE END */
+
+    /* SUMMARY COUNTERS BEGIN */
+
+    syncSummaryItems(partition, date, summaryInfo)
+    {
+        this.logger.info("[syncSummaryItems] partition: %s, date: %s", partition, date);
+        this.logger.debug("[syncSummaryItems] partition: %s, date: %s, summaryInfo: ", partition, date, summaryInfo);
+
+        return Promise.resolve()
+            .then(() => {
+                let statements = this._getSummaryItems('INSERT_SUMMARY_COUNTERS_ITEM', partition, date, summaryInfo);
+                return this._executeMany(statements);
+            })
+            .then(() => {
+                let statements = this._getSummaryItemsByKind('INSERT_SUMMARY_COUNTERS_BY_KIND_ITEM', partition, date, summaryInfo);
+                return this._executeMany(statements);
+            })
+    }
+
+    syncSummaryDeltaItems(partition, date, summaryInfo)
+    {
+        this.logger.info("[syncSummaryDeltaItems] partition: %s, date: %s", partition, date);
+        this.logger.debug("[syncSummaryDeltaItems] partition: %s, date: %s, summaryInfo: ", partition, date, summaryInfo);
+
+        return Promise.resolve()
+            .then(() => {
+                let statements = this._getSummaryItems('INSERT_SUMMARY_DELTA_COUNTERS_ITEM', partition, date, summaryInfo);
+                return this._executeMany(statements);
+            })
+            .then(() => {
+                let statements = this._getSummaryItemsByKind('INSERT_SUMMARY_DELTA_COUNTERS_BY_KIND_ITEM', partition, date, summaryInfo);
+                return this._executeMany(statements);
+            })
+    }
+
+    _getSummaryItems(statementId, partition, date, dict)
+    {
+        const items = [];
+
+        items.push({
+            id: statementId,
+            params: [partition, date, 'logic', dict.items]
+        });
+
+        for(let severity of _.keys(dict.alerts))
+        {
+            items.push({
+                id: statementId,
+                params: [partition, date, severity, dict.alerts[severity]]
+            });
+        }
+
+        return items;
+    }
+
+    _getSummaryItemsByKind(statementId, partition, date, dict)
+    {
+        const items = [];
+
+        for(let kind of _.keys(dict.kinds))
+        {
+            items.push({
+                id: statementId,
+                params: [partition, date, 'logic', kind, dict.kinds[kind]]
+            });
+        }
+
+        for(let kind of _.keys(dict.alertsByKind))
+        {
+            for(let severity of _.keys(dict.alertsByKind[kind]))
+            {
+                items.push({
+                    id: statementId,
+                    params: [partition, date, severity, kind, dict.alertsByKind[kind][severity]]
+                });
+            }
+        }
+
+        return items;
+    }
+
+    /* SUMMARY COUNTERS END */
+
+
+
+
     _produceDelta(targetSnapshot, dbSnapshot)
     {
         this.logger.info("[produceDelta] targetSnapshot count: %s",  targetSnapshot.count);

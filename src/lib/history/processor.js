@@ -176,6 +176,8 @@ class HistoryProcessor
                                 .then(() => this._persistConfigHashes(configHashes, partition))
                                 .then(() => this._persistSnapshot(snapshot, partition))
                                 .then(() => this._persistDiff(snapshot, partition, itemsDelta, deltaSummary))
+                                .then(() => this._persistTimeline(snapshot, partition, deltaSummary))
+                                .then(() => this._persistSummaries(snapshot, partition, deltaSummary))
                                 .then(() => this._persistConfig())
                         });
                     })
@@ -370,6 +372,33 @@ class HistoryProcessor
             })
     }
 
+    _persistTimeline(snapshot, partition, deltaSummary)
+    {
+        this.logger.info('[_persistTimeline] BEGIN. ');
+        return Promise.resolve()
+            .then(() => {
+                return this._dbAccessor.syncTimelineItems(partition, snapshot.date, deltaSummary);
+            })
+            .then(() => {
+                this.logger.info('[_persistTimeline] END.');
+            })
+    }
+
+    _persistSummaries(snapshot, partition, deltaSummary)
+    {
+        this.logger.info('[_persistSummaries] BEGIN. ');
+        return Promise.resolve()
+            .then(() => {
+                return this._dbAccessor.syncSummaryItems(partition, snapshot.date, deltaSummary.snapshot);
+            })
+            .then(() => {
+                return this._dbAccessor.syncSummaryDeltaItems(partition, snapshot.date, deltaSummary.delta);
+            })
+            .then(() => {
+                this.logger.info('[_persistSummaries] END.');
+            })
+    }
+
     _constructDeltaSummary(snapshot, itemsDelta)
     {
         var deltaSummary = {
@@ -377,27 +406,67 @@ class HistoryProcessor
             delta: this._constructSnapshotSummary(itemsDelta)
         }
 
-        var currentSnapshotAlerts = {}
-        this._constructAlertsSummary(snapshot, currentSnapshotAlerts);
+        var currentSnapshotAlerts = this._constructAlertsSummary(snapshot);
 
-        var alertsDict = _.clone(currentSnapshotAlerts);
-        deltaSummary.snapshot.alerts = _.sum(_.values(alertsDict));
+        this.debugObjectLogger.dump("current-snapshot-alerts-", this._interation, currentSnapshotAlerts);
 
-        if (this._latestSnapshotAlerts)
+
+        const currentTotalAlerts = this._newAlertsDict();
+        const currentByKindAlerts = {};
+        for(let kind of _.keys(currentSnapshotAlerts))
         {
-            for(var x of _.keys(this._latestSnapshotAlerts))
+            let dict = currentSnapshotAlerts[kind];
+            currentByKindAlerts[kind] = this._newAlertsDict();
+            for(let itemAlerts of _.values(dict))
             {
-                if (!alertsDict[x]) {
-                    alertsDict[x] = 0;
+                for(let severity of _.keys(itemAlerts))
+                {
+                    const count = itemAlerts[severity];
+                    currentByKindAlerts[kind][severity] += count;
+                    currentTotalAlerts[severity] += count;
                 }
-                alertsDict[x] -= this._latestSnapshotAlerts[x];
             }
         }
-        deltaSummary.delta.alerts = _.sum(_.values(alertsDict));
+        deltaSummary.snapshot.alerts = currentTotalAlerts;
+        deltaSummary.snapshot.alertsByKind = currentByKindAlerts;
+
+        var deltaAlertsDict = _.cloneDeep(currentTotalAlerts);
+        var deltaAlertsByKindDict = _.cloneDeep(currentByKindAlerts);
+        if (this._latestSnapshotAlerts)
+        {
+            for(let kind of _.keys(this._latestSnapshotAlerts))
+            {
+                if (!deltaAlertsByKindDict[kind]) {
+                    deltaAlertsByKindDict[kind] = this._newAlertsDict();
+                }
+                let dict = this._latestSnapshotAlerts[kind];
+                for(let itemAlerts of _.values(dict))
+                {
+                    for(let severity of _.keys(itemAlerts))
+                    {
+                        if (!deltaAlertsDict[severity]) {
+                            deltaAlertsDict[severity] = 0;
+                        }
+                        deltaAlertsDict[severity] -= itemAlerts[severity];
+                        deltaAlertsByKindDict[kind][severity] -= itemAlerts[severity];
+                    }
+                }
+            }
+        }
+        deltaSummary.delta.alerts = deltaAlertsDict;
+        deltaSummary.delta.alertsByKind = deltaAlertsByKindDict;
 
         this._latestSnapshotAlerts = currentSnapshotAlerts;
 
         return deltaSummary;
+    }
+
+    _newAlertsDict()
+    {
+        return {
+            error: 0,
+            warn: 0
+        }
     }
 
     _constructSnapshotSummary(items)
@@ -433,19 +502,36 @@ class HistoryProcessor
         return summary;
     }
 
-    _constructAlertsSummary(snapshot, alertsDict)
+    _constructAlertsSummary(snapshot)
     {
+        let alertsDict = {};
         for(var item of snapshot.getItems())
         {
             // this.logger.info("[_constructAlertsSummary] ", item);
-            if (item.config_kind == 'alerts')
+            if (item.config_kind == 'node')
             {
-                if (_.isNullOrUndefined(alertsDict[item.dn])) {
-                    alertsDict[item.dn] = 0;
+                if (item.config.selfAlertCount)
+                {
+                    for(let severity of _.keys(item.config.selfAlertCount))
+                    {
+                        let count = item.config.selfAlertCount[severity];
+                        if (count > 0)
+                        {
+                            if (!alertsDict[item.kind])
+                            {
+                                alertsDict[item.kind] = {};
+                            }
+                            if (!alertsDict[item.kind][item.dn])
+                            {
+                                alertsDict[item.kind][item.dn] = {};
+                            }
+                            alertsDict[item.kind][item.dn][severity] = count;
+                        }
+                    }
                 }
-                alertsDict[item.dn] += item.config.length;
             }
         }
+        return alertsDict;
     }
 
     _produceDelta(targetSnapshot, currentSnapshot)
@@ -586,16 +672,18 @@ class HistoryProcessor
 
                 this._latestSnapshot = snapshot;
 
-                this._latestSnapshotAlerts = {};
-                this._constructAlertsSummary(snapshot, this._latestSnapshotAlerts);
+                this._latestSnapshotAlerts = this._constructAlertsSummary(snapshot);
 
                 this._cleanupSnapshot(snapshot);
 
                 this._logger.info("[_onDbConnected] _latestSnapshotAlerts key count: %s", _.keys(this._latestSnapshotAlerts).length);
                 this._logger.silly("[_onDbConnected] this._latestSnapshotAlerts: ", this._latestSnapshotAlerts);
-
-                this.debugObjectLogger.dump("history-initial-latest-snapshot-", this._interation, this._latestSnapshot);
-                this.debugObjectLogger.dump("history-initial-latest-snapshot-alerts-", this._interation, this._latestSnapshotAlerts);
+            })
+            .then(() => {
+                return this.debugObjectLogger.dump("history-initial-latest-snapshot-", this._interation, this._latestSnapshot);
+            })
+            .then(() => {
+                return this.debugObjectLogger.dump("history-initial-latest-snapshot-alerts-", this._interation, this._latestSnapshotAlerts);
             })
             .then(() => {
                 return this._dbAccessor.querySnapshot(this._currentState.snapshot_id)

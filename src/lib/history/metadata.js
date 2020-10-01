@@ -3,6 +3,11 @@ module.exports.HISTORY_TABLES = [
     'snapshots',
     'snap_items',
     'diffs',
-    'diff_items'
+    'diff_items',
+    'timeline',
+    'summary_counters',
+    'summary_counters_by_kind',
+    'summary_delta_counters',
+    'summary_delta_counters_by_kind'
 ];
 
