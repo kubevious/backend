@@ -312,7 +312,7 @@ class HistoryProcessor
 
     _prepareTablePartitions(tableName, partition, myPartitions)
     {
-        this.logger.info("[_prepareTablePartitions] %s :: %s", tableName, partition, myPartitions)
+        this.logger.verbose("[_prepareTablePartitions] %s :: %s", tableName, partition, myPartitions)
         if (myPartitions[partition]) {
             return;
         }
