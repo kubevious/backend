@@ -17,7 +17,7 @@ const RuleProcessor = require('./rule/rule-processor')
 const HistorySnapshotReader = require("kubevious-helpers").History.SnapshotReader;
 const WebSocketServer = require('./websocket/server');
 const SnapshotProcessor = require('./snapshot-processor');
-const { WorldviousClient } = require('kubevious-worldvious-client');
+const { WorldviousClient } = require('@kubevious/worldvious-client');
 
 const SERVER_PORT = 4001;
 const VERSION = require('../version');
