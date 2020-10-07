@@ -39,16 +39,16 @@ module.exports = {
             }
     
             return context.historySnapshotReader.queryTimeline(dateFrom, dateTo)
-                // .then(data => {
-                //     var result = data.map(x => {
-                //         return {
-                //             date: x.date,
-                //             items: x.summary.delta.items, //x.summary.snapshot.items
-                //             alerts: x.summary.snapshot.alerts,
-                //         }
-                //     });
-                //     return result;
-                // });
+                .then(data => {
+                    var result = data.map(x => {
+                        return {
+                            date: x.date,
+                            items: x.changes,
+                            alerts: x.error + x.warn
+                        }
+                    });
+                    return result;
+                });
         });
     
     
