@@ -2,7 +2,7 @@ const Promise = require('the-promise');
 const _ = require('the-lodash');
 const DataStore = require("helper-easy-data-store").DataStore;
 
-const TARGET_DB_VERSION = 5;
+const TARGET_DB_VERSION = 6;
 
 class Database
 {
@@ -146,6 +146,14 @@ class Database
                 .then(() => this._getDbVersion())
                 .then(version => {
                     this.logger.info("[_processMigration] VERSION: %s", version);
+                    this.logger.info("[_processMigration] TARGET_DB_VERSION: %s", TARGET_DB_VERSION);
+                    if (version == TARGET_DB_VERSION) {
+                        return;
+                    }
+                    if (version > TARGET_DB_VERSION) {
+                        this.logger.error("[_processMigration] You are running database version more recent then the binary. Results may be unpredictable.");
+                        return;
+                    }
                     var migrateableVersions = _.range(version + 1, TARGET_DB_VERSION + 1);
                     this.logger.info("[_processMigration] MigrateableVersions: ", migrateableVersions);
                     return Promise.serial(migrateableVersions, x => this._processVersionMigration(x));
