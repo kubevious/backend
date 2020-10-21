@@ -1,5 +1,6 @@
 const _ = require("the-lodash");
 const DateUtils = require("kubevious-helpers").DateUtils;
+const SeriesResampler = require("kubevious-helpers").History.SeriesResampler;
 
 module.exports = {
     url: '/api/v1/history',
@@ -43,11 +44,15 @@ module.exports = {
                     var result = data.map(x => {
                         return {
                             date: x.date,
+                            // changes: x.changes,
+                            // error: x.error,
+                            // warn: x.warn,
                             items: x.changes,
                             alerts: x.error + x.warn
                         }
                     });
-                    return result;
+
+                    return context.seriesResamplerHelper.process(result);
                 });
         });
     
