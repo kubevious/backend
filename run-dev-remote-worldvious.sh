@@ -13,9 +13,9 @@ export MYSQL_USER=root
 export MYSQL_PASS=
 export MYSQL_DB=kubevious
 
-export WORLDVIOUS_URL=https://api.worldvious.io/api/v1/oss
-export WORLDVIOUS_ID=123e4567-e89b-12d3-a456-426614174000
-
+export WORLDVIOUS_URL=https://api.kubevious.io/api/v1/oss
+export WORLDVIOUS_ID=00000000-0000-0000-0000-000000000000
+                     
 export WORLDVIOUS_VERSION_CHECK_TIMEOUT=5
 export WORLDVIOUS_COUNTERS_REPORT_TIMEOUT=6
 export WORLDVIOUS_METRICS_REPORT_TIMEOUT=6

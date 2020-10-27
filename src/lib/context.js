@@ -61,9 +61,9 @@ class Context
         this._seriesResamplerHelper = new SeriesResampler(200)
             .column("items", _.max)
             .column("alerts", _.mean)
-            // .column("changes", _.max)
-            // .column("error", _.mean)
-            // .column("warn", _.mean)
+            .column("changes", _.max)
+            .column("error", _.mean)
+            .column("warn", _.mean)
             ;
 
         this._server = null;
