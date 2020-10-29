@@ -45,9 +45,7 @@ module.exports = {
                             date: x.date,
                             changes: x.changes,
                             error: x.error,
-                            warn: x.warn,
-                            items: x.changes,
-                            alerts: x.error + x.warn
+                            warn: x.warn
                         }
                     });
 

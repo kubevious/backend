@@ -59,8 +59,6 @@ class Context
         this._worldvious = new WorldviousClient(logger, 'backend', VERSION);
 
         this._seriesResamplerHelper = new SeriesResampler(200)
-            .column("items", _.max)
-            .column("alerts", _.mean)
             .column("changes", _.max)
             .column("error", _.mean)
             .column("warn", _.mean)
