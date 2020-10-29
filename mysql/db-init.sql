@@ -1,7 +1,6 @@
 USE kubevious;
 SET NAMES utf8mb4;
 
-SET GLOBAL expire_logs_days = 0;
 SET GLOBAL binlog_expire_logs_seconds = 259200;
 
 CREATE TABLE IF NOT EXISTS `config` (

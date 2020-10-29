@@ -43,11 +43,13 @@ module.exports = {
                     var result = data.map(x => {
                         return {
                             date: x.date,
-                            items: x.changes,
-                            alerts: x.error + x.warn
+                            changes: x.changes,
+                            error: x.error,
+                            warn: x.warn
                         }
                     });
-                    return result;
+
+                    return context.seriesResamplerHelper.process(result);
                 });
         });
     

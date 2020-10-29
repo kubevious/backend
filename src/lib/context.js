@@ -1,3 +1,4 @@
+const _ = require("the-lodash");
 const Promise = require('the-promise');
 const ProcessingTracker = require("kubevious-helpers").ProcessingTracker;
 const FacadeRegistry = require('./facade/registry');
@@ -17,6 +18,7 @@ const RuleProcessor = require('./rule/rule-processor')
 const HistorySnapshotReader = require("kubevious-helpers").History.SnapshotReader;
 const WebSocketServer = require('./websocket/server');
 const SnapshotProcessor = require('./snapshot-processor');
+const SeriesResampler = require("kubevious-helpers").History.SeriesResampler;
 const { WorldviousClient } = require('@kubevious/worldvious-client');
 
 const SERVER_PORT = 4001;
@@ -55,6 +57,12 @@ class Context
         this._historyCleanupProcessor = new HistoryCleanupProcessor(this);
 
         this._worldvious = new WorldviousClient(logger, 'backend', VERSION);
+
+        this._seriesResamplerHelper = new SeriesResampler(200)
+            .column("changes", _.max)
+            .column("error", _.mean)
+            .column("warn", _.mean)
+            ;
 
         this._server = null;
         this._k8sClient = null;
@@ -139,6 +147,10 @@ class Context
 
     get worldvious() {
         return this._worldvious;
+    }
+
+    get seriesResamplerHelper() {
+        return this._seriesResamplerHelper;
     }
 
     setupServer()
