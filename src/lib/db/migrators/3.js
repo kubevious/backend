@@ -13,7 +13,7 @@ module.exports = function(logger, driver, executeSql) {
         "`script` TEXT NOT NULL," +
         "`hash` BINARY(32) NULL," +
         "PRIMARY KEY (`name`)" +
-    ") ENGINE=InnoDB DEFAULT CHARSET=latin1;"
+    ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;"
 
     ,
 
@@ -26,7 +26,7 @@ module.exports = function(logger, driver, executeSql) {
         "`item_count` int unsigned NOT NULL," +
         "PRIMARY KEY (`id`)," +
         "KEY `rule_name` (`rule_name`)" +
-    ") ENGINE=InnoDB DEFAULT CHARSET=latin1;"
+    ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;"
 
     ,
 
@@ -37,7 +37,7 @@ module.exports = function(logger, driver, executeSql) {
         "`msg` json NOT NULL," +
         "PRIMARY KEY (`id`)," +
         "KEY `rule_name` (`rule_name`)" +
-    ") ENGINE=InnoDB DEFAULT CHARSET=latin1;" 
+    ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;" 
 
     ,
 
@@ -50,7 +50,7 @@ module.exports = function(logger, driver, executeSql) {
         "`markers` json NULL," +
         "PRIMARY KEY (`id`)," +
         "KEY `rule_name` (`rule_name`)" +
-    ") ENGINE=InnoDB DEFAULT CHARSET=latin1;"
+    ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;"
 
     ,
 
@@ -61,7 +61,7 @@ module.exports = function(logger, driver, executeSql) {
         "`color` varchar(128) NOT NULL," +
         "`propagate` TINYINT NOT NULL," +
         "PRIMARY KEY (`name`)" +
-    ") ENGINE=InnoDB DEFAULT CHARSET=latin1;" 
+    ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;" 
 
     ,
 
@@ -71,7 +71,7 @@ module.exports = function(logger, driver, executeSql) {
         "`dn` varchar(1024) NOT NULL," +
         "PRIMARY KEY (`id`)," +
         "KEY `marker_name` (`marker_name`)" +
-    ") ENGINE=InnoDB DEFAULT CHARSET=latin1;" 
+    ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;" 
 
     ];
 

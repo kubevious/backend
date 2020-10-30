@@ -10,7 +10,9 @@ class Database
     {
         this._logger = logger.sublogger("DB");
 
-        this._dataStore = new DataStore(logger.sublogger("DataStore"));
+        this._dataStore = new DataStore(logger.sublogger("DataStore"), false, {
+            charset: 'utf8_general_ci'
+        });
         this._driver = this._dataStore.mysql;
 
         this._statements = {};

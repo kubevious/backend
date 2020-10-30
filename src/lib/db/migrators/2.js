@@ -14,7 +14,7 @@ module.exports = function(logger, driver, executeSql) {
             "`date` datetime NOT NULL," +
             "PRIMARY KEY (`id`)," +
             "KEY `date` (`date`)" +
-        ") ENGINE=InnoDB DEFAULT CHARSET=latin1;"
+        ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;"
 
         ,
 
@@ -32,7 +32,7 @@ module.exports = function(logger, driver, executeSql) {
             "KEY `kind` (`kind`)," +
             "KEY `config-kind` (`config-kind`)," +
             "CONSTRAINT `snap_item_snapshot_id` FOREIGN KEY (`snapshot_id`) REFERENCES `snapshots` (`id`)" +
-        ") ENGINE=InnoDB DEFAULT CHARSET=latin1;"
+        ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;"
 
         ,
 
@@ -46,7 +46,7 @@ module.exports = function(logger, driver, executeSql) {
             "KEY `snapshot_id` (`snapshot_id`)," +
             "KEY `date` (`date`)," +
             "CONSTRAINT `diff_snapshot_id` FOREIGN KEY (`snapshot_id`) REFERENCES `snapshots` (`id`)" +
-        ") ENGINE=InnoDB DEFAULT CHARSET=latin1;"
+        ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;"
 
         ,
 
@@ -65,7 +65,7 @@ module.exports = function(logger, driver, executeSql) {
             "KEY `kind` (`kind`)," +
             "KEY `config-kind` (`config-kind`)," +
             "CONSTRAINT `diff_items_diff_id` FOREIGN KEY (`diff_id`) REFERENCES `diffs` (`id`)" +
-        ") ENGINE=InnoDB DEFAULT CHARSET=latin1;"
+        ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;"
 
     ];
     return Promise.serial(queries, x => executeSql(x));

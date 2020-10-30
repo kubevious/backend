@@ -19,7 +19,7 @@ module.exports = function(logger, driver, executeSql) {
         "`part` smallint unsigned NOT NULL, " +
         "`value` json NOT NULL, " +
         "PRIMARY KEY (`key`, `part`) " +
-    ") ENGINE=InnoDB DEFAULT CHARSET=latin1 " +
+    ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci " +
     "PARTITION BY RANGE (`part`) ( " +
         "PARTITION p0 VALUES LESS THAN (0) " +
     ");"
@@ -32,7 +32,7 @@ module.exports = function(logger, driver, executeSql) {
         "`date` datetime NOT NULL, " +
         "PRIMARY KEY (`id`, `part`), " +
         "KEY `date` (`date`) " +
-    ") ENGINE=InnoDB DEFAULT CHARSET=latin1 " +
+    ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci " +
     "PARTITION BY RANGE (part) ( " +
         "PARTITION p0 VALUES LESS THAN (0) " +
     ");"
@@ -55,7 +55,7 @@ module.exports = function(logger, driver, executeSql) {
         "KEY `kind` (`kind`), " +
         "KEY `config_kind` (`config_kind`), " +
         "KEY `config_hash_part` (`config_hash_part`) " +
-    ") ENGINE=InnoDB DEFAULT CHARSET=latin1 " +
+    ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci " +
     "PARTITION BY RANGE (part) ( " +
         "PARTITION p0 VALUES LESS THAN (0) " +
     ");" 
@@ -72,7 +72,7 @@ module.exports = function(logger, driver, executeSql) {
         "PRIMARY KEY (`id`, `part`), " +
         "KEY `snapshot_id` (`snapshot_id`), " +
         "KEY `date` (`date`) " +
-    ") ENGINE=InnoDB DEFAULT CHARSET=latin1 " +
+    ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci " +
     "PARTITION BY RANGE (part) ( " +
         "PARTITION p0 VALUES LESS THAN (0) " +
     ");"
@@ -96,7 +96,7 @@ module.exports = function(logger, driver, executeSql) {
         "KEY `kind` (`kind`), " +
         "KEY `config_kind` (`config_kind`), " +
         "KEY `config_hash_part` (`config_hash_part`) " +
-    ") ENGINE=InnoDB DEFAULT CHARSET=latin1 " +
+    ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci " +
     "PARTITION BY RANGE (part) ( " +
         "PARTITION p0 VALUES LESS THAN (0) " +
     ")"

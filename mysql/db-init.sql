@@ -1,5 +1,5 @@
 USE kubevious;
-SET NAMES utf8mb4;
+SET NAMES utf8;
 
 SET GLOBAL binlog_expire_logs_seconds = 259200;
 
@@ -7,14 +7,14 @@ CREATE TABLE IF NOT EXISTS `config` (
   `key` varchar(64) NOT NULL DEFAULT '',
   `value` json NOT NULL,
   PRIMARY KEY (`key`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS `config_hashes` (
   `key` binary(32) NOT NULL DEFAULT '',
   `part` int unsigned NOT NULL,
   `value` json NOT NULL,
   PRIMARY KEY (`key`, `part`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
 PARTITION BY RANGE (`part`) (
   PARTITION p0 VALUES LESS THAN (0)
 );
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `snapshots` (
   `date` datetime NOT NULL,
   PRIMARY KEY (`id`, `part`),
   KEY `date` (`date`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
 PARTITION BY RANGE (part) (
   PARTITION p0 VALUES LESS THAN (0)
 );
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS `snap_items` (
   KEY `dn` (`dn`),
   KEY `kind` (`kind`),
   KEY `config_kind` (`config_kind`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
 PARTITION BY RANGE (part) (
   PARTITION p0 VALUES LESS THAN (0)
 );
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS `diffs` (
   PRIMARY KEY (`id`, `part`),
   KEY `snapshot_id` (`snapshot_id`),
   KEY `date` (`date`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
 PARTITION BY RANGE (part) (
   PARTITION p0 VALUES LESS THAN (0)
 );
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS `diff_items` (
   KEY `dn` (`dn`),
   KEY `kind` (`kind`),
   KEY `config_kind` (`config_kind`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
 PARTITION BY RANGE (part) (
   PARTITION p0 VALUES LESS THAN (0)
 );
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS `summary_counters` (
   PRIMARY KEY (`id`, `part`),
   KEY `date` (`date`),
   KEY `counter_kind` (`counter_kind`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
 PARTITION BY RANGE (part) (
   PARTITION p0 VALUES LESS THAN (0)
 );
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS `summary_counters_by_kind` (
   KEY `date` (`date`),
   KEY `counter_kind` (`counter_kind`),
   KEY `item_kind` (`item_kind`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
 PARTITION BY RANGE (part) (
   PARTITION p0 VALUES LESS THAN (0)
 );
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS `summary_delta_counters` (
   PRIMARY KEY (`id`, `part`),
   KEY `date` (`date`),
   KEY `counter_kind` (`counter_kind`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
 PARTITION BY RANGE (part) (
   PARTITION p0 VALUES LESS THAN (0)
 );
@@ -139,7 +139,7 @@ CREATE TABLE IF NOT EXISTS `summary_delta_counters_by_kind` (
   KEY `date` (`date`),
   KEY `counter_kind` (`counter_kind`),
   KEY `item_kind` (`item_kind`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
 PARTITION BY RANGE (part) (
   PARTITION p0 VALUES LESS THAN (0)
 );
@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS `timeline` (
   `warn` int NOT NULL,
   PRIMARY KEY (`id`, `part`),
   KEY `date` (`date`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
 PARTITION BY RANGE (part) (
   PARTITION p0 VALUES LESS THAN (0)
 );
@@ -168,7 +168,7 @@ CREATE TABLE IF NOT EXISTS `rules` (
   `script` TEXT NOT NULL,
   `hash` binary(32) NULL,
   PRIMARY KEY (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS `rule_statuses` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
@@ -179,7 +179,7 @@ CREATE TABLE IF NOT EXISTS `rule_statuses` (
   `item_count` int unsigned NOT NULL,
   PRIMARY KEY (`id`),
   KEY `rule_name` (`rule_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS `rule_logs` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
@@ -188,7 +188,7 @@ CREATE TABLE IF NOT EXISTS `rule_logs` (
   `msg` json NOT NULL,
   PRIMARY KEY (`id`),
   KEY `rule_name` (`rule_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS `rule_items` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
@@ -199,7 +199,7 @@ CREATE TABLE IF NOT EXISTS `rule_items` (
   `markers` json NULL,
   PRIMARY KEY (`id`),
   KEY `rule_name` (`rule_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 
 CREATE TABLE IF NOT EXISTS `markers` (
@@ -208,7 +208,7 @@ CREATE TABLE IF NOT EXISTS `markers` (
   `color` varchar(128) NOT NULL, 
   `propagate` TINYINT NOT NULL,
   PRIMARY KEY (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 
 CREATE TABLE IF NOT EXISTS `marker_items` (
@@ -217,7 +217,7 @@ CREATE TABLE IF NOT EXISTS `marker_items` (
   `dn` varchar(1024) NOT NULL, 
   PRIMARY KEY (`id`), 
   KEY `marker_name` (`marker_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 
 INSERT IGNORE INTO `config`(`key`, `value`)

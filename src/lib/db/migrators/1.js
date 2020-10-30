@@ -8,7 +8,7 @@ module.exports = function(logger, driver, executeSql) {
             "`key` varchar(64) NOT NULL DEFAULT ''," +
             "`value` json NOT NULL," +
             "PRIMARY KEY (`key`)" +
-        ") ENGINE=InnoDB DEFAULT CHARSET=latin1;"
+        ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;"
     ];
     return Promise.serial(queries, x => executeSql(x));
 }

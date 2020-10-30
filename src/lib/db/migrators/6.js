@@ -14,7 +14,7 @@ module.exports = function(logger, driver, executeSql) {
         "  PRIMARY KEY (`id`, `part`), " +
         "  KEY `date` (`date`), " +
         "  KEY `counter_kind` (`counter_kind`) " +
-        ") ENGINE=InnoDB DEFAULT CHARSET=latin1 " +
+        ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci " +
         "PARTITION BY RANGE (part) ( " +
         "  PARTITION p0 VALUES LESS THAN (0) " +
         "); " 
@@ -32,7 +32,7 @@ module.exports = function(logger, driver, executeSql) {
         "  KEY `date` (`date`), " +
         "  KEY `counter_kind` (`counter_kind`), " +
         "  KEY `item_kind` (`item_kind`) " +
-        ") ENGINE=InnoDB DEFAULT CHARSET=latin1 " +
+        ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci " +
         "PARTITION BY RANGE (part) ( " +
         "  PARTITION p0 VALUES LESS THAN (0) " +
         "); "
@@ -48,7 +48,7 @@ module.exports = function(logger, driver, executeSql) {
         "  PRIMARY KEY (`id`, `part`), " +
         "  KEY `date` (`date`), " +
         "  KEY `counter_kind` (`counter_kind`) " +
-        ") ENGINE=InnoDB DEFAULT CHARSET=latin1 " +
+        ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci " +
         "PARTITION BY RANGE (part) ( " +
         "  PARTITION p0 VALUES LESS THAN (0) " +
         "); "
@@ -66,7 +66,7 @@ module.exports = function(logger, driver, executeSql) {
         "  KEY `date` (`date`), " +
         "  KEY `counter_kind` (`counter_kind`), " +
         "  KEY `item_kind` (`item_kind`) " +
-        ") ENGINE=InnoDB DEFAULT CHARSET=latin1 " +
+        ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci " +
         "PARTITION BY RANGE (part) ( " +
         "  PARTITION p0 VALUES LESS THAN (0) " +
         "); " 
@@ -82,7 +82,7 @@ module.exports = function(logger, driver, executeSql) {
         "  `warn` int NOT NULL, " +
         "  PRIMARY KEY (`id`, `part`), " +
         "  KEY `date` (`date`) " +
-        ") ENGINE=InnoDB DEFAULT CHARSET=latin1 " +
+        ") ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci " +
         "PARTITION BY RANGE (part) ( " +
         "  PARTITION p0 VALUES LESS THAN (0) " +
         "); " 
