@@ -178,7 +178,7 @@ class Context
             .then(() => this._runServer())
             .then(() => this._setupWebSocket())
             .then(() => this.historyCleanupProcessor.init())
-            .then(() => this._setupVersionChecker())
+            .then(() => this._setupNotificationsChecker())
             .catch(reason => {
                 console.log("***** ERROR *****");
                 console.log(reason);
@@ -207,10 +207,12 @@ class Context
         })
     }
 
-    _setupVersionChecker()
+    _setupNotificationsChecker()
     {
-        this._worldvious.onVersionChanged(version => {
-            this.websocket.update({ kind: 'new-version' }, version);
+        this._worldvious.onNotificationsChanged(notifications => {
+            this.websocket.update({ kind: 'notifications-info' }, {
+                count: notifications.length
+            });
         });
     }
 
