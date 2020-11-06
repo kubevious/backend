@@ -19,6 +19,7 @@ const HistorySnapshotReader = require("kubevious-helpers").History.SnapshotReade
 const WebSocketServer = require('./websocket/server');
 const SnapshotProcessor = require('./snapshot-processor');
 const SeriesResampler = require("kubevious-helpers").History.SeriesResampler;
+const NotificationsApp = require('./apps/notifications');
 const { WorldviousClient } = require('@kubevious/worldvious-client');
 
 const SERVER_PORT = 4001;
@@ -63,6 +64,8 @@ class Context
             .column("error", _.mean)
             .column("warn", _.mean)
             ;
+
+        this._notificationsApp = new NotificationsApp(this);
 
         this._server = null;
         this._k8sClient = null;
@@ -153,6 +156,10 @@ class Context
         return this._seriesResamplerHelper;
     }
 
+    get notificationsApp() {
+        return this._notificationsApp;
+    }
+
     setupServer()
     {
         const Server = require("./server");
@@ -178,7 +185,7 @@ class Context
             .then(() => this._runServer())
             .then(() => this._setupWebSocket())
             .then(() => this.historyCleanupProcessor.init())
-            .then(() => this._setupNotificationsChecker())
+            .then(() => this._notificationsApp.init())
             .catch(reason => {
                 console.log("***** ERROR *****");
                 console.log(reason);
@@ -205,15 +212,6 @@ class Context
         this.tracker.registerListener(extractedData => {
             this._worldvious.acceptMetrics(extractedData);
         })
-    }
-
-    _setupNotificationsChecker()
-    {
-        this._worldvious.onNotificationsChanged(notifications => {
-            this.websocket.update({ kind: 'notifications-info' }, {
-                count: notifications.length
-            });
-        });
     }
 
     _runServer()
