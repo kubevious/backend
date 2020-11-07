@@ -1,6 +1,4 @@
 const _ = require('the-lodash');
-const uuidParse = require('uuid-parse');
-const moment = require('moment');
 
 module.exports = {
     url: '/api/v1/support',
@@ -14,7 +12,7 @@ module.exports = {
         router.post('/notification/snooze', function (req, res) {
             return context.notificationsApp.snooze(
                 req.body.kind,
-                req.body.feedback,
+                req.body.id,
                 req.body.days
             )
             .then(() => ({}));
