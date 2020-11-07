@@ -19,7 +19,15 @@ module.exports = {
         });
 
         router.post('/feedback', function (req, res) {
-            return context.worldvious.reportFeedback(req.body.id, req.body.answers);
+            return context.worldvious.reportFeedback(req.body.id, req.body.answers)
+                .then(() => {
+                    return context.notificationsApp.snooze(
+                        req.body.kind,
+                        req.body.id,
+                        null
+                    )
+                })
+                .then(() => ({}));
         });
     
     }
