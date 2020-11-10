@@ -158,8 +158,6 @@ PARTITION BY RANGE (part) (
   PARTITION p0 VALUES LESS THAN (0)
 );
 
-
-
 CREATE TABLE IF NOT EXISTS `rules` (
   `name` varchar(128) NOT NULL,
   `enabled` TINYINT NOT NULL,
@@ -220,5 +218,13 @@ CREATE TABLE IF NOT EXISTS `marker_items` (
 ) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 
+CREATE TABLE IF NOT EXISTS `notification_snooze` (
+  `kind` varchar(128) NOT NULL,
+  `feedback` binary(16) NOT NULL,
+  `snooze` DATETIME NULL,
+  PRIMARY KEY (`kind`, `feedback`)
+) ENGINE=InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;
+
+
 INSERT IGNORE INTO `config`(`key`, `value`)
-VALUES('DB_SCHEMA', '{ "version": 6 }');
+VALUES('DB_SCHEMA', '{ "version": 7 }');

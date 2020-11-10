@@ -15,10 +15,6 @@ module.exports = {
             };
         });
 
-        router.get('/api/v1/new-version', function (req, res) {
-            return context.worldvious.versionInfo;
-        });
-
         router.get('/api/v1/metrics', function (req, res) {
             let metrics = [];
             metrics = _.concat(metrics, context.collector.extractMetrics());

@@ -2,7 +2,7 @@ const Promise = require('the-promise');
 const _ = require('the-lodash');
 const DataStore = require("helper-easy-data-store").DataStore;
 
-const TARGET_DB_VERSION = 6;
+const TARGET_DB_VERSION = 7;
 
 class Database
 {
@@ -42,6 +42,7 @@ class Database
     {
         require('./rules')(this._dataStore.meta());
         require('./markers')(this._dataStore.meta());
+        require('./notifications')(this._dataStore.meta());
     }
 
     onConnect(cb)
