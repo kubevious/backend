@@ -1,13 +1,8 @@
 const Promise = require('the-promise');
 
 module.exports = function(logger, driver, executeSql) {
-    logger.info("MIGRATING v2");
 
     var queries = [
-
-        "SET GLOBAL binlog_expire_logs_seconds = 259200;"
-
-        ,
 
         "CREATE TABLE IF NOT EXISTS `snapshots` (" +
             "`id` int unsigned NOT NULL AUTO_INCREMENT," +

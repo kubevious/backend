@@ -62,7 +62,7 @@ class RuleAccessor
                 }
             }))
             .then(() => {
-                var ruleObj = this._makeDbRule(config);
+                var ruleObj = this.makeDbRule(config);
                 return this._dataStore.table('rules')
                     .createOrUpdate(ruleObj);
             });
@@ -92,13 +92,13 @@ class RuleAccessor
 
     importRules(rules, deleteExtra)
     {
-        var items = rules.items.map(x => this._makeDbRule(x));
+        var items = rules.items.map(x => this.makeDbRule(x));
         return this._dataStore.table('rules')
             .synchronizer(null, !deleteExtra)
             .execute(items);
     }
 
-    _makeDbRule(rule)
+    makeDbRule(rule)
     {
         var ruleObj = {
             name: rule.name,

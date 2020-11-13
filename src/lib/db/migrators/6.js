@@ -1,7 +1,6 @@
 const Promise = require('the-promise');
 
 module.exports = function(logger, driver, executeSql) {
-    logger.info("MIGRATING v6.");
 
     var queryies = [
 

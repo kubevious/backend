@@ -1,7 +1,6 @@
 const Promise = require('the-promise');
 
 module.exports = function(logger, driver, executeSql) {
-    logger.info("MIGRATING v7.");
 
     var queryies = [
         "CREATE TABLE IF NOT EXISTS `notification_snooze` (" +

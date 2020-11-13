@@ -2,12 +2,13 @@ const Promise = require('the-promise');
 const _ = require('the-lodash');
 const DataStore = require("helper-easy-data-store").DataStore;
 
-const TARGET_DB_VERSION = 7;
+const TARGET_DB_VERSION = 8;
 
 class Database
 {
-    constructor(logger)
+    constructor(logger, context)
     {
+        this._context = context;
         this._logger = logger.sublogger("DB");
 
         this._dataStore = new DataStore(logger.sublogger("DataStore"), false, {
@@ -170,16 +171,18 @@ class Database
 
         var migrator = require('./migrators/' + targetVersion);
         return Promise.resolve()
-            .then(() => migrator(this.logger, this.driver, this._migratorExecuteSql.bind(this)))
+            .then(() => {
+                return migrator(this.logger, this.driver, this._migratorExecuteSql.bind(this), this._context);
+            })
             .then(() => {
                 return this._setDbVersion(targetVersion);
             })
     }
 
-    _migratorExecuteSql(sql)
+    _migratorExecuteSql(sql, params)
     {
-        this.logger.info("[_migratorExecuteSql] Executing: %s", sql);
-        return this.driver.executeSql(sql)
+        this.logger.info("[_migratorExecuteSql] Executing: %s, params: ", sql, params);
+        return this.driver.executeSql(sql, params)
             .catch(reason => {
                 this.logger.info("[_migratorExecuteSql] Failed. Reason: ", reason);
                 throw reason;

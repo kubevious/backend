@@ -33,7 +33,7 @@ class Context
         this._logger.info("Version: %s", VERSION);
         
         this._tracker = new ProcessingTracker(logger.sublogger("Tracker"));
-        this._database = new Database(logger);
+        this._database = new Database(logger, this);
         this._searchEngine = new SearchEngine(this);
         this._historyProcessor = new HistoryProcessor(this);
         this._collector = new Collector(this);
