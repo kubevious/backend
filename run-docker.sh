@@ -3,18 +3,20 @@ MY_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE
 MY_DIR="$(dirname $MY_PATH)"
 cd $MY_DIR
 
+source configuration.sh
+
 docker run \
     -it \
     --rm \
-    --name 'kubevious-backend' \
-    -p 4001:4001 \
-    --network kubevious \
+    --name "${CONTAINER_NAME}" \
+    -p ${SERVER_PORT}:${SERVER_PORT} \
+    --network ${NETWORK_NAME} \
     -e NODE_ENV=development \
     -e MYSQL_HOST=kubevious-mysql \
     -e MYSQL_PORT=3306 \
     -e MYSQL_DB=kubevious \
     -e MYSQL_USER=root \
     -e MYSQL_PASS= \
-    kubevious-backend
+    ${IMAGE_NAME}
 
     

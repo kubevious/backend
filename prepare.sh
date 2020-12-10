@@ -6,4 +6,5 @@ cd $MY_DIR
 cd src
 rm -rf node_modules/
 npm install
-npm update kubevious-helpers kubevious-kubik websocket-subscription-server @kubevious/worldvious-client
+npm install --only=dev
+npm update @kubevious/helpers kubevious-kubik websocket-subscription-server @kubevious/worldvious-client the-lodash the-logger the-promise
