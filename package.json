@@ -21,22 +21,22 @@
   },
   "homepage": "https://github.com/kubevious/kubevious",
   "dependencies": {
-    "@kubevious/worldvious-client": "^1.0.6",
     "@kubevious/helper-backend": "^1.0.5",
     "@kubevious/helpers": "^1.0.4",
-    "helper-easy-data-store": "git+https://github.com/kubevious/helper-easy-data-store.git",
-    "kubevious-kubik": "git+https://github.com/kubevious/kubik.git",
-    "kubik.git": "git+https://github.com/kubevious/kubik.git",
-    "websocket-subscription-server": "^1.0.27",
+    "@kubevious/worldvious-client": "^1.0.6",
     "cron": "^1.8.2",
     "flexsearch": "^0.6.32",
+    "helper-easy-data-store": "git+https://github.com/kubevious/helper-easy-data-store.git",
     "js-yaml": "^3.13.1",
+    "kubevious-kubik": "git+https://github.com/kubevious/kubik.git",
+    "kubik.git": "git+https://github.com/kubevious/kubik.git",
     "moment": "^2.29.1",
     "the-lodash": "^2.0.0",
     "the-logger": "^2.0.4",
     "the-promise": "^2.0.3",
     "uuid": "^7.0.2",
-    "uuid-parse": "^1.1.0"
+    "uuid-parse": "^1.1.0",
+    "websocket-subscription-server": "^1.0.27"
   },
   "devDependencies": {
     "@types/js-yaml": "^3.12.5",
