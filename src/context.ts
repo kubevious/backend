@@ -13,7 +13,7 @@ const HistoryProcessor = require('./history/processor');
 const HistoryCleanupProcessor = require('./history/history-cleanup-processor');
 const Registry = require('./registry/registry');
 const Collector = require('./collector/collector');
-const DebugObjectLogger = require('./utils/debug-object-logger');
+import { DebugObjectLogger } from './utils/debug-object-logger';
 const MarkerAccessor = require('./rule/marker-accessor')
 const MarkerCache = require('./rule/marker-cache')
 const RuleAccessor = require('./rule/rule-accessor')
