@@ -1,12 +1,21 @@
-const Promise = require('the-promise');
-const _ = require('the-lodash');
-const DataStore = require("helper-easy-data-store").DataStore;
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { ILogger } from 'the-logger' ;
+
+import { DataStore } from '@kubevious/easy-data-store';
+
+import { Context } from '../context' ;
 
 const TARGET_DB_VERSION = 8;
 
-class Database
+export class Database
 {
-    constructor(logger, context)
+    private _logger : ILogger;
+    private _context : Context
+
+    private _dataStore : DataStore;
+
+    constructor(logger : ILogger, context : Context)
     {
         this._context = context;
         this._logger = logger.sublogger("DB");
@@ -39,7 +48,7 @@ class Database
         return this._driver.isConnected;
     }
 
-    _setupMeta()
+    private _setupMeta()
     {
         require('./rules')(this._dataStore.meta());
         require('./markers')(this._dataStore.meta());
@@ -132,7 +141,7 @@ class Database
             })
     }
 
-    _onDbMigrate()
+    private _onDbMigrate()
     {
         this._logger.info("[_onDbMigrate] ...");
         this._latestSnapshot = null;
@@ -141,7 +150,7 @@ class Database
             ;
     }
 
-    _processMigration()
+    private _processMigration()
     {
         this.logger.info("[_processMigration] ...");
 
@@ -165,7 +174,7 @@ class Database
         });
     }
 
-    _processVersionMigration(targetVersion)
+    private _processVersionMigration(targetVersion)
     {
         this.logger.info("[_processVersionMigration] target version: %s", targetVersion);
 
@@ -179,7 +188,7 @@ class Database
             })
     }
 
-    _migratorExecuteSql(sql, params)
+    private _migratorExecuteSql(sql, params)
     {
         this.logger.info("[_migratorExecuteSql] Executing: %s, params: ", sql, params);
         return this.driver.executeSql(sql, params)
@@ -189,7 +198,7 @@ class Database
             })
     }
 
-    _getDbVersion()
+    private _getDbVersion()
     {
         return this._tableExists('config')
             .then(configExists => {
@@ -209,7 +218,7 @@ class Database
             ;
     }
 
-    _tableExists(name)
+    private _tableExists(name)
     {
         return this.driver.executeSql(`SHOW TABLES LIKE '${name}';`)
             .then(result => {
@@ -217,7 +226,7 @@ class Database
             })
     }
 
-    _setDbVersion(version)
+    private _setDbVersion(version)
     {
         this._logger.info("[_setDbVersion] version: %s", version);
 
@@ -230,5 +239,3 @@ class Database
             ;
     }
 }
-
-module.exports = Database;

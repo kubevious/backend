@@ -1,4 +1,4 @@
-module.exports.makeRelativeName = function(parentName, name) {
+export function makeRelativeName(parentName: string, name: string) {
     var prefix = parentName + "-";
     if (name.startsWith(prefix)) {
         return name.substring(prefix.length);

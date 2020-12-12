@@ -21,12 +21,12 @@
   },
   "homepage": "https://github.com/kubevious/kubevious",
   "dependencies": {
+    "@kubevious/easy-data-store": "^1.0.6",
     "@kubevious/helper-backend": "^1.0.5",
     "@kubevious/helpers": "^1.0.4",
     "@kubevious/worldvious-client": "^1.0.6",
     "cron": "^1.8.2",
     "flexsearch": "^0.6.32",
-    "helper-easy-data-store": "git+https://github.com/kubevious/helper-easy-data-store.git",
     "js-yaml": "^3.13.1",
     "kubevious-kubik": "git+https://github.com/kubevious/kubik.git",
     "kubik.git": "git+https://github.com/kubevious/kubik.git",

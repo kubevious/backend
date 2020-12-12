@@ -1,21 +1,37 @@
-const Promise = require('the-promise');
-const _ = require('the-lodash');
-const uuidParse = require('uuid-parse');
-const moment = require('moment');
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { ILogger } from 'the-logger' ;
+
+import uuidParse from 'uuid-parse';
+import moment from 'moment';
+
+import { Context } from '../context';
+import { WorldviousClient, NotificationItem } from '@kubevious/worldvious-client';
 
 class Notifications
 {
-    constructor(context)
+    private context : Context;
+    private _logger : ILogger;
+    
+    private _worldvious : WorldviousClient;
+
+    private _isDictLoaded = false;
+    private _allNotifications : NotificationItem[] = [];
+    private _notifications : NotificationItem[] = [];
+    private _snooseDict = {};
+
+    constructor(context : Context)
     {
         this.context = context;
-        this.logger = context.logger.sublogger('NotificationsApp');
+        this._logger = context.logger.sublogger('NotificationsApp');
+        
         this._worldvious = this.context.worldvious;
-        this._allNotifications = [];
-        this._notifications = [];
-        this._snooseDict = {};
-        this._isDictLoaded = false;
-
+       
         this.context.database.onConnect(this._onDbConnected.bind(this));
+    }
+
+    get logger() {
+        return this._logger;
     }
 
     get notificationItems() {
@@ -30,9 +46,9 @@ class Notifications
         });
     }
 
-    snooze(kind, id, days)
+    snooze(kind: string, id: string, days?: number)
     {
-        const dbData = {
+        const dbData : Record<string, any> = {
             kind: kind,
             feedback: Buffer.from(uuidParse.parse(id)),
             snooze: null
@@ -48,14 +64,14 @@ class Notifications
             });
     }
 
-    _onDbConnected()
+    private _onDbConnected()
     {
         this.logger.info("[_onDbConnected] ...");
         return Promise.resolve()
             .then(() => this._loadSnoozedNotifications());
     }
 
-    _loadSnoozedNotifications()
+    private _loadSnoozedNotifications()
     {
         return this.context.database.dataStore.table('notification_snooze')
             .queryMany()
