@@ -1,9 +1,17 @@
-const Promise = require('the-promise');
-const _ = require('the-lodash');
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { ILogger } from 'the-logger' ;
 
-class MarkerAccessor
+import { Context } from '../context';
+
+import { DataStore } from '@kubevious/easy-data-store';
+
+export class MarkerAccessor
 {
-    constructor(context, dataStore)
+    private _logger : ILogger;
+    private _dataStore : DataStore;
+
+    constructor(context : Context, dataStore: DataStore)
     {
         this._logger = context.logger.sublogger("MarkerAccessor");
         this._dataStore = dataStore;
@@ -30,13 +38,13 @@ class MarkerAccessor
             });
     }
 
-    getMarker(name)
+    getMarker(name: string)
     {
         return this._dataStore.table('markers')
-            .query({ name: name });
+            .querySingle({ name: name });
     }
 
-    createMarker(config, target)
+    createMarker(config: any, target: any)
     {
         return Promise.resolve()
             .then((() => {
@@ -58,7 +66,7 @@ class MarkerAccessor
             });
     }
 
-    deleteMarker(name)
+    deleteMarker(name: string)
     {
         return this._dataStore.table('markers')
             .delete({ 
@@ -66,7 +74,7 @@ class MarkerAccessor
             });
     }
 
-    importMarkers(markers, deleteExtra)
+    importMarkers(markers : { items: any[]}, deleteExtra: boolean)
     {
         return this._dataStore.table('markers')
             .synchronizer(null, !deleteExtra)
@@ -79,12 +87,10 @@ class MarkerAccessor
             .queryMany();
     }
 
-    getMarkerItems(name)
+    getMarkerItems(name: string)
     {
         return this._dataStore.table('marker_items')
             .queryMany({ marker_name: name });
     }
 
 }
-
-module.exports = MarkerAccessor;

@@ -1,30 +1,47 @@
-const Promise = require('the-promise');
-const _ = require('the-lodash');
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { ILogger } from 'the-logger' ;
+
+import { Context } from '../context';
+
+import { DataStore, DataStoreTableSynchronizer } from '@kubevious/easy-data-store';
+import { RegistryState } from '@kubevious/helpers/dist/registry-state';
+import { ProcessingTrackerScoper } from '@kubevious/helpers/dist/processing-tracker';
+import { ExecutionContext } from './execution-context';
+
 const KubikRuleProcessor = require('kubevious-kubik').RuleProcessor;
 
+export type RuleItem = Record<string, any>;
 
-class RuleProcessor
+export class RuleProcessor
 {
-    constructor(context, dataStore)
+    private _logger : ILogger;
+    private _context : Context;
+
+    private _ruleStatusesSynchronizer : DataStoreTableSynchronizer;
+    private _ruleItemsSynchronizer : DataStoreTableSynchronizer;
+    private _ruleLogsSynchronizer : DataStoreTableSynchronizer;
+    private _markerItemsSynchronizer : DataStoreTableSynchronizer;
+
+    constructor(context: Context, dataStore: DataStore)
     {
         this._context = context;
         this._logger = context.logger.sublogger("RuleProcessor");
-        this._dataStore = dataStore;
 
         this._ruleStatusesSynchronizer = 
-            this._dataStore.table('rule_statuses')
+            dataStore.table('rule_statuses')
                 .synchronizer();
 
         this._ruleItemsSynchronizer = 
-            this._dataStore.table('rule_items')
+            dataStore.table('rule_items')
                 .synchronizer();
 
         this._ruleLogsSynchronizer = 
-            this._dataStore.table('rule_logs')
+            dataStore.table('rule_logs')
                 .synchronizer();
 
         this._markerItemsSynchronizer = 
-            this._dataStore.table('marker_items')
+            dataStore.table('marker_items')
                 .synchronizer();
     }
 
@@ -32,7 +49,7 @@ class RuleProcessor
         return this._logger;
     }
 
-    execute(state, tracker)
+    execute(state : RegistryState, tracker : ProcessingTrackerScoper)
     {
         this._logger.info("[execute] date: %s, count: %s", 
             state.date.toISOString(),
@@ -59,16 +76,13 @@ class RuleProcessor
             })
     }
 
-    _fetchRules()
+    private _fetchRules() : Promise<RuleItem[]>
     {
         return this._context.ruleAccessor
-            .queryEnabledRules()
-            .then(result => {
-                return result;
-            });
+            .queryEnabledRules();
     }
 
-    _processRules(state, rules, executionContext, tracker)
+    private _processRules(state : RegistryState, rules: RuleItem[], executionContext : ExecutionContext, tracker: ProcessingTrackerScoper)
     {
         return Promise.serial(rules, x => {
 
@@ -79,7 +93,7 @@ class RuleProcessor
         });
     }
     
-    _processRule(state, rule, executionContext)
+    private _processRule(state: RegistryState, rule: RuleItem, executionContext : ExecutionContext)
     {
         this.logger.info('[_processRule] Begin: %s', rule.name);
         this.logger.verbose('[_processRule] Begin: ', rule);
@@ -94,7 +108,7 @@ class RuleProcessor
 
         var processor = new KubikRuleProcessor(state, rule);
         return processor.process()
-            .then(result => {
+            .then((result : any) => {
                 this.logger.silly('[_processRule] RESULT: ', result);
                 this.logger.silly('[_processRule] RESULT ITEMS: ', result.ruleItems);
 
@@ -106,7 +120,7 @@ class RuleProcessor
 
                         var ruleItemInfo = result.ruleItems[dn];
 
-                        var ruleItem = {
+                        let ruleItem : RuleItem = {
                             errors: 0,
                             warnings: 0
                         };
@@ -223,7 +237,7 @@ class RuleProcessor
             });
     }
 
-    _saveRuleData(executionContext)
+    private _saveRuleData(executionContext : ExecutionContext)
     {
         return this._context.database.driver.executeInTransaction(() => {
             return Promise.resolve()
@@ -234,28 +248,28 @@ class RuleProcessor
         });
     }
 
-    _syncRuleStatuses(executionContext)
+    private _syncRuleStatuses(executionContext : ExecutionContext)
     {
         this.logger.info('[_syncRuleStatuses] Begin');
         this.logger.debug('[_syncRuleStatuses] Begin', executionContext.ruleStatuses);
         return this._ruleStatusesSynchronizer.execute(_.values(executionContext.ruleStatuses));
     }
 
-    _syncRuleItems(executionContext)
+    private _syncRuleItems(executionContext : ExecutionContext)
     {
         this.logger.info('[_syncRuleItems] Begin');
         this.logger.debug('[_syncRuleItems] Begin', executionContext.ruleItems);
         return this._ruleItemsSynchronizer.execute(executionContext.ruleItems);
     }
 
-    _syncRuleLogs(executionContext)
+    private _syncRuleLogs(executionContext : ExecutionContext)
     {
         this.logger.info('[_syncRuleLogs] Begin');
         this.logger.debug('[_syncRuleLogs] Begin', executionContext.ruleLogs);
         return this._ruleLogsSynchronizer.execute(executionContext.ruleLogs);
     }
 
-    _syncMarkerItems(executionContext)
+    private _syncMarkerItems(executionContext : ExecutionContext)
     {
         this.logger.info('[_syncRuleItems] Begin');
         this.logger.debug('[_syncRuleItems] Begin', executionContext.markerItems);
@@ -263,5 +277,3 @@ class RuleProcessor
     }
     
 }
-
-module.exports = RuleProcessor;

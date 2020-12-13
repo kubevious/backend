@@ -1,12 +1,16 @@
 import _ from 'the-lodash';
-import { Promise } from 'the-promise';
+import { Promise, Resolvable } from 'the-promise';
 import { ILogger } from 'the-logger' ;
 
-import { DataStore } from '@kubevious/easy-data-store';
+import { DataStore, MySqlDriver, MySqlStatement } from '@kubevious/easy-data-store';
 
 import { Context } from '../context' ;
 
-const TARGET_DB_VERSION = 8;
+import { setupMarkersMeta } from './meta/markers';
+import { setupRulesMeta } from './meta/rules';
+import { setupNotificationsMeta } from './meta/notifications';
+
+const TARGET_DB_VERSION : number = 8;
 
 export class Database
 {
@@ -14,6 +18,8 @@ export class Database
     private _context : Context
 
     private _dataStore : DataStore;
+    private _driver : MySqlDriver;
+    private _statements : Record<string, MySqlStatement> = {};
 
     constructor(logger : ILogger, context : Context)
     {
@@ -24,8 +30,6 @@ export class Database
             charset: 'utf8_general_ci'
         });
         this._driver = this._dataStore.mysql;
-
-        this._statements = {};
 
         this._driver.onMigrate(this._onDbMigrate.bind(this));
 
@@ -50,28 +54,28 @@ export class Database
 
     private _setupMeta()
     {
-        require('./rules')(this._dataStore.meta());
-        require('./markers')(this._dataStore.meta());
-        require('./notifications')(this._dataStore.meta());
+        setupMarkersMeta(this._dataStore.meta());
+        setupRulesMeta(this._dataStore.meta());
+        setupNotificationsMeta(this._dataStore.meta());
     }
 
-    onConnect(cb)
+    onConnect(cb: ((driver: MySqlDriver) => Resolvable<any>))
     {
         return this._driver.onConnect(cb);
     }
 
-    registerStatement(id, sql)
+    registerStatement(id: string, sql: string)
     {
         this._statements[id] = this._driver.statement(sql);
     }
 
-    executeStatement(id, params)
+    executeStatement(id: string, params?: any) : Promise<any>
     {
         var statement = this._statements[id];
         return statement.execute(params);
     }
 
-    executeStatements(statements)
+    executeStatements(statements: {id: string, params?: any}[])
     {
         var myStatements = statements.map(x => ({
             statement: this._statements[x.id],
@@ -80,17 +84,17 @@ export class Database
         return this._driver.executeStatements(myStatements);
     }
 
-    executeInTransaction(cb)
+    executeInTransaction(cb: ((driver: MySqlDriver) => Promise<any>))
     {
         return this._driver.executeInTransaction(cb);
     }
 
-    executeSql(sql)
+    executeSql(sql: string)
     {
         return this.driver.executeSql(sql);
     }
 
-    queryPartitions(tableName)
+    queryPartitions(tableName: string)
     {
         var sql = 
             "SELECT PARTITION_NAME, PARTITION_DESCRIPTION " +
@@ -101,7 +105,7 @@ export class Database
             'AND PARTITION_DESCRIPTION != 0;';
         
         return this.executeSql(sql)
-            .then(results => {
+            .then((results: any[]) => {
                 return results.map(x => ({
                     name: x.PARTITION_NAME,
                     value: parseInt(x.PARTITION_DESCRIPTION)
@@ -109,7 +113,7 @@ export class Database
             })
     }
 
-    createPartition(tableName, name, value)
+    createPartition(tableName: string, name: string, value: number)
     {
         this._logger.info("[createPartition] Table: %s, %s -> %s", tableName, name, value);
 
@@ -120,7 +124,7 @@ export class Database
         return this.executeSql(sql);
     }
 
-    dropPartition(tableName, name)
+    dropPartition(tableName: string, name: string)
     {
         this._logger.info("[dropPartition] Table: %s, %s", tableName, name);
 
@@ -144,7 +148,6 @@ export class Database
     private _onDbMigrate()
     {
         this._logger.info("[_onDbMigrate] ...");
-        this._latestSnapshot = null;
         return Promise.resolve()
             .then(() => this._processMigration())
             ;
@@ -174,7 +177,7 @@ export class Database
         });
     }
 
-    private _processVersionMigration(targetVersion)
+    private _processVersionMigration(targetVersion: number)
     {
         this.logger.info("[_processVersionMigration] target version: %s", targetVersion);
 
@@ -188,7 +191,7 @@ export class Database
             })
     }
 
-    private _migratorExecuteSql(sql, params)
+    private _migratorExecuteSql(sql: string, params? : any)
     {
         this.logger.info("[_migratorExecuteSql] Executing: %s, params: ", sql, params);
         return this.driver.executeSql(sql, params)
@@ -207,7 +210,7 @@ export class Database
                     return 0;
                 }
                 return this.driver.executeSql('SELECT `value` FROM `config` WHERE `key` = "DB_SCHEMA"')
-                    .then(result => {
+                    .then((result: any[]) => {
                         var value = _.head(result);
                         if (value) {
                             return value.value.version || 0;
@@ -218,7 +221,7 @@ export class Database
             ;
     }
 
-    private _tableExists(name)
+    private _tableExists(name: string)
     {
         return this.driver.executeSql(`SHOW TABLES LIKE '${name}';`)
             .then(result => {
@@ -226,7 +229,7 @@ export class Database
             })
     }
 
-    private _setDbVersion(version)
+    private _setDbVersion(version: number)
     {
         this._logger.info("[_setDbVersion] version: %s", version);
 

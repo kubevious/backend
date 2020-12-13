@@ -1,18 +1,35 @@
-const Promise = require('the-promise');
-const _ = require('lodash');
-const fs = require("fs");
-const Path = require("path");
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { ILogger } from 'the-logger' ;
 
-const RegistryState = require('kubevious-helpers').RegistryState;
+import * as fs from 'fs';
+import * as Path from 'path';
 
-class SnapshotProcessor
+import { RegistryState, StateBundle } from '@kubevious/helpers/dist/registry-state';
+import { ProcessorBuilder, ProcessorInfo, Handler as ProcessorHandler } from './builder';
+
+import { Context } from '../context';
+import { ProcessingTrackerScoper } from '@kubevious/helpers/dist/processing-tracker';
+
+interface ProcessorEntry
 {
-    constructor(context)
+    name: string;
+    order: number;
+    handler: ProcessorHandler;
+}
+
+export class SnapshotProcessor
+{
+    private _logger : ILogger;
+    private _context : Context;
+
+    private _processors : ProcessorEntry[] = [];
+
+    constructor(context: Context)
     {
         this._context = context;
         this._logger = context.logger.sublogger('SnapshotProcessor');
 
-        this._processors = [];
         this._extractProcessors();
     }
 
@@ -20,24 +37,25 @@ class SnapshotProcessor
         return this._logger;
     }
 
-    _extractProcessors()
+    private _extractProcessors()
     {
         this.logger.info('[_extractProcessors] ');
         var location = 'snapshot-processors';
         var files = fs.readdirSync(Path.join(__dirname, location));
         files = _.filter(files, x => x.endsWith('.js'));
 
-        for(var x of files)
+        for(let fileName of files)
         {
-            const pa = './' + location + '/' + x;
-            const procModule = require(pa);
+            const pa = './' + location + '/' + fileName;
+            const processorBuilder = <ProcessorBuilder> require(pa);
+            const processorInfo = processorBuilder._export();
 
-            if (!procModule.disabled)
+            if (!processorInfo.isDisabled)
             {
                 this._processors.push({
-                    name: Path.parse(x).name,
-                    order: procModule.order,
-                    handler: procModule.handler
+                    name: Path.parse(fileName).name,
+                    order: processorInfo.order,
+                    handler: processorInfo.handler!
                 });
             }
         }
@@ -51,38 +69,38 @@ class SnapshotProcessor
         }
     }
 
-    process(snapshotInfo, tracker, extraParams)
+    process(snapshotInfo: any, tracker: ProcessingTrackerScoper, extraParams: any)
     {
-        return tracker.scope("SnapshotProcessor::process", (tracker) => {
+        return tracker.scope("SnapshotProcessor::process", (innerTracker) => {
 
-            var registryState = null;
-            var bundle = null;
+            var registryState : RegistryState | null = null;
+            var bundle : StateBundle | null = null;
             return Promise.resolve()
-                .then(() => this._makeState(snapshotInfo, tracker))
+                .then(() => this._makeState(snapshotInfo, innerTracker))
                 .then(result => {
                     registryState = result;
                 })
-                .then(() => this._runProcessors(registryState, extraParams, tracker))
+                .then(() => this._runProcessors(registryState!, extraParams, innerTracker))
                 .then(() => {
-                    return tracker.scope("finalizeState", () => {
-                        registryState.finalizeState();
+                    return innerTracker.scope("finalizeState", () => {
+                        registryState!.finalizeState();
                     });
                 })
                 .then(() => {
-                    return tracker.scope("buildBundle", () => {
-                        bundle = registryState.buildBundle();
+                    return innerTracker.scope("buildBundle", () => {
+                        bundle = registryState!.buildBundle();
                     });
                 })
                 .then(() => {
                     return {
-                        registryState: registryState,
-                        bundle: bundle
+                        registryState: registryState!,
+                        bundle: bundle!
                     }
                 })
         });
     }
 
-    _makeState(snapshotInfo, tracker)
+    private _makeState(snapshotInfo: any, tracker: ProcessingTrackerScoper)
     {
         return tracker.scope("_makeState", () => {
             var registryState = new RegistryState(snapshotInfo)
@@ -90,7 +108,7 @@ class SnapshotProcessor
         });
     }
 
-    _runProcessors(registryState, extraParams, tracker)
+    private _runProcessors(registryState: RegistryState, extraParams: any, tracker : ProcessingTrackerScoper)
     {
         return tracker.scope("handlers", (procTracker) => {
             return Promise.serial(this._processors, processor => {
@@ -116,5 +134,3 @@ class SnapshotProcessor
     }
 
 }
-
-module.exports = SnapshotProcessor;

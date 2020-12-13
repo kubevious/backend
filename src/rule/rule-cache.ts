@@ -1,31 +1,41 @@
-const Promise = require('the-promise');
-const _ = require('the-lodash');
-const HashUtils = require('kubevious-helpers').HashUtils;
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { ILogger } from 'the-logger' ;
 
-class RuleCache
+import { Context } from '../context';
+
+import { ExecutionContext } from './execution-context';
+
+export type UserRule = Record<string, any>;
+
+export type RuleStatus = Record<string, any>;
+export type RuleResult = Record<string, any>;
+
+export class RuleCache
 {
-    constructor(context)
+    private _logger : ILogger;
+    private _context : Context;
+
+    private _userRules : any[] = [];
+    private _ruleConfigDict : Record<string, any> = {};
+
+    private _listRuleStatuses : any[] = [];
+    private _ruleExecResultDict : Record<string, any> = {};
+    private _ruleResultsDict : Record<string, any> = {};
+
+    constructor(context : Context)
     {
         this._context = context;
         this._logger = context.logger.sublogger("RuleCache");
-        this._database = context.database;
-        this._driver = context.database.driver;
 
         context.database.onConnect(this._onDbConnected.bind(this));
-
-        this._userRules = [];
-        this._ruleConfigDict = {};
-
-        this._listRuleStatuses = [];
-        this._ruleExecResultDict = {};
-        this._ruleResultsDict = {};
     }
 
     get logger() {
         return this._logger;
     }
 
-    _onDbConnected()
+    private _onDbConnected()
     {
         this._logger.info("[_onDbConnected] ...");
 
@@ -44,16 +54,16 @@ class RuleCache
             .then(() => this._notifyRuleResults())
     }
 
-    _refreshRuleConfigs()
+    private _refreshRuleConfigs()
     {
         return this._context.ruleAccessor.queryAll()
             .then(result => {
-                this._ruleConfigDict = _.makeDict(result, x => x.name);
+                this._ruleConfigDict = _.makeDict(result, x => x.name, x => x);
             })
             ;
     }
 
-    _recalculateRuleList()
+    private _recalculateRuleList()
     {
         this._userRules = this._buildRuleList();
         this._listRuleStatuses = this._buildRuleStatusList();
@@ -71,7 +81,7 @@ class RuleCache
         return this._listRuleStatuses;
     }
 
-    queryRule(name)
+    queryRule(name: string) : UserRule | null
     {
         var rule = this._ruleConfigDict[name];
         if (!rule) {
@@ -81,9 +91,9 @@ class RuleCache
         return userRule;
     }
 
-    _buildRuleList()
+    private _buildRuleList() : UserRule[]
     {
-        var userRules = [];
+        var userRules : UserRule[] = [];
         for(var rule of _.values(this._ruleConfigDict))
         {
             var userRule = {
@@ -95,7 +105,7 @@ class RuleCache
         return userRules;
     }
 
-    _buildRuleStatusList()
+    private _buildRuleStatusList() : RuleStatus[]
     {
         var userRules = [];
         for(var rule of _.values(this._ruleConfigDict))
@@ -109,18 +119,19 @@ class RuleCache
         return userRules;
     }
 
-    _refreshExecutionStatuses()
+    private _refreshExecutionStatuses()
     {
-        var executionContext = {
+        let executionContext : ExecutionContext = {
             ruleStatuses: {},
             ruleItems: [],
-            ruleLogs: []
+            ruleLogs: [],
+            markerItems: []
         }
 
         return Promise.all([
             this._context.ruleAccessor.queryAllRuleStatuses()
                 .then(result => {
-                    executionContext.ruleStatuses = _.makeDict(result, x => x.rule_id);
+                    executionContext.ruleStatuses = _.makeDict(result, x => x.rule_id, x => x);
                 }),
             this._context.ruleAccessor.queryAllRuleItems()
                 .then(result => {
@@ -134,14 +145,14 @@ class RuleCache
         .then(() => this._acceptExecutionContext(executionContext));
     }
 
-    acceptExecutionContext(executionContext)
+    acceptExecutionContext(executionContext: ExecutionContext)
     {
         this._acceptExecutionContext(executionContext);
         this._recalculateRuleList();
         this._notifyRuleResults();
     }
 
-    _acceptExecutionContext(executionContext)
+    private _acceptExecutionContext(executionContext: ExecutionContext)
     {
         this._ruleExecResultDict = {};
 
@@ -163,7 +174,7 @@ class RuleCache
         }
     }
 
-    _notifyRuleResults()
+    private _notifyRuleResults()
     {
         this._ruleResultsDict = {};
         for(var ruleResult of _.values(this._ruleExecResultDict))
@@ -179,7 +190,7 @@ class RuleCache
         return this._context.websocket.updateScope({ kind: 'rule-result' }, data);
     }
 
-    getRuleResult(name)
+    getRuleResult(name: string)
     {
         if (this._ruleResultsDict[name]) {
             return this._ruleResultsDict[name];
@@ -187,7 +198,7 @@ class RuleCache
         return null;
     }
 
-    _fetchRuleExecResult(name)
+    private _fetchRuleExecResult(name: string)
     {
         if (!this._ruleExecResultDict[name]) {
             this._ruleExecResultDict[name] = {
@@ -200,8 +211,7 @@ class RuleCache
         return this._ruleExecResultDict[name];
     }
 
-
-    _buildRuleConfig(rule)
+    private _buildRuleConfig(rule: any) : UserRule
     {
         var userRule = {
             name: rule.name,
@@ -212,7 +222,7 @@ class RuleCache
         return userRule;
     }
 
-    _buildRuleStatus(name)
+    private _buildRuleStatus(name: string) : RuleStatus
     {
         var info = this._buildRuleInfo(name);
         delete info.items;
@@ -220,16 +230,16 @@ class RuleCache
         return info;
     }
 
-    _buildRuleResult(name)
+    private _buildRuleResult(name: string) : RuleResult
     {
         var info = this._buildRuleInfo(name);
         delete info.item_count;
         return info;
     }
 
-    _buildRuleInfo(name)
+    private _buildRuleInfo(name: string) : any
     {
-        var info = {
+        var info : any = {
             name: name,
             enabled: false,
             is_current: false,

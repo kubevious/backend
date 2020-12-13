@@ -1,11 +1,8 @@
-const _ = require('lodash');
+import { Processor } from '../builder'
 
-
-module.exports = {
-    order: 200,
-
-    handler: ({logger, state}) => {
-
+export default Processor()
+    .order(200)
+    .handler(({logger, state, tracker, context}) => {
 
         state.traverseNodes((dn, node) => {
 
@@ -14,5 +11,4 @@ module.exports = {
 
         })
 
-    }
-}
+    })

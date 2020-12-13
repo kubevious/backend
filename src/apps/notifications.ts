@@ -2,13 +2,13 @@ import _ from 'the-lodash';
 import { Promise } from 'the-promise';
 import { ILogger } from 'the-logger' ;
 
-import uuidParse from 'uuid-parse';
+const uuidParse = require('uuid-parse');
 import moment from 'moment';
 
 import { Context } from '../context';
-import { WorldviousClient, NotificationItem } from '@kubevious/worldvious-client';
+import { WorldviousClient, NotificationItem, FeedbackRequest } from '@kubevious/worldvious-client';
 
-class Notifications
+export class NotificationsApp
 {
     private context : Context;
     private _logger : ILogger;
@@ -18,7 +18,7 @@ class Notifications
     private _isDictLoaded = false;
     private _allNotifications : NotificationItem[] = [];
     private _notifications : NotificationItem[] = [];
-    private _snooseDict = {};
+    private _snooseDict : Record<string, { isRead? : boolean, snoozeTill? : moment.Moment } > = {};
 
     constructor(context : Context)
     {
@@ -95,7 +95,7 @@ class Notifications
             ;
     }
 
-    _decideNotifications()
+    private _decideNotifications()
     {
         if (!this._isDictLoaded) {
             return;
@@ -105,7 +105,8 @@ class Notifications
         const now = moment();
         this._notifications = 
             this._allNotifications.filter(x => {
-                const key = this._makeKey(x.kind, x.id);
+                const notif = <FeedbackRequest>x;
+                const key = this._makeKey(notif.kind, notif.id);
                 const snoozeInfo = this._snooseDict[key];
                 if (snoozeInfo) {
                     if (snoozeInfo.isRead) {
@@ -127,11 +128,9 @@ class Notifications
         });
     }
 
-    _makeKey(kind, id)
+    private _makeKey(kind: string, id: string)
     {
         return `${kind}-${id}`;
     }
 
 }
-
-module.exports = Notifications;

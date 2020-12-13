@@ -8,19 +8,19 @@ import { ProcessingTracker } from '@kubevious/helpers/dist/processing-tracker';
 
 const FacadeRegistry = require('./facade/registry');
 const SearchEngine = require('./search/engine');
-const Database = require('./db');
+import { Database } from './db';
 const HistoryProcessor = require('./history/processor');
 const HistoryCleanupProcessor = require('./history/history-cleanup-processor');
-const Registry = require('./registry/registry');
+import { Registry } from './registry/registry';
 const Collector = require('./collector/collector');
 import { DebugObjectLogger } from './utils/debug-object-logger';
-const MarkerAccessor = require('./rule/marker-accessor')
-const MarkerCache = require('./rule/marker-cache')
-const RuleAccessor = require('./rule/rule-accessor')
-const RuleCache = require('./rule/rule-cache')
-const RuleProcessor = require('./rule/rule-processor')
-const SnapshotProcessor = require('./snapshot-processor');
-const NotificationsApp = require('./apps/notifications');
+import { MarkerAccessor } from './rule/marker-accessor';
+import { MarkerCache } from './rule/marker-cache';
+import { RuleAccessor } from './rule/rule-accessor';
+import { RuleCache } from './rule/rule-cache';
+import { RuleProcessor } from './rule/rule-processor';
+import { SnapshotProcessor } from './snapshot-processor';
+import { NotificationsApp } from './apps/notifications';
 import { WorldviousClient } from '@kubevious/worldvious-client';
 
 import { WebServer } from './server';
@@ -33,7 +33,7 @@ import VERSION from './version'
 
 export class Context
 {
-    private backend : Backend;
+    private _backend : Backend;
     private _logger : ILogger;
     private _tracker: ProcessingTracker;
     private _worldvious : WorldviousClient;
@@ -41,35 +41,35 @@ export class Context
     private _server: WebServer;
     private _websocket: WebSocket;
 
-    private _database: any;
+    private _database: Database;
     private _searchEngine: any;
     private _historyProcessor: any;
     private _collector: any;
-    private _registry: any;
+    private _registry: Registry;
 
     private _facadeRegistry: any;
 
-    private _debugObjectLogger: any;
+    private _debugObjectLogger: DebugObjectLogger;
 
-    private _markerAccessor: any;
-    private _markerCache: any;
-    private _ruleAccessor: any;
-    private _ruleCache: any;
-    private _ruleProcessor: any;
+    private _markerAccessor: MarkerAccessor;
+    private _markerCache: MarkerCache;
+    private _ruleAccessor: RuleAccessor;
+    private _ruleCache: RuleCache;
+    private _ruleProcessor: RuleProcessor;
 
     private _historySnapshotReader: HistorySnapshotReader;
 
-    private _snapshotProcessor: any;
+    private _snapshotProcessor: SnapshotProcessor;
 
     private _historyCleanupProcessor: any;
 
     private _seriesResamplerHelper : SeriesResampler;
 
-    private _notificationsApp: any;
+    private _notificationsApp: NotificationsApp;
 
     constructor(backend : Backend)
     {
-        this.backend = backend;
+        this._backend = backend;
         this._logger = backend.logger.sublogger('Context');
 
         this._logger.info("Version: %s", VERSION);

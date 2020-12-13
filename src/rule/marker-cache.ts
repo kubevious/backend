@@ -1,27 +1,48 @@
-const Promise = require('the-promise');
-const _ = require('the-lodash');
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { ILogger } from 'the-logger' ;
 
-class MarkerCache
+import { Context } from '../context';
+import { ExecutionContext } from './execution-context';
+
+export type Marker = Record<string, any>;
+export interface MarkerResult 
 {
-    constructor(context)
+    name: string;
+    items: { dn: string}[];
+}
+
+export interface MarkerStatus
+{
+    name: string,
+    shape: string,
+    color: string,
+    item_count: number
+}
+
+export class MarkerCache
+{
+    private _context: Context;
+    private _logger : ILogger;
+
+    private _markerDict : Record<string, Marker> = {};
+    private _markerList : Marker[] = [];
+    private _markersStatuses : MarkerStatus[] = [];
+    private _markerResultsDict : Record<string, MarkerResult> = {};
+
+    constructor(context: Context)
     {
         this._context = context;
         this._logger = context.logger.sublogger("MarkerCache");
 
         context.database.onConnect(this._onDbConnected.bind(this));
-
-        this._markerDict = {};
-        this._markerList = [];
-
-        this._markersStatuses = [];
-        this._markerResultsDict = {};
     }
 
     get logger() {
         return this._logger;
     }
 
-    _onDbConnected()
+    private _onDbConnected()
     {
         this._logger.info("[_onDbConnected] ...");
 
@@ -37,12 +58,12 @@ class MarkerCache
             .then(() => this._updateMarkerOperationData())
     }
     
-    acceptExecutionContext(executionContext)
+    acceptExecutionContext(executionContext: ExecutionContext)
     {
         this._acceptMarkerItems(executionContext.markerItems);
     }
 
-    _acceptMarkerItems(items)
+    private _acceptMarkerItems(items : Record<string, any> [])
     {
         this._markerResultsDict = {};
         for(var x of items)
@@ -62,7 +83,7 @@ class MarkerCache
         this._updateMarkerOperationData();
     }
 
-    _refreshMarkerItems()
+    private _refreshMarkerItems()
     {
         return this._context.markerAccessor.getAllMarkersItems()
             .then(result => {
@@ -70,29 +91,29 @@ class MarkerCache
             })
     }
 
-    _refreshMarkerConfigs()
+    private _refreshMarkerConfigs()
     {
         return this._context.markerAccessor.queryAll()
             .then(result => {
-                this._markerDict = _.makeDict(result, x => x.name);
+                this._markerDict = _.makeDict(result, x => x.name, x => x);
                 this._markerList = _.orderBy(result, x => x.name);
             })
             ;
     }
 
-    _updateMarkerOperationData()
+    private _updateMarkerOperationData()
     {
         this._updateMarkersStatuses();
         this._updateMarkerResults();
     }
 
-    _updateMarkersStatuses()
+    private _updateMarkersStatuses()
     {
         this._markersStatuses = this._markerList.map(x => this._makeMarkerStatus(x));
         this._context.websocket.update({ kind: 'markers-statuses' }, this._markersStatuses);
     }
 
-    _makeMarkerStatus(marker)
+    private _makeMarkerStatus(marker: Marker) : MarkerStatus
     {
         var item_count = 0;
         var result = this._markerResultsDict[marker.name];
@@ -108,7 +129,7 @@ class MarkerCache
         }
     }
 
-    _updateMarkerResults()
+    private _updateMarkerResults()
     {
         var items = _.values(this._markerResultsDict).map(x => ({
             target: { name: x.name },
@@ -122,7 +143,7 @@ class MarkerCache
         return this._markersStatuses;
     }
 
-    getMarkerResult(name)
+    getMarkerResult(name: string) : MarkerResult | null
     {
         if (this._markerResultsDict[name]) {
             return this._markerResultsDict[name];
@@ -135,7 +156,7 @@ class MarkerCache
         return this._markerList;
     }
 
-    queryMarker(name)
+    queryMarker(name: string) : Marker | null
     {
         var marker = this._markerDict[name];
         if (!marker) {
@@ -144,5 +165,3 @@ class MarkerCache
         return marker;
     }
 }
-
-module.exports = MarkerCache;

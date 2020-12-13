@@ -1,6 +1,7 @@
-const _ = require('the-lodash');
+import _ from 'the-lodash';
+import { MetaStore } from '@kubevious/easy-data-store';
 
-module.exports = function(meta) {
+export function setupNotificationsMeta(meta: MetaStore) {
     meta
     .table('notification_snooze')
         .key('kind')

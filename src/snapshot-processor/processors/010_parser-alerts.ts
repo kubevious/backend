@@ -1,7 +1,8 @@
-module.exports = {
-    order: 10,
+import { Processor } from '../builder'
 
-    handler: ({logger, state}) => {
+export default Processor()
+    .order(10)
+    .handler(({logger, state}) => {
 
         state.traverseNodes((dn, node) => {
 
@@ -15,5 +16,4 @@ module.exports = {
 
         })
 
-    }
-}
+    })

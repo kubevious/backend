@@ -1,10 +1,19 @@
-const Promise = require('the-promise');
-const _ = require('the-lodash');
-const HashUtils = require('kubevious-helpers').HashUtils;
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { ILogger } from 'the-logger' ;
 
-class RuleAccessor
+import { Context } from '../context';
+
+import { DataStore } from '@kubevious/easy-data-store';
+
+import * as HashUtils from '@kubevious/helpers/dist/hash-utils'
+
+export class RuleAccessor
 {
-    constructor(context, dataStore)
+    private _logger : ILogger;
+    private _dataStore : DataStore;
+
+    constructor(context : Context, dataStore: DataStore)
     {
         this._logger = context.logger.sublogger("RuleAccessor");
         this._dataStore = dataStore;
@@ -44,13 +53,13 @@ class RuleAccessor
             .queryMany();
     }
 
-    getRule(name)
+    getRule(name: string)
     {
         return this._dataStore.table('rules')
-            .query({ name: name });
+            .querySingle({ name: name });
     }
 
-    createRule(config, target)
+    createRule(config: any, target: any)
     {
         return Promise.resolve()
             .then((() => {
@@ -68,7 +77,7 @@ class RuleAccessor
             });
     }
 
-    deleteRule(name)
+    deleteRule(name: string)
     {
         return this._dataStore.table('rules')
             .delete({ name: name });
@@ -90,7 +99,7 @@ class RuleAccessor
             });
     }
 
-    importRules(rules, deleteExtra)
+    importRules(rules: { items: any[]}, deleteExtra: boolean)
     {
         var items = rules.items.map(x => this.makeDbRule(x));
         return this._dataStore.table('rules')
@@ -98,9 +107,9 @@ class RuleAccessor
             .execute(items);
     }
 
-    makeDbRule(rule)
+    makeDbRule(rule: any)
     {
-        var ruleObj = {
+        var ruleObj : any = {
             name: rule.name,
             enabled: rule.enabled,
             target: rule.target,
@@ -112,42 +121,4 @@ class RuleAccessor
         return ruleObj;
     }
 
-    getRuleItems(rule_id)
-    {
-        var params = [ rule_id ];
-        return this._execute('RULE_ITEMS_QUERY', params)
-            .then(result => {
-                return result;
-            });
-    }
-
-    getRuleLogs(rule_id)
-    {
-        var params = [ rule_id ];
-        return this._execute('RULE_LOGS_QUERY', params)
-            .then(result => {
-                return result;
-            });
-    }
-
-    _execute(statementId, params)
-    {
-        return this._database.executeStatement(statementId, params);
-    }
-
-    _makeRuleObj(config)
-    {
-        var ruleObj = {
-            name: config.name,
-            enabled: config.enabled,
-            target: config.target,
-            script: config.script,
-            date: new Date()
-        }
-        var hash = HashUtils.calculateObjectHash(ruleObj);
-        ruleObj.hash = hash;
-        return ruleObj;
-    }
 }
-
-module.exports = RuleAccessor;

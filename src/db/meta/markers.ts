@@ -1,4 +1,6 @@
-module.exports = function(meta) {
+import { MetaStore } from '@kubevious/easy-data-store';
+
+export function setupMarkersMeta(meta: MetaStore) {
     meta
     .table('markers')
         .key('name')
