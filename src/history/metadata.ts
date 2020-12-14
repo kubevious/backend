@@ -1,4 +1,4 @@
-module.exports.HISTORY_TABLES = [
+export const HISTORY_TABLES : string[] = [
     'config_hashes',
     'snapshots',
     'snap_items',

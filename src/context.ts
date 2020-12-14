@@ -9,7 +9,7 @@ import { ProcessingTracker } from '@kubevious/helpers/dist/processing-tracker';
 import { FacadeRegistry } from './facade/registry';
 import { SearchEngine } from './search/engine';
 import { Database } from './db';
-const HistoryProcessor = require('./history/processor');
+import { HistoryProcessor } from './history/processor';
 const HistoryCleanupProcessor = require('./history/history-cleanup-processor');
 import { Registry } from './registry/registry';
 import { Collector } from './collector/collector';

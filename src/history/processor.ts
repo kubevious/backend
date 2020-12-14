@@ -1,31 +1,57 @@
-const crypto = require('crypto');
-const Promise = require('the-promise');
-const _ = require('the-lodash');
-const HistoryAccessor = require("./db-accessor");
-const Snapshot = require("kubevious-helpers").History.Snapshot;
-const BufferUtils = require("kubevious-helpers").BufferUtils;
-const HistoryPartitioning = require("kubevious-helpers").History.Partitioning;
-const { HISTORY_TABLES } = require('./metadata');
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { ILogger } from 'the-logger' ;
 
-class HistoryProcessor
+import BufferUtils from '@kubevious/helpers/dist/buffer-utils';
+
+import HashUtils from '@kubevious/helpers/dist/hash-utils';
+
+
+import { Snapshot, Partitioning as HistoryPartitioning } from '@kubevious/helpers/dist/history';
+import { SnapshotItem, DiffItem, TimelineSample } from '@kubevious/helpers/dist/history';
+import { ConfigHash } from './entities';
+
+import { HistoryAccessor } from './db-accessor';
+
+import { Context } from '../context';
+import { Database } from '../db';
+import { RegistryState } from '@kubevious/helpers/dist/registry-state';
+
+import { HISTORY_TABLES } from './metadata';
+
+export interface HandlerCallback
 {
-    constructor(context)
+    finish: () => void;
+}
+
+export class HistoryProcessor
+{
+    private _logger : ILogger;
+    private _context : Context;
+
+    private _database : Database;
+    private _dbAccessor : HistoryAccessor;
+
+    private _latestSnapshot : any = null;
+    private _currentState : any = null;
+    private _interation : number = 0;
+    private _isDbReady : boolean = false;
+    private _configHashesDict : Record<string, boolean> = {};
+    private _configHashesPartition? : number;
+    private _statesQueue : RegistryState[] = [];
+    private _isLocked : boolean  = false;
+    private _isProcessing : boolean  = false;
+    private _processFinishListeners : (() => void)[] = [];
+    private _latestSnapshotAlerts? : AlertsSummary;
+
+    constructor(context : Context)
     {
         this._context = context;
         this._database = context.database;
-        this._logger = context.logger.sublogger('HistoryProcessor');
-        this._dbAccessor = new HistoryAccessor(context, this._database);
-        this._latestSnapshot = null;
-        this._currentState = null;
-        this._interation = 0;
-        this._isDbReady = false;
-        this._configHashesDict = {};
-        this._configHashesPartition = null;
-        this._statesQueue = [];
 
-        this._isLocked = false;
-        this._isProcessing = false;
-        this._processFinishListeners = [];
+        this._logger = context.logger.sublogger('HistoryProcessor');
+        this._dbAccessor = new HistoryAccessor(context);
+        
 
         this._database.onConnect(this._onDbConnected.bind(this));
     }
@@ -38,7 +64,7 @@ class HistoryProcessor
         return this._context.debugObjectLogger;
     }
 
-    lockForCleanup(cb)
+    lockForCleanup(cb: (handler: HandlerCallback) => void)
     {
         this._logger.info("[lockForCleanup] BEGIN");
         var handler = {
@@ -58,19 +84,19 @@ class HistoryProcessor
         }
     }
 
-    accept(state)
+    accept(state: RegistryState)
     {
         this._addToQueue(state);
         return this._safeProcessQueue();
     }
 
-    _resumeProcessing()
+    private _resumeProcessing()
     {
         this._isLocked = false;
         this._safeProcessQueue();
     }
 
-    _safeProcessQueue()
+    private _safeProcessQueue()
     {
         return Promise.resolve()
             .then(() => this._processQueue())
@@ -79,7 +105,7 @@ class HistoryProcessor
             });
     }
 
-    _processQueue() 
+    private _processQueue() : Promise<any> | void
     {
         if (this._statesQueue.length == 0) {
             return;
@@ -93,7 +119,7 @@ class HistoryProcessor
         }
         this._isProcessing = true;
 
-        var state = this._statesQueue.shift();
+        var state = this._statesQueue.shift()!;
         return this._processQueueItem(state)
             .finally(() => {
                 this._isProcessing = false;
@@ -103,7 +129,7 @@ class HistoryProcessor
             })
     }
 
-    _processQueueItem(state)
+    private _processQueueItem(state: RegistryState)
     {
         this._logger.info("[_processQueueItem] begin");
         var snapshot = this._produceSnapshot(state);
@@ -119,14 +145,14 @@ class HistoryProcessor
             });
     }
 
-    _addToQueue(state)
+    private _addToQueue(state: RegistryState)
     {
         this._statesQueue.push(state);
         this._statesQueue = _.takeRight(this._statesQueue, 1);
         this.logger.info("[_addToQueue] Size: %s", this._statesQueue.length);
     }
 
-    _processSnapshot(snapshot)
+    private _processSnapshot(snapshot: Snapshot)
     {
         this.logger.info("[_processSnapshot] BEGIN. %s, Item Count: %s", snapshot.date.toISOString(), snapshot.count);
 
@@ -136,7 +162,7 @@ class HistoryProcessor
 
                 this._interation += 1;
                 var partition = HistoryPartitioning.calculateDatePartition(snapshot.date);
-                var tablesPartitionsData = null;
+                var tablesPartitionsData : TablesPartitionsInfo;
 
                 this.logger.info("[_processSnapshot] Date: %s, Partition: %s", snapshot.date, partition);
 
@@ -192,7 +218,7 @@ class HistoryProcessor
             });
     }
 
-    _prepareConfigHashesCache(partition)
+    private _prepareConfigHashesCache(partition: number)
     {
         if (this._configHashesPartition != partition)
         {
@@ -201,13 +227,13 @@ class HistoryProcessor
         }
     }
 
-    _produceConfigHashes(snapshot)
+    private _produceConfigHashes(snapshot: Snapshot) 
     {
-        var configHashes = [];
+        var configHashes : ConfigHash[] = [];
         for(var item of snapshot.getItems())
         {
             // this.logger.info("[_produceConfigHashes] %s...", item.dn, item);
-            var hash = this._calculateObjectHash(item.config);
+            var hash = HashUtils.calculateObjectHash(item.config);
             configHashes.push({ 
                 config_hash: hash,
                 config: item.config
@@ -217,7 +243,7 @@ class HistoryProcessor
         return configHashes;
     }
 
-    _cleanupSnapshot(snapshot)
+    private _cleanupSnapshot(snapshot: Snapshot)
     {
         for(var item of snapshot.getItems())
         {
@@ -225,23 +251,9 @@ class HistoryProcessor
         }
     }
 
-    _calculateObjectHash(obj)
+    private _persistConfigHashes(configHashes: ConfigHash[], partition: number)
     {
-        if (_.isNullOrUndefined(obj)) {
-            throw new Error('NO Object');
-        }
-
-        var str = _.stableStringify(obj);
-
-        const sha256 = crypto.createHash('sha256');
-        sha256.update(str);
-        var value = sha256.digest();
-        return value;
-    }
-
-    _persistConfigHashes(configHashes, partition)
-    {
-        var newHashes = configHashes.filter(x => !this._configHashesDict[x.config_hash]);
+        var newHashes = configHashes.filter(x => !this._configHashesDict[<string>x.config_hash]);
         this.logger.info('[_persistConfigHashes] current hash count: %s', _.keys(this._configHashesDict).length);
         this.logger.info('[_persistConfigHashes] new hash count: %s', newHashes.length);
         return Promise.resolve()
@@ -251,12 +263,12 @@ class HistoryProcessor
             .then(() => {
                 for(var x of newHashes)
                 {
-                    this._configHashesDict[x.config_hash] = true;
+                    this._configHashesDict[<string>x.config_hash] = true;
                 }
             });
     }
 
-    _persistSnapshot(snapshot, partition)
+    private _persistSnapshot(snapshot: Snapshot, partition: number)
     {
         if (!this._shouldCreateNewDbSnapshot(snapshot, partition)) {
             return;
@@ -281,9 +293,9 @@ class HistoryProcessor
             });
     }
 
-    _queryDatabasePartitions()
+    private _queryDatabasePartitions()
     {
-        var tablesPartitionsData = {
+        var tablesPartitionsData : TablesPartitionsInfo = {
             maxPartition: 0,
             byTable: {}
         };
@@ -305,12 +317,12 @@ class HistoryProcessor
         .then(() => tablesPartitionsData);
     }
 
-    _prepareDatabasePartitions(partition, tablePartitions)
+    private _prepareDatabasePartitions(partition: number, tablePartitions: Record<string, TablePartitionMap>)
     {
         return Promise.serial(HISTORY_TABLES, x => this._prepareTablePartitions(x, partition, tablePartitions[x]));
     }
 
-    _prepareTablePartitions(tableName, partition, myPartitions)
+    private _prepareTablePartitions(tableName: string, partition: number, myPartitions: TablePartitionMap)
     {
         this.logger.verbose("[_prepareTablePartitions] %s :: %s", tableName, partition, myPartitions)
         if (myPartitions[partition]) {
@@ -321,7 +333,7 @@ class HistoryProcessor
             partition + 1);
     }
 
-    _shouldCreateNewDbSnapshot(snapshot, partition)
+    private _shouldCreateNewDbSnapshot(snapshot: Snapshot, partition: number)
     {
         if (!this._currentState.snapshot_id) {
             return true;
@@ -338,7 +350,7 @@ class HistoryProcessor
         return false;
     }
 
-    _persistDiff(snapshot, partition, itemsDelta, deltaSummary)
+    private _persistDiff(snapshot: Snapshot, partition: number, itemsDelta: DeltaItem[], deltaSummary: DeltaSummary)
     {
         this.logger.info('[_persistDiff] BEGIN. ', this._currentState);
 
@@ -358,7 +370,7 @@ class HistoryProcessor
 
                 this._currentState.diff_item_count += itemsDelta.length;
 
-                var diffSnapshot = new Snapshot();
+                var diffSnapshot = new Snapshot(null);
                 for(var x of itemsDelta)
                 {
                     var newItem = _.clone(x);
@@ -372,7 +384,7 @@ class HistoryProcessor
             })
     }
 
-    _persistTimeline(snapshot, partition, deltaSummary)
+    private _persistTimeline(snapshot: Snapshot, partition: number, deltaSummary: DeltaSummary)
     {
         this.logger.info('[_persistTimeline] BEGIN. ');
         return Promise.resolve()
@@ -384,7 +396,7 @@ class HistoryProcessor
             })
     }
 
-    _persistSummaries(snapshot, partition, deltaSummary)
+    private _persistSummaries(snapshot: Snapshot, partition: number, deltaSummary: DeltaSummary)
     {
         this.logger.info('[_persistSummaries] BEGIN. ');
         return Promise.resolve()
@@ -399,9 +411,9 @@ class HistoryProcessor
             })
     }
 
-    _constructDeltaSummary(snapshot, itemsDelta)
+    private _constructDeltaSummary(snapshot: Snapshot, itemsDelta: DeltaItem[])
     {
-        var deltaSummary = {
+        var deltaSummary : DeltaSummary = {
             snapshot: this._constructSnapshotSummary(snapshot.getItems()),
             delta: this._constructSnapshotSummary(itemsDelta)
         }
@@ -412,19 +424,15 @@ class HistoryProcessor
 
 
         const currentTotalAlerts = this._newAlertsDict();
-        const currentByKindAlerts = {};
+        const currentByKindAlerts : Record<string, AlertCounter> = {};
         for(let kind of _.keys(currentSnapshotAlerts))
         {
             let dict = currentSnapshotAlerts[kind];
             currentByKindAlerts[kind] = this._newAlertsDict();
             for(let itemAlerts of _.values(dict))
             {
-                for(let severity of _.keys(itemAlerts))
-                {
-                    const count = itemAlerts[severity];
-                    currentByKindAlerts[kind][severity] += count;
-                    currentTotalAlerts[severity] += count;
-                }
+                this._appendAlertCounts(currentTotalAlerts, itemAlerts);
+                this._appendAlertCounts(currentByKindAlerts[kind], itemAlerts);
             }
         }
         deltaSummary.snapshot.alerts = currentTotalAlerts;
@@ -442,14 +450,8 @@ class HistoryProcessor
                 let dict = this._latestSnapshotAlerts[kind];
                 for(let itemAlerts of _.values(dict))
                 {
-                    for(let severity of _.keys(itemAlerts))
-                    {
-                        if (!deltaAlertsDict[severity]) {
-                            deltaAlertsDict[severity] = 0;
-                        }
-                        deltaAlertsDict[severity] -= itemAlerts[severity];
-                        deltaAlertsByKindDict[kind][severity] -= itemAlerts[severity];
-                    }
+                    this._subtractAlertCounts(deltaAlertsDict, itemAlerts);
+                    this._subtractAlertCounts(deltaAlertsByKindDict[kind], itemAlerts);
                 }
             }
         }
@@ -461,7 +463,19 @@ class HistoryProcessor
         return deltaSummary;
     }
 
-    _newAlertsDict()
+    private _appendAlertCounts(counter: AlertCounter, other: AlertCounter)
+    {
+        counter.error += other.error;
+        counter.warn += other.warn;
+    }
+
+    private _subtractAlertCounts(counter: AlertCounter, other: AlertCounter)
+    {
+        counter.error += other.error;
+        counter.warn += other.warn;
+    }
+
+    private _newAlertsDict() : AlertCounter
     {
         return {
             error: 0,
@@ -469,10 +483,10 @@ class HistoryProcessor
         }
     }
 
-    _constructSnapshotSummary(items)
+    private _constructSnapshotSummary(items: any[])
     {
-        var dns = {};
-        var summary = {
+        var dns : Record<string, boolean> = {};
+        var summary : SnapshotSummary= {
             items: 0,
             kinds: {}
         };
@@ -502,9 +516,9 @@ class HistoryProcessor
         return summary;
     }
 
-    _constructAlertsSummary(snapshot)
+    private _constructAlertsSummary(snapshot: Snapshot) : AlertsSummary
     {
-        let alertsDict = {};
+        let alertsDict : AlertsSummary = {};
         for(var item of snapshot.getItems())
         {
             // this.logger.info("[_constructAlertsSummary] ", item);
@@ -523,9 +537,12 @@ class HistoryProcessor
                             }
                             if (!alertsDict[item.kind][item.dn])
                             {
-                                alertsDict[item.kind][item.dn] = {};
+                                alertsDict[item.kind][item.dn] = {
+                                    error: 0,
+                                    warn: 0
+                                };
                             }
-                            alertsDict[item.kind][item.dn][severity] = count;
+                            (<any>alertsDict[item.kind][item.dn])[severity] = count;
                         }
                     }
                 }
@@ -534,10 +551,10 @@ class HistoryProcessor
         return alertsDict;
     }
 
-    _produceDelta(targetSnapshot, currentSnapshot)
+    private _produceDelta(targetSnapshot: Snapshot, currentSnapshot: Snapshot) : DeltaItem[]
     {
         this.logger.info("[_produceDelta] target count: %s, current count: %s.",  targetSnapshot.count, currentSnapshot.count);
-        var itemsDelta = [];
+        var itemsDelta : DeltaItem[] = [];
 
         for(var key of targetSnapshot.keys)
         {
@@ -582,12 +599,12 @@ class HistoryProcessor
         return itemsDelta;
     }
 
-    _sanitizeSnapshotItem(item)
+    private _sanitizeSnapshotItem(item: any)
     {
         if (!item) {
             return null;
         }
-        var config = {
+        var config: any = {
             dn: item.dn,
             kind: item.kind,
             config_kind: item.config_kind,
@@ -599,13 +616,13 @@ class HistoryProcessor
         return config;
     }
 
-    _persistConfig()
+    private _persistConfig()
     {
         return Promise.resolve()
             .then(() => this._dbAccessor.updateConfig('STATE', this._currentState));
     }
 
-    _produceSnapshot(state)
+    private _produceSnapshot(state: RegistryState)
     {
         this._logger.info("[_produceSnapshot] date: %s, count: %s", state.date.toISOString(), state.getCount());
 
@@ -655,13 +672,13 @@ class HistoryProcessor
         return snapshot;
     }
 
-    _onDbConnected()
+    private _onDbConnected()
     {
         this._logger.info("[_onDbConnected] ...");
         this._latestSnapshot = null;
         return Promise.resolve()
             .then(() => this._dbAccessor.queryConfig('STATE'))
-            .then(config => {
+            .then((config : any) => {
                 this._currentState = config.value || {};
                 this._logger.info("[_onDbConnected] state: ", this._currentState);
             })
@@ -699,7 +716,7 @@ class HistoryProcessor
             })
     }
 
-    markDeletedPartition(partition)
+    markDeletedPartition(partition: number)
     {
         if (this._currentState.snapshot_part == partition)
         {
@@ -707,13 +724,13 @@ class HistoryProcessor
         }
     }
 
-    setUsedHashesDict(dict)
+    setUsedHashesDict(dict: Record<string, boolean>)
     {
         this.logger.info("[setUsedHashesDict] size: %s", _.keys(dict).length);
         this._configHashesDict = dict;
     }
 
-    _resetSnapshotState()
+    private _resetSnapshotState()
     {
         this.logger.info('[_resetSnapshotState] ');
 
@@ -727,4 +744,43 @@ class HistoryProcessor
 
 }
 
-module.exports = HistoryProcessor;
+
+interface TablesPartitionsInfo
+{
+    maxPartition: number,
+    byTable: Record<string, TablePartitionMap>
+}
+
+type TablePartitionMap = Record<string, boolean>
+
+
+interface DeltaItem
+{
+    present: number,
+    dn: string,
+    kind: string,
+    config_kind: string,
+    name: string,
+    config: any,
+    config_hash: Buffer
+}
+
+interface DeltaSummary
+{
+    snapshot: any,
+    delta: any,
+}
+
+type AlertsSummary = Record<string, Record<string, AlertCounter > >;
+
+interface AlertCounter {
+    error: number,
+    warn: number
+}
+
+
+interface SnapshotSummary
+{
+    items: number,
+    kinds: Record<string, number>
+}

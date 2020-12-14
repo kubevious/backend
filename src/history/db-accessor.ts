@@ -1,18 +1,34 @@
-const Promise = require('the-promise');
-const _ = require('the-lodash');
-const DateUtils = require("kubevious-helpers").DateUtils;
-const Helpers = require("kubevious-helpers").History.Helpers;
-const Snapshot = require("kubevious-helpers").History.Snapshot;
-const SnapshotReader = require("kubevious-helpers").History.SnapshotReader;
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { ILogger } from 'the-logger' ;
 
-class HistoryDbAccessor
+import DateUtils from '@kubevious/helpers/dist/date-utils';
+import BufferUtils from '@kubevious/helpers/dist/buffer-utils';
+import { Helpers, Snapshot, SnapshotReader } from '@kubevious/helpers/dist/history';
+
+import { SnapshotItem, DiffItem, TimelineSample } from '@kubevious/helpers/dist/history';
+
+import { Context } from '../context';
+import { Database } from '../db';
+import { MySqlDriver } from '@kubevious/easy-data-store'
+import { ConfigHash } from './entities';
+
+export class HistoryAccessor
 {
-    constructor(context, database)
+    private _logger : ILogger;
+    private _context : Context
+
+    private _database : Database;
+    private _snapshotReader : SnapshotReader;
+
+    constructor(context: Context)
     {
         this._context = context;
-        this._logger = context.logger.sublogger('HistoryDbAccessor');
-        this._database = database;
-        this._snapshotReader = new SnapshotReader(this.logger, database.driver);
+        this._logger = context.logger.sublogger('HistoryAccessor');
+
+        this._database = context.database;
+
+        this._snapshotReader = new SnapshotReader(this.logger, context.database.driver);
 
         this._registerStatements();
     }
@@ -29,7 +45,7 @@ class HistoryDbAccessor
         return this._snapshotReader;
     }
 
-    _registerStatements()
+    private _registerStatements()
     {
         this._registerStatement('GET_SNAPSHOTS', 'SELECT * FROM `snapshots`;');
         this._registerStatement('GET_SNAPSHOT', 'SELECT * FROM `snapshots` WHERE `id` = ?;');
@@ -62,17 +78,17 @@ class HistoryDbAccessor
         this._registerStatement('INSERT_CONFIG_HASH', 'INSERT IGNORE INTO `config_hashes`(`key`, `part`, `value`) VALUES(?, ?, ?);');
     }
 
-    updateConfig(key, value)
+    updateConfig(key: string, value: any)
     {
         var params = [key, value, value]; 
         return this._execute('SET_CONFIG', params);
     }
 
-    queryConfig(key)
+    queryConfig(key: string) : Promise<object>
     {
         var params = [key]; 
         return this._execute('GET_CONFIG', params)
-            .then(results => {
+            .then((results: any[]) => {
                 if (results.length == 0) {
                     return {};
                 }
@@ -80,11 +96,11 @@ class HistoryDbAccessor
             });
     }
 
-    querySnapshot(id)
+    querySnapshot(id: string)
     {
         var params = [id]; 
         return this._execute('GET_SNAPSHOT', params)
-            .then(results => {
+            .then((results: any[]) => {
                 if (!results.length) {
                     return null;
                 } else {
@@ -93,7 +109,7 @@ class HistoryDbAccessor
             })
     }
 
-    fetchSnapshot(partition, date)
+    fetchSnapshot(partition: number, date: any) : Promise<any>
     {
         date = DateUtils.makeDate(date);
 
@@ -118,23 +134,23 @@ class HistoryDbAccessor
 
     /* SNAPSHOT ITEMS BEGIN */
 
-    _makeDbSnapshotFromItems(items)
+    private _makeDbSnapshotFromItems(items : SnapshotItem[])
     {
-        var snapshot = new Snapshot();
+        const snapshot = new Snapshot(null);
         for(var x of items)
         {
             var key = Helpers.makeKey(x);
             if (!snapshot.findById(key)) {
-                snapshot._items[key] = {};
+                snapshot.addItemByKey(key, {});
             }
             var id = x.id;
             delete x.id;
-            snapshot._items[key][id] = x;
+            snapshot.findById(key)[id] = x;
         }
         return snapshot;
     }
 
-    persistConfigHashes(configHashes, partition)
+    persistConfigHashes(configHashes: ConfigHash[], partition: number)
     {
         this.logger.info("[persistConfigHashes] BEGIN, count: %s", configHashes.length);
 
@@ -159,7 +175,7 @@ class HistoryDbAccessor
             });
     }
 
-    syncSnapshotItems(partition, snapshotId, snapshot)
+    syncSnapshotItems(partition: number, snapshotId: string, snapshot: any)
     {
         this.logger.info("[syncSnapshotItems] BEGIN, partition: %s, item count: %s", partition, snapshot.count);
 
@@ -233,12 +249,12 @@ class HistoryDbAccessor
 
     /* DIFF BEGIN */
 
-    fetchDiff(snapshotId, partition, date, in_snapshot, summary)
+    fetchDiff(snapshotId: string, partition: number, date: any, in_snapshot: any, summary: any)
     {
         date = DateUtils.makeDate(date);
         var params = [partition, snapshotId, date, in_snapshot]; 
         return this._execute('FIND_DIFF', params)
-            .then(results => {
+            .then((results : any[]) => {
                 if (!results.length) {
                     params = [partition, snapshotId, date, in_snapshot, summary]; 
                     return this._execute('INSERT_DIFF', params)
@@ -260,7 +276,7 @@ class HistoryDbAccessor
 
     /* DIFF ITEMS BEGIN */
 
-    syncDiffItems(partition, diffId, diffSnapshot)
+    syncDiffItems(partition: number, diffId: string, diffSnapshot: any)
     {
         this.logger.info("[syncDiffItems] partition: %s, item count: %s", partition, diffSnapshot.count);
 
@@ -329,7 +345,7 @@ class HistoryDbAccessor
 
     /* TIMELINE BEGIN */
 
-    syncTimelineItems(partition, date, deltaSummary)
+    syncTimelineItems(partition: number, date: any, deltaSummary: any)
     {
         this.logger.info("[syncTimelineItems] partition: %s, date: %s", partition, date);
         this.logger.debug("[syncTimelineItems] partition: %s, date: %s, deltaSummary: ", partition, date, deltaSummary);
@@ -349,7 +365,7 @@ class HistoryDbAccessor
 
     /* SUMMARY COUNTERS BEGIN */
 
-    syncSummaryItems(partition, date, summaryInfo)
+    syncSummaryItems(partition: number, date: any, summaryInfo: any)
     {
         this.logger.info("[syncSummaryItems] partition: %s, date: %s", partition, date);
         this.logger.debug("[syncSummaryItems] partition: %s, date: %s, summaryInfo: ", partition, date, summaryInfo);
@@ -365,7 +381,7 @@ class HistoryDbAccessor
             })
     }
 
-    syncSummaryDeltaItems(partition, date, summaryInfo)
+    syncSummaryDeltaItems(partition: number, date: any, summaryInfo: any)
     {
         this.logger.info("[syncSummaryDeltaItems] partition: %s, date: %s", partition, date);
         this.logger.debug("[syncSummaryDeltaItems] partition: %s, date: %s, summaryInfo: ", partition, date, summaryInfo);
@@ -381,7 +397,7 @@ class HistoryDbAccessor
             })
     }
 
-    _getSummaryItems(statementId, partition, date, dict)
+    private _getSummaryItems(statementId: string, partition: number, date: any, dict: any)
     {
         const items = [];
 
@@ -401,7 +417,7 @@ class HistoryDbAccessor
         return items;
     }
 
-    _getSummaryItemsByKind(statementId, partition, date, dict)
+    private _getSummaryItemsByKind(statementId: string, partition: number, date: any, dict: any)
     {
         const items = [];
 
@@ -430,9 +446,7 @@ class HistoryDbAccessor
     /* SUMMARY COUNTERS END */
 
 
-
-
-    _produceDelta(targetSnapshot, dbSnapshot)
+    private _produceDelta(targetSnapshot: any, dbSnapshot: any)
     {
         this.logger.info("[produceDelta] targetSnapshot count: %s",  targetSnapshot.count);
         var itemsDelta = [];
@@ -501,26 +515,25 @@ class HistoryDbAccessor
         return itemsDelta;
     }
 
-    _registerStatement(name, sql)
+    private _registerStatement(name: string, sql: string)
     {
         return this._database.registerStatement(name, sql);
     }
 
-    _execute(name, params)
+    private _execute(name: string, params?: any[])
     {
         return this._database.executeStatement(name, params);
     }
 
-    _executeMany(statements)
+    private _executeMany(statements: {id: string, params?: any}[])
     {
         return this._database.executeStatements(statements);
     }
 
-    executeInTransaction(cb)
+    executeInTransaction(cb: ((driver: MySqlDriver) => Promise<any>))
     {
         return this._database.executeInTransaction(cb);
     }
 
 }
 
-module.exports = HistoryDbAccessor;
