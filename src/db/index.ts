@@ -2,6 +2,9 @@ import _ from 'the-lodash';
 import { Promise, Resolvable } from 'the-promise';
 import { ILogger } from 'the-logger' ;
 
+import * as fs from 'fs';
+import * as Path from 'path';
+
 import { DataStore, MySqlDriver, MySqlStatement } from '@kubevious/easy-data-store';
 
 import { Context } from '../context' ;
@@ -9,6 +12,7 @@ import { Context } from '../context' ;
 import { setupMarkersMeta } from './meta/markers';
 import { setupRulesMeta } from './meta/rules';
 import { setupNotificationsMeta } from './meta/notifications';
+import { MigratorBuilder, MigratorInfo } from './migration';
 
 const TARGET_DB_VERSION : number = 8;
 
@@ -16,6 +20,8 @@ export class Database
 {
     private _logger : ILogger;
     private _context : Context
+
+    private _migrators : Record<string, MigratorInfo> = {};
 
     private _dataStore : DataStore;
     private _driver : MySqlDriver;
@@ -25,6 +31,8 @@ export class Database
     {
         this._context = context;
         this._logger = logger.sublogger("DB");
+
+        this._loadMigrators();
 
         this._dataStore = new DataStore(logger.sublogger("DataStore"), false, {
             charset: 'utf8_general_ci'
@@ -57,6 +65,25 @@ export class Database
         setupMarkersMeta(this._dataStore.meta());
         setupRulesMeta(this._dataStore.meta());
         setupNotificationsMeta(this._dataStore.meta());
+    }
+
+    private _loadMigrators()
+    {
+        var location = 'migrators';
+        var files = fs.readdirSync(Path.join(__dirname, location));
+        files = _.filter(files, x => x.endsWith('.d.ts'));
+
+        for(let fileName of files)
+        {
+            let moduleName = fileName.replace('.d.ts', '');
+            let modulePath = location + '/' + moduleName;
+            const pa = './' + modulePath;
+            const migrationBuilder = <MigratorBuilder> require(pa);
+            const migrationInfo = migrationBuilder._export();
+
+            this._logger.info("Loaded migrator %s from %s", moduleName, modulePath);
+            this._migrators[moduleName] = migrationInfo;
+        }
     }
 
     onConnect(cb: ((driver: MySqlDriver) => Resolvable<any>))

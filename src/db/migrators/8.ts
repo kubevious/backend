@@ -1,33 +1,37 @@
-const Promise = require('the-promise');
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
 
-module.exports = function(logger, driver, executeSql, context) {
+import { Migrator } from '../migration';
 
-    return Promise.resolve()
-        .then(() => Promise.serial(MARKERS, x => {
-            const sql = `INSERT IGNORE INTO \`markers\`(\`name\`, \`shape\`, \`color\`, \`propagate\`) VALUES (?, ?, ?, ?)`;
-            const params = [
-                x.name, 
-                x.shape, 
-                x.color, 
-                false
-            ]
-            return executeSql(sql, params);
-        }))
-        .then(() => Promise.serial(RULES, x => {
-            x.enabled = true;
-            const row = context.ruleAccessor.makeDbRule(x);
-            const sql = `INSERT IGNORE INTO \`rules\`(\`name\`, \`enabled\`, \`date\`, \`target\`, \`script\`, \`hash\`) VALUES (?, ?, ?, ?, ?, ?)`;
-            const params = [
-                row.name, 
-                row.enabled, 
-                row.date, 
-                row.target, 
-                row.script, 
-                row.hash
-            ]
-            return executeSql(sql, params);
-        }))
-}
+export default Migrator()
+    .handler(({ logger, driver, executeSql, context }) => {
+
+        return Promise.resolve()
+            .then(() => Promise.serial(MARKERS, x => {
+                const sql = `INSERT IGNORE INTO \`markers\`(\`name\`, \`shape\`, \`color\`, \`propagate\`) VALUES (?, ?, ?, ?)`;
+                const params = [
+                    x.name, 
+                    x.shape, 
+                    x.color, 
+                    false
+                ]
+                return executeSql(sql, params);
+            }))
+            .then(() => Promise.serial(RULES, (x : any) => {
+                x.enabled = true;
+                const row = context.ruleAccessor.makeDbRule(x);
+                const sql = `INSERT IGNORE INTO \`rules\`(\`name\`, \`enabled\`, \`date\`, \`target\`, \`script\`, \`hash\`) VALUES (?, ?, ?, ?, ?, ?)`;
+                const params = [
+                    row.name, 
+                    row.enabled, 
+                    row.date, 
+                    row.target, 
+                    row.script, 
+                    row.hash
+                ]
+                return executeSql(sql, params);
+            }))
+    })
 
 const MARKERS = [
     {

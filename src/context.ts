@@ -42,8 +42,8 @@ export class Context
     private _websocket: WebSocket;
 
     private _database: Database;
-    private _searchEngine: any;
-    private _historyProcessor: any;
+    private _searchEngine: SearchEngine;
+    private _historyProcessor: HistoryProcessor;
     private _collector: Collector;
     private _registry: Registry;
 
