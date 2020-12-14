@@ -1,26 +1,67 @@
-const Promise = require('the-promise');
-const _ = require('lodash');
-const { v4: uuidv4 } = require('uuid');
-const DateUtils = require('kubevious-helpers').DateUtils;
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { ILogger } from 'the-logger' ;
 
-class Collector
+import { v4 as uuidv4 } from 'uuid';
+import * as DateUtils from '@kubevious/helpers/dist/date-utils';
+
+import { Context } from '../context';
+
+export interface UserMetricItem
 {
-    constructor(context)
+    category: string,
+    name: string,
+    value: string | number
+}
+
+export interface MetricItem
+{
+    origDate: Date,
+    dateStart: Date,
+    dateEnd: Date | null,
+    kind: string,
+    durationSeconds: number | null
+}
+
+export interface SnapshotInfo
+{
+    date: Date,
+    metric: MetricItem,
+    items: Record<string, any>
+}
+
+export interface SnapshotItem
+{
+    hash: string,
+    data: any
+}
+
+export interface DiffItem
+{
+
+}
+
+export class Collector
+{
+    private _logger : ILogger;
+    private _context : Context
+
+    private _snapshots : Record<string, SnapshotInfo> = {};
+    private _diffs : Record<string, any> = {};
+
+    private _iteration : number = 0;
+
+    private _parserVersion? : string;
+    private _currentMetric : any;
+    private _latestMetric : any;
+    private _recentDurations : any;
+
+    constructor(context: Context)
     {
         this._context = context;
         this._logger = context.logger.sublogger("Collector");
 
         this.logger.info("[constructed] ");
-
-        this._snapshots = {};
-        this._diffs = {};
-
-        this._iteration = 0;
-
-        this._parserVersion = null;
-        this._currentMetric = null;
-        this._latestMetric = null;
-        this._recentDurations = [];
     }
 
     get logger() {
@@ -29,7 +70,7 @@ class Collector
 
     extractMetrics()
     {
-        let metrics = [];
+        let metrics : UserMetricItem[] = [];
 
         metrics.push({
             category: 'Collector',
@@ -87,20 +128,20 @@ class Collector
         return metrics;
     }
 
-    _newMetric(date)
+    private _newMetric(date: Date, kind: string) 
     {
-        let metric = {
+        let metric : MetricItem = {
             origDate: date,
             dateStart: new Date(),
             dateEnd: null,
-            kind: null,
+            kind: kind,
             durationSeconds: null
         };
         this._currentMetric = metric;
         return metric;
     }
 
-    _endMetric(metric)
+    private _endMetric(metric: MetricItem)
     {
         metric.dateEnd = new Date();
         metric.durationSeconds = DateUtils.diffSeconds(metric.dateEnd, metric.dateStart);
@@ -110,12 +151,11 @@ class Collector
         return metric;
     }
     
-    newSnapshot(date, parserVersion)
+    newSnapshot(date: Date, parserVersion: string)
     {
         this._parserVersion = parserVersion;
 
-        let metric = this._newMetric(date);
-        metric.kind = 'snapshot';
+        let metric = this._newMetric(date, 'snapshot');
 
         var id = uuidv4();
         this._snapshots[id] = {
@@ -129,7 +169,7 @@ class Collector
         };
     }
 
-    acceptSnapshotItems(snapshotId, items)
+    acceptSnapshotItems(snapshotId: string, items: SnapshotItem[])
     {
         var snapshotInfo = this._snapshots[snapshotId];
         if (!snapshotInfo) {
@@ -144,7 +184,7 @@ class Collector
         return {};
     }
 
-    activateSnapshot(snapshotId)
+    activateSnapshot(snapshotId: string)
     {
         return this._context.tracker.scope("collector::activateSnapshot", (tracker) => {
             var snapshotInfo = this._snapshots[snapshotId];
@@ -158,14 +198,14 @@ class Collector
         });
     }
 
-    newDiff(snapshotId, date)
+    newDiff(snapshotId: string, date: Date)
     {
         var snapshotInfo = this._snapshots[snapshotId];
         if (!snapshotInfo) {
             return RESPONSE_NEED_NEW_SNAPSHOT;
         }
 
-        let metric = this._newMetric(date);
+        let metric = this._newMetric(date, 'snapshot');
         metric.kind = 'diff';
 
         var id = uuidv4();
@@ -181,7 +221,7 @@ class Collector
         };
     }
 
-    acceptDiffItems(diffId, items)
+    acceptDiffItems(diffId: string, items: DiffItem[])
     {
         var diffInfo = this._diffs[diffId];
         if (!diffInfo) {
@@ -196,7 +236,7 @@ class Collector
         return {};
     }
 
-    activateDiff(diffId)
+    activateDiff(diffId: string)
     {
         return this._context.tracker.scope("collector::activateDiff", (tracker) => {
             var diffInfo = this._diffs[diffId];
@@ -210,7 +250,7 @@ class Collector
             }
     
             var newSnapshotId = uuidv4();
-            var newSnapshotInfo = {
+            var newSnapshotInfo : SnapshotInfo = {
                 date: new Date(diffInfo.date),
                 metric: diffInfo.metric,
                 items: _.clone(snapshotInfo.items)
@@ -239,7 +279,7 @@ class Collector
         });
     }
 
-    _acceptSnapshot(snapshotInfo)
+    private _acceptSnapshot(snapshotInfo: SnapshotInfo)
     {
         this._endMetric(snapshotInfo.metric);
 
@@ -254,5 +294,3 @@ class Collector
 const RESPONSE_NEED_NEW_SNAPSHOT = {
     new_snapshot: true
 };
-
-module.exports = Collector;

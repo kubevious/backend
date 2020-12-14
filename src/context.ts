@@ -6,13 +6,13 @@ import { Backend, TimerFunction } from '@kubevious/helper-backend'
 
 import { ProcessingTracker } from '@kubevious/helpers/dist/processing-tracker';
 
-const FacadeRegistry = require('./facade/registry');
-const SearchEngine = require('./search/engine');
+import { FacadeRegistry } from './facade/registry';
+import { SearchEngine } from './search/engine';
 import { Database } from './db';
 const HistoryProcessor = require('./history/processor');
 const HistoryCleanupProcessor = require('./history/history-cleanup-processor');
 import { Registry } from './registry/registry';
-const Collector = require('./collector/collector');
+import { Collector } from './collector/collector';
 import { DebugObjectLogger } from './utils/debug-object-logger';
 import { MarkerAccessor } from './rule/marker-accessor';
 import { MarkerCache } from './rule/marker-cache';
@@ -44,10 +44,10 @@ export class Context
     private _database: Database;
     private _searchEngine: any;
     private _historyProcessor: any;
-    private _collector: any;
+    private _collector: Collector;
     private _registry: Registry;
 
-    private _facadeRegistry: any;
+    private _facadeRegistry: FacadeRegistry;
 
     private _debugObjectLogger: DebugObjectLogger;
 
@@ -113,6 +113,10 @@ export class Context
         backend.registerErrorHandler((reason) => {
             return this.worldvious.acceptError(reason);
         });
+    }
+
+    get backend() {
+        return this._backend;
     }
 
     get logger() {

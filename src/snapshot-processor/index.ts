@@ -10,6 +10,7 @@ import { ProcessorBuilder, ProcessorInfo, Handler as ProcessorHandler } from './
 
 import { Context } from '../context';
 import { ProcessingTrackerScoper } from '@kubevious/helpers/dist/processing-tracker';
+import { SnapshotInfo } from '../collector/collector';
 
 interface ProcessorEntry
 {
@@ -69,7 +70,7 @@ export class SnapshotProcessor
         }
     }
 
-    process(snapshotInfo: any, tracker: ProcessingTrackerScoper, extraParams: any)
+    process(snapshotInfo: SnapshotInfo, tracker: ProcessingTrackerScoper, extraParams?: any)
     {
         return tracker.scope("SnapshotProcessor::process", (innerTracker) => {
 
@@ -100,7 +101,7 @@ export class SnapshotProcessor
         });
     }
 
-    private _makeState(snapshotInfo: any, tracker: ProcessingTrackerScoper)
+    private _makeState(snapshotInfo: SnapshotInfo, tracker: ProcessingTrackerScoper)
     {
         return tracker.scope("_makeState", () => {
             var registryState = new RegistryState(snapshotInfo)

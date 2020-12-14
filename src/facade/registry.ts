@@ -1,15 +1,25 @@
-const Promise = require('the-promise');
-const _ = require('lodash');
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { ILogger } from 'the-logger' ;
 
-class FacadeRegistry
+import { Context } from '../context';
+import { SnapshotInfo } from '../collector/collector';
+import { RegistryState, StateBundle } from '@kubevious/helpers/dist/registry-state';
+import { ProcessingTrackerScoper } from '@kubevious/helpers/dist/processing-tracker';
+
+export class FacadeRegistry
 {
-    constructor(context)
+    private _logger : ILogger;
+    private _context : Context
+
+    private _latestSnapshot : SnapshotInfo | null = null;
+    private _isProcessing : boolean = false;
+    private _isScheduled : boolean = false;
+    
+    constructor(context : Context)
     {
         this._context = context;
         this._logger = context.logger.sublogger("FacadeRegistry");
-
-        this._configMap = {};
-        this._latestSnapshot = null;
     }
 
     get logger() {
@@ -20,17 +30,17 @@ class FacadeRegistry
         return this._context.debugObjectLogger;
     }
 
-    acceptCurrentSnapshot(snapshotInfo)
+    acceptCurrentSnapshot(snapshotInfo: SnapshotInfo)
     {
         this._latestSnapshot = snapshotInfo;
         this._triggerProcess();
     }
 
-    _triggerProcess()
+    private _triggerProcess()
     {
         this._logger.verbose('[_triggerProcess] Begin');
 
-        if (this._processTimer) {
+        if (this._isScheduled) {
             this._logger.verbose('[_triggerProcess] Timer scheduled...');
             return;
         }
@@ -39,10 +49,13 @@ class FacadeRegistry
             return;
         }
 
-        this._processTimer = setTimeout(() => {
+        this._isScheduled = true;
+
+        this._context.backend.timer(5000, () => {
             this._logger.verbose('[_triggerProcess] Timer Triggered...');
 
-            this._processTimer = null;
+            this._isScheduled = false;
+
             if (!this._latestSnapshot) {
                 this._logger.verbose('[_triggerProcess] No Latest snapshot...');
                 return;
@@ -57,11 +70,10 @@ class FacadeRegistry
                 .finally(() => {
                     this._isProcessing = false;
                 });
-
-        }, 5000);
+        })
     }
 
-    _processCurrentSnapshot(snapshotInfo)
+    private _processCurrentSnapshot(snapshotInfo: SnapshotInfo)
     {
         return this._context.tracker.scope("FacadeRegistry::_processCurrentSnapshot", (tracker) => {
 
@@ -72,7 +84,7 @@ class FacadeRegistry
         });
     }
 
-    _runFinalize(registryState, bundle, tracker)
+    private _runFinalize(registryState: RegistryState, bundle : StateBundle, tracker: ProcessingTrackerScoper)
     {
         return Promise.resolve()
             .then(() => this.debugObjectLogger.dump("latest-bundle", 0, bundle))
@@ -101,7 +113,7 @@ class FacadeRegistry
             })
     }
 
-    _produceCounters(bundle)
+    private _produceCounters(bundle: StateBundle)
     {
         const counters = this._extractCounters(bundle);
         this.logger.info("[COUNTERS] BEGIN");
@@ -113,9 +125,9 @@ class FacadeRegistry
         this._context.worldvious.acceptCounters(counters);
     }
 
-    _extractCounters(bundle)
+    private _extractCounters(bundle: StateBundle)
     {
-        let nodeCountDict = {};
+        let nodeCountDict : Record<string, number> = {};
         for(let node of bundle.nodes)
         {
             if (!nodeCountDict[node.config.kind])
@@ -136,7 +148,7 @@ class FacadeRegistry
         return nodeCounters;
     }
 
-    _updateWebsocket(bundle)
+    private _updateWebsocket(bundle: StateBundle)
     {
         {
             var items = [];
@@ -192,5 +204,3 @@ class FacadeRegistry
     }
 
 }
-
-module.exports = FacadeRegistry;
