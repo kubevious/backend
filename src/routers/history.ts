@@ -3,7 +3,7 @@ import { Context } from '../context';
 import { Router } from '@kubevious/helper-backend'
 import Joi from 'joi';
 
-import DateUtils from '@kubevious/helpers/dist/date-utils';
+import * as DateUtils from '@kubevious/helpers/dist/date-utils';
 
 export default function (router: Router, context: Context) {
 

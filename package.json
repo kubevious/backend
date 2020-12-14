@@ -33,7 +33,7 @@
     "kubik.git": "git+https://github.com/kubevious/kubik.git",
     "moment": "^2.29.1",
     "the-lodash": "^2.0.0",
-    "the-logger": "^2.0.4",
+    "the-logger": "^2.0.5",
     "the-promise": "^2.0.3",
     "uuid": "^7.0.2",
     "uuid-parse": "^1.1.0",

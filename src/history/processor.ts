@@ -2,9 +2,9 @@ import _ from 'the-lodash';
 import { Promise } from 'the-promise';
 import { ILogger } from 'the-logger' ;
 
-import BufferUtils from '@kubevious/helpers/dist/buffer-utils';
+import * as BufferUtils from '@kubevious/helpers/dist/buffer-utils';
 
-import HashUtils from '@kubevious/helpers/dist/hash-utils';
+import * as HashUtils from '@kubevious/helpers/dist/hash-utils';
 
 import { Snapshot, Partitioning as HistoryPartitioning } from '@kubevious/helpers/dist/history';
 import { SnapshotItem, DiffItem, TimelineSample } from '@kubevious/helpers/dist/history';
