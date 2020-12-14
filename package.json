@@ -27,6 +27,7 @@
     "@kubevious/worldvious-client": "^1.0.6",
     "cron": "^1.8.2",
     "flexsearch": "^0.6.32",
+    "joi": "^17.3.0",
     "js-yaml": "^3.13.1",
     "kubevious-kubik": "git+https://github.com/kubevious/kubik.git",
     "kubik.git": "git+https://github.com/kubevious/kubik.git",

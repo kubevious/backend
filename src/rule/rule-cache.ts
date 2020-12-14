@@ -280,7 +280,4 @@ export class RuleCache
 
         return info;
     }
-
 }
-
-module.exports = RuleCache;
