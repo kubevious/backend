@@ -70,16 +70,21 @@ export class Database
     private _loadMigrators()
     {
         var location = 'migrators';
-        var files = fs.readdirSync(Path.join(__dirname, location));
+        const migratorsDir = Path.join(__dirname, location);
+
+        var files = fs.readdirSync(migratorsDir);
         files = _.filter(files, x => x.endsWith('.d.ts'));
 
         for(let fileName of files)
         {
             let moduleName = fileName.replace('.d.ts', '');
             let modulePath = location + '/' + moduleName;
-            const pa = './' + modulePath;
-            const migrationBuilder = <MigratorBuilder> require(pa);
+            this._logger.info("Loading migrator %s from %s...", moduleName, modulePath);
+
+            const migratorModule = require('./' + modulePath);
+            const migrationBuilder = <MigratorBuilder> migratorModule.default;
             const migrationInfo = migrationBuilder._export();
+            this._logger.info("migrationInfo: ", migrationInfo);
 
             this._logger.info("Loaded migrator %s from %s", moduleName, modulePath);
             this._migrators[moduleName] = migrationInfo;

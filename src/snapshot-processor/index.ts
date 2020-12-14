@@ -40,17 +40,20 @@ export class SnapshotProcessor
 
     private _extractProcessors()
     {
-        this.logger.info('[_extractProcessors] ');
-        var location = 'snapshot-processors';
-        var files = fs.readdirSync(Path.join(__dirname, location));
+        var location = 'processors';
+        const processorsDir = Path.join(__dirname, location);
+        this.logger.info('[_extractProcessors] from %s', processorsDir);
+        var files = fs.readdirSync(processorsDir);
         files = _.filter(files, x => x.endsWith('.d.ts'));
 
         for(let fileName of files)
         {
             let moduleName = fileName.replace('.d.ts', '');
             let modulePath = location + '/' + moduleName;
-            const pa = './' + modulePath;
-            const processorBuilder = <ProcessorBuilder> require(pa);
+            this._logger.info("Loading processor %s from %s...", moduleName, modulePath);
+
+            const processorModule = require('./' + modulePath);
+            const processorBuilder = <ProcessorBuilder> processorModule.default;
             const processorInfo = processorBuilder._export();
 
             if (!processorInfo.isDisabled)

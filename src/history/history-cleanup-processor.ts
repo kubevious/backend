@@ -1,21 +1,36 @@
-const _ = require('the-lodash');
-const Promise = require('the-promise');
-const moment = require('moment')
-const CronJob = require('cron').CronJob
-const HistoryPartitioning = require("kubevious-helpers").History.Partitioning;
-const { HISTORY_TABLES } = require('./metadata');
+import _ from 'the-lodash';
+import { Promise } from 'the-promise';
+import { ILogger } from 'the-logger';
 
-class HistoryCleanupProcessor {
-    constructor(context)
+import { Context } from '../context';
+
+import moment from 'moment';
+
+const CronJob = require('cron').CronJob
+
+import { Partitioning as HistoryPartitioning } from '@kubevious/helpers/dist/history'
+import { HISTORY_TABLES } from './metadata';
+import { Database } from '../db';
+import { ProcessingTrackerScoper } from '@kubevious/helpers/dist/processing-tracker';
+
+export class HistoryCleanupProcessor
+{
+    private _logger : ILogger;
+    private _context : Context
+
+    private _database : Database;
+    private _days : number = 15;
+    private _isProcessing : boolean = false;
+
+    private _startupDate? : moment.Moment;
+    private _lastCleanupDate? : moment.Moment;
+    private _cutoffDate? : moment.Moment;
+
+    constructor(context: Context)
     {
         this._context = context;
         this._logger = context.logger.sublogger('HistoryCleanupProcessor');
         this._database = context.database;
-        this._days = 15;
-        this._isProcessing = false;
-
-        this._startupDate = null;
-        this._lastCleanupDate = null;
     }
 
     get logger() {
@@ -28,7 +43,7 @@ class HistoryCleanupProcessor {
         this._setupCronJob();
     }
 
-    _setupCronJob()
+    private _setupCronJob()
     {
         // TODO: Temporarity disabled cleanup scheduling.
         // return;
@@ -40,7 +55,7 @@ class HistoryCleanupProcessor {
         cleanupJob.start();
     }
 
-    _processSchedule()
+    private _processSchedule()
     {
         var now = moment();
         this.logger.info('[_processSchedule] now: %s', now);
@@ -72,9 +87,6 @@ class HistoryCleanupProcessor {
 
         this._lastCleanupDate = moment();
 
-        this._currentConfigHashes = [];
-        this._usedHashesDict = {};
-
         this._cutoffDate = moment().subtract(this._days, 'days');
         this._logger.info('[processCleanup] Cutoff Date=%s', this._cutoffDate);
 
@@ -90,7 +102,7 @@ class HistoryCleanupProcessor {
             })
     }
 
-    _process(tracker)
+    private _process(tracker: ProcessingTrackerScoper)
     {
         return new Promise((resolve, reject) => {
 
@@ -119,7 +131,7 @@ class HistoryCleanupProcessor {
         });
     }
 
-    _cleanupHistoryTables(tracker)
+    private _cleanupHistoryTables(tracker: ProcessingTrackerScoper)
     {
         this._logger.info('[_cleanupHistoryTables] Running...');
 
@@ -128,7 +140,7 @@ class HistoryCleanupProcessor {
         });
     }
 
-    _cleanupHistoryTable(tableName)
+    private _cleanupHistoryTable(tableName: string)
     {
         this._logger.info('[_cleanupHistoryTable] Table: %s', tableName);
         return this._database.queryPartitions(tableName)
@@ -138,33 +150,33 @@ class HistoryCleanupProcessor {
                 var cutoffPartition = HistoryPartitioning.calculateDatePartition(this._cutoffDate);
                 this._logger.info('[_cleanupHistoryTable] CutoffPartition=%s', cutoffPartition);
 
-                for(var x of partitions)
-                {
-                    x.id = (x.value - 1);
-                }
+                let partitionIds : PartitionId[] = partitions.map(x => ({
+                    id: x.value - 1,
+                    name: x.name
+                }))
 
-                var partitionsToDelete = partitions.filter(x => (x.id <= cutoffPartition));
+                var partitionsToDelete = partitionIds.filter(x => (x.id <= cutoffPartition));
                 this._logger.info('[_cleanupHistoryTable] table: %s, partitionsToDelete:', tableName, partitionsToDelete);
 
                 return Promise.serial(partitionsToDelete, x => this._deletePartition(tableName, x));
             });
     }
 
-    _deletePartition(tableName, partitionInfo)
+    private _deletePartition(tableName: string, partitionId: PartitionId)
     {
-        this._logger.info('[_deletePartition] Table: %s, Partition: %s, Id: %s', tableName, partitionInfo.name, partitionInfo.id);
-        this._context.historyProcessor.markDeletedPartition(partitionInfo.id);
-        return this._database.dropPartition(tableName, partitionInfo.name);
+        this._logger.info('[_deletePartition] Table: %s, Partition: %s, Id: %s', tableName, partitionId.name, partitionId.id);
+        this._context.historyProcessor.markDeletedPartition(partitionId.id);
+        return this._database.dropPartition(tableName, partitionId.name);
     }
 
-    _outputDBUsage(stage, tracker)
+    private _outputDBUsage(stage: string, tracker: ProcessingTrackerScoper)
     {
         return tracker.scope("_outputDBUsage", (childTracker) => {
             return this._outputDbSize(stage)
         });
     }
 
-    _countTable(tableName, keyColumn, stage)
+    private _countTable(tableName: string, keyColumn: string, stage: string)
     {
         if (!stage) {
             stage = '';
@@ -177,7 +189,7 @@ class HistoryCleanupProcessor {
             })
     }
 
-    _outputDbSize(stage)
+    private _outputDbSize(stage: string)
     {
         var sql = `SELECT \`TABLE_NAME\`, \`TABLE_ROWS\`, ((data_length + index_length) / 1024 / 1024 ) AS size FROM information_schema.TABLES WHERE table_schema = "${process.env.MYSQL_DB}"`
         return this._executeSql(sql)
@@ -190,10 +202,14 @@ class HistoryCleanupProcessor {
             });
     }
 
-    _executeSql(sql)
+    private _executeSql(sql: string)
     {
         return this._database.executeSql(sql);
     }
 }
 
-module.exports = HistoryCleanupProcessor
+interface PartitionId
+{
+    name: string,
+    id: number
+}

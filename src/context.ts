@@ -10,7 +10,7 @@ import { FacadeRegistry } from './facade/registry';
 import { SearchEngine } from './search/engine';
 import { Database } from './db';
 import { HistoryProcessor } from './history/processor';
-const HistoryCleanupProcessor = require('./history/history-cleanup-processor');
+import { HistoryCleanupProcessor } from './history/history-cleanup-processor';
 import { Registry } from './registry/registry';
 import { Collector } from './collector/collector';
 import { DebugObjectLogger } from './utils/debug-object-logger';
