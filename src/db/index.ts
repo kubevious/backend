@@ -12,7 +12,7 @@ import { Context } from '../context' ;
 import { setupMarkersMeta } from './meta/markers';
 import { setupRulesMeta } from './meta/rules';
 import { setupNotificationsMeta } from './meta/notifications';
-import { MigratorBuilder, MigratorInfo } from './migration';
+import { MigratorArgs, MigratorBuilder, MigratorInfo } from './migration';
 
 const TARGET_DB_VERSION : number = 8;
 
@@ -213,10 +213,19 @@ export class Database
     {
         this.logger.info("[_processVersionMigration] target version: %s", targetVersion);
 
-        var migrator = require('./migrators/' + targetVersion);
+        let migrator = this._migrators[targetVersion.toString()];
+        if (!migrator) {
+            throw new Error(`Missing Migrator for db version ${targetVersion}`);
+        }
         return Promise.resolve()
             .then(() => {
-                return migrator(this.logger, this.driver, this._migratorExecuteSql.bind(this), this._context);
+                let migratorArgs : MigratorArgs = {
+                    logger: this.logger,
+                    driver: this.driver,
+                    executeSql: this._migratorExecuteSql.bind(this),
+                    context: this._context
+                }
+                return migrator.handler!(migratorArgs);
             })
             .then(() => {
                 return this._setDbVersion(targetVersion);
