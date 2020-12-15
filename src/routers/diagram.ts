@@ -6,7 +6,7 @@ import Joi from 'joi';
 export default function (router: Router, context: Context) {
 
     router.url('/api/v1/diagram');
-    
+
     router.get('/tree', function (req, res) {
         var state = context.registry.getCurrentState();
         return state.getTree();
@@ -58,11 +58,11 @@ export default function (router: Router, context: Context) {
         var alerts = state.getHierarchyAlerts(dn);
         return alerts;
     })
-    // .querySchema(
-    //     Joi.object({
-    //         dn: Joi.string().required()
-    //     })
-    // );
+    .querySchema(
+        Joi.object({
+            dn: Joi.string().required()
+        })
+    );
 
 
     /*************************/
@@ -71,10 +71,10 @@ export default function (router: Router, context: Context) {
         const criteria : string[] = <string[]>req.query.criteria;
         return context.searchEngine.search(criteria);
     })
-    // .querySchema(
-    //     Joi.object({
-    //         criteria: Joi.array().items(Joi.string()).required()
-    //     })
-    // );
+    .querySchema(
+        Joi.object({
+            criteria: Joi.array().items(Joi.string()).required()
+        })
+    );
 
 }

@@ -34,7 +34,7 @@ import VERSION from './version'
 export class Context
 {
     private _backend : Backend;
-    private _logger : ILogger;
+    private _logger: any; //  ILogger;
     private _tracker: ProcessingTracker;
     private _worldvious : WorldviousClient;
 
