@@ -1,16 +1,21 @@
 ###############################################################################
 # Step 1 : Builder image
-FROM node:12-alpine
-RUN apk update && apk upgrade && \
-    apk add --no-cache bash git openssh
+FROM kubevious/node-builder:12
+RUN node --version
+RUN npm --version
 WORKDIR /app
-COPY src/package*.json ./
-RUN npm install --production
+COPY ./package*.json ./
+RUN npm ci
+COPY ./src ./src
+COPY ./tsconfig.json ./
+RUN npm run build
 
 ###############################################################################
 # Step 2 : Runner image
 FROM node:12-alpine
 WORKDIR /app
-COPY --from=0 /app .
-COPY src/ ./
+COPY --from=0 /app/package*.json ./
+COPY --from=0 /app/node_modules ./node_modules
+COPY --from=0 /app/dist ./dist
+RUN ls -la
 CMD [ "node", "." ]

@@ -3,6 +3,13 @@ MY_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE
 MY_DIR="$(dirname $MY_PATH)"
 cd $MY_DIR
 
+./build.sh
+RESULT=$?
+if [ $RESULT -ne 0 ]; then
+  echo "Build failed"
+  exit 1;
+fi
+
 export LOG_TO_FILE=true
 export NODE_ENV=development
 # export DEBUG=express:*
@@ -21,4 +28,4 @@ export WORLDVIOUS_ID=123e4567-e89b-12d3-a456-426614174000
 # export WORLDVIOUS_METRICS_REPORT_TIMEOUT=6
 # export WORLDVIOUS_ERROR_REPORT_TIMEOUT=7
 
-node src/
+node .
