@@ -3,10 +3,10 @@ import { RegistryState } from '@kubevious/helpers/dist/registry-state';
 import { Context } from '../context';
 
 type Counters = {
-    [key: string]: { // labels or annotations
-        [label: string]: { // label or annotation info
-            counter: number // label or annotation has counter
-            [value: string]: any // label or annotation has value with cunter too
+    [key: string]: {
+        [label: string]: {
+            counter: number
+            [value: string]: any
         }
     }
 }
