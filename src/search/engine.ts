@@ -8,7 +8,7 @@ import { Context } from '../context';
 import { Index as FlexSearchIndex  } from 'flexsearch'
 import FlexSearch from 'flexsearch'
 
-import DocsHelper from '@kubevious/helpers/dist/docs';
+import * as DocsHelper from '@kubevious/helpers/dist/docs';
 
 export class SearchEngine
 {

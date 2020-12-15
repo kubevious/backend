@@ -17,7 +17,7 @@ export default function (router: Router, context: Context, logger: ILogger) {
     .bodySchema(
         Joi.object({
             date: Joi.string().required()
-        })
+        }).unknown(true)
     );
 
     router.post('/snapshot/items', function (req, res) {

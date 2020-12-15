@@ -54,7 +54,7 @@ export class Collector
     private _parserVersion? : string;
     private _currentMetric : any;
     private _latestMetric : any;
-    private _recentDurations : any;
+    private _recentDurations : number[] = [];
 
     constructor(context: Context)
     {

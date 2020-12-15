@@ -21,7 +21,7 @@ export default function (router: Router, context: Context) {
         var state = context.registry.getCurrentState();
         return state.getNode(dn, includeChildren);
     })
-    .paramsSchema(
+    .querySchema(
         Joi.object({
             dn: Joi.string().required(),
             'inc-children': Joi.boolean().optional()
@@ -33,7 +33,7 @@ export default function (router: Router, context: Context) {
         var state = context.registry.getCurrentState();
         return state.getChildren(dn)
     })
-    .paramsSchema(
+    .querySchema(
         Joi.object({
             dn: Joi.string().required()
         })
@@ -46,12 +46,11 @@ export default function (router: Router, context: Context) {
         props = _.values(props);
         return props;
     })
-    .paramsSchema(
+    .querySchema(
         Joi.object({
             dn: Joi.string().required()
         })
     );
-
 
     router.get('/alerts', function (req, res) {
         const dn : string = <string>req.query.dn;
@@ -59,11 +58,11 @@ export default function (router: Router, context: Context) {
         var alerts = state.getHierarchyAlerts(dn);
         return alerts;
     })
-    .paramsSchema(
-        Joi.object({
-            dn: Joi.string().required()
-        })
-    );
+    // .querySchema(
+    //     Joi.object({
+    //         dn: Joi.string().required()
+    //     })
+    // );
 
 
     /*************************/
@@ -72,10 +71,10 @@ export default function (router: Router, context: Context) {
         const criteria : string[] = <string[]>req.query.criteria;
         return context.searchEngine.search(criteria);
     })
-    .paramsSchema(
-        Joi.object({
-            criteria: Joi.array().items(Joi.string()).required()
-        })
-    );
+    // .querySchema(
+    //     Joi.object({
+    //         criteria: Joi.array().items(Joi.string()).required()
+    //     })
+    // );
 
 }

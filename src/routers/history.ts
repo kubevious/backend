@@ -46,7 +46,7 @@ export default function (router: Router, context: Context) {
                 return snapshot.generateTree();
             })
     })
-    .paramsSchema(
+    .querySchema(
         Joi.object({
             date: Joi.string().required()
         })
@@ -73,7 +73,7 @@ export default function (router: Router, context: Context) {
                 return result;
             })
     })
-    .paramsSchema(
+    .querySchema(
         Joi.object({
             dn: Joi.string().required(),
             date: Joi.string().required()
@@ -99,7 +99,7 @@ export default function (router: Router, context: Context) {
                 return result;
             });
     })
-    .paramsSchema(
+    .querySchema(
         Joi.object({
             dn: Joi.string().required(),
             date: Joi.string().required()
