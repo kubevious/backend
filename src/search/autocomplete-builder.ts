@@ -1,5 +1,4 @@
 import { RegistryState } from '@kubevious/helpers/dist/registry-state';
-
 import { Context } from '../context';
 
 type Counters = {
@@ -64,7 +63,7 @@ export class AutocompleteBuilder {
                 }
             })
         )
-        results =  results.sort((a, b) => this.orderKeysByRelevance(a, b, type))
+        results = results.sort((a, b) => this.orderKeysByRelevance(a, b, type))
         return results
     }
 

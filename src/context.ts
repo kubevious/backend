@@ -8,6 +8,7 @@ import { ProcessingTracker } from '@kubevious/helpers/dist/processing-tracker';
 
 import { FacadeRegistry } from './facade/registry';
 import { SearchEngine } from './search/engine';
+import { AutocompleteBuilder } from './search/autocomplete-builder';
 import { Database } from './db';
 import { HistoryProcessor } from './history/processor';
 import { HistoryCleanupProcessor } from './history/history-cleanup-processor';
@@ -48,6 +49,7 @@ export class Context
     private _historyProcessor: HistoryProcessor;
     private _collector: Collector;
     private _registry: Registry;
+    private _autocompleteBuilder: AutocompleteBuilder;
 
     private _facadeRegistry: FacadeRegistry;
 
@@ -84,6 +86,7 @@ export class Context
         this._historyProcessor = new HistoryProcessor(this);
         this._collector = new Collector(this);
         this._registry = new Registry(this);
+        this._autocompleteBuilder = new AutocompleteBuilder(this);
 
         this._facadeRegistry = new FacadeRegistry(this);
 
@@ -207,6 +210,10 @@ export class Context
 
     get notificationsApp() {
         return this._notificationsApp;
+    }
+
+    get autocompleteBuilder() {
+        return this._autocompleteBuilder;
     }
 
     run()
