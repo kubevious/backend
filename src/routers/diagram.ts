@@ -2,6 +2,7 @@ import _ from 'the-lodash';
 import { Context } from '../context';
 import { Router } from '@kubevious/helper-backend'
 import Joi from 'joi';
+import { SearchQuery } from '../types';
 
 export default function (router: Router, context: Context) {
 
@@ -68,13 +69,13 @@ export default function (router: Router, context: Context) {
     /*************************/
 
     router.get('/search', function (req, res) {
-        const criteria : string[] = <string[]>req.query.criteria;
+        const criteria: SearchQuery = <SearchQuery>req.query;
         return context.searchEngine.search(criteria);
     })
-    .querySchema(
-        Joi.object({
-            criteria: Joi.array().items(Joi.string()).required()
-        })
-    );
+    // .querySchema(                // Temporary commented
+    //     Joi.object({
+    //         criteria: Joi.object().schema()
+    //     })
+    // );
 
 }

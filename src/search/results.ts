@@ -1,6 +1,8 @@
+import { NodeItem } from "../types"
+
 export class SearchResults {
     private _wasFiltered: boolean
-    private _results: Object[]
+    private _results: NodeItem[]
 
     constructor() {
         this._wasFiltered = false

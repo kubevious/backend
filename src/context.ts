@@ -35,6 +35,8 @@ export class Context
 {
     private _backend : Backend;
     private _logger: any; //  ILogger;
+    /* Both of the 'DumpWriter' class (inside the-logger and worldvious-client/node_modules/the-logger)
+    should have public _writer and _indent prorerties to be able to uncomment */
     private _tracker: ProcessingTracker;
     private _worldvious : WorldviousClient;
 

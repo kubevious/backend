@@ -8,40 +8,15 @@ import { SearchResults } from './results';
 import { Index as FlexSearchIndex  } from 'flexsearch'
 import FlexSearch from 'flexsearch'
 
-import DocsHelper from '@kubevious/helpers/dist/docs';
-
-export interface NodeItem {
-    dn?: string
-    config?: {
-        kind: string
-        alertCount: {
-            error: number
-            warn: number
-        }
-        selfAlertCount: {
-            error: number
-            warn: number
-        }
-        markers?: string[]
-    }
-    labels?: {
-        [label: string]: string
-    }
-    annotations?: {
-        [annotation: string]: string
-    }
-}
-
-export interface SearchQuery {
-    [filter: string]: string | string[]
-}
+import { prettyKind as helperPrettyKind } from '@kubevious/helpers/dist/docs';
+import { SearchQuery, NodeItem, AlertsPayload  } from '../types';
 
 export class SearchEngine
 {
     private _logger : ILogger;
     private _context : Context;
     private _index?: any; //FlexSearchIndex<any>;
-    private _rawItems: Object[]
+    private _rawItems: NodeItem[]
 
     constructor(context: Context)
     {
@@ -83,7 +58,7 @@ export class SearchEngine
     addSnapshotItemToIndex(node: any)
     {
         var doc: any = [ node.dn ];
-        var prettyKind = DocsHelper.prettyKind(node.config.kind);
+        var prettyKind = helperPrettyKind(node.config.kind);
         doc.push(prettyKind);
         doc = doc.join(' ');
         this._index.add(node.dn, doc);
@@ -146,9 +121,9 @@ export class SearchEngine
         const nodes = search.wasFiltered ? search.results : this._rawItems
         search.results = nodes.filter(
             (item: NodeItem) =>
-                item.config.markers &&
+                item.config!.markers &&
                 criteriaMarkers.every((criteria) =>
-                    item.config.markers.some((marker: string) => criteria === marker)
+                    item.config!.markers.some((marker: string) => criteria === marker)
                 )
         )
         search.wasFiltered = true
@@ -157,30 +132,30 @@ export class SearchEngine
     filterByKind(value: string, search: SearchResults) {
         const nodes = search.wasFiltered ? search.results : this._rawItems
         search.results = nodes.filter((item: NodeItem) =>
-            item.config.kind === value
+            item.config!.kind === value
         )
         search.wasFiltered = true
     }
 
     filterByAlerts(condition: string, value: string, search: SearchResults) {
-        const parsedValue = JSON.parse(value)
+        const parsedValue: AlertsPayload = JSON.parse(value)
         const nodes = search.wasFiltered ? search.results : this._rawItems
         search.results = nodes.filter((item: NodeItem) => {
-            const selfCounter = item.config.selfAlertCount
-            const counter = item.config.alertCount
+            const selfCounter = item.config!.selfAlertCount
+            const counter = item.config!.alertCount
 
             return parsedValue.kind === 'at-least'
-                ? counter[condition] >= parsedValue.count || selfCounter[condition] >= parsedValue.count
+                ? counter[condition] as number >= parsedValue.count || selfCounter[condition] >= parsedValue.count
                 : counter[condition] <= parsedValue.count && selfCounter[condition] <= parsedValue.count || !counter[condition] && !selfCounter[condition]
         })
         search.wasFiltered = true
     }
 
-    filterByFields(condition: string, value: string[], search: SearchResults) {
-        const nodes = search.wasFiltered ? search.results : this._rawItems
+    filterByFields(condition: keyof NodeItem, value: string[], search: SearchResults) {
+        const nodes: NodeItem[] = search.wasFiltered ? search.results : this._rawItems
         search.results = nodes.filter((item: NodeItem) => {
             let hasCriteria = value.every((filterCriteria) => {
-                const { key, value } = JSON.parse(filterCriteria)
+                const { key, value }: { key: string; value: string} = JSON.parse(filterCriteria)
                 return this.filterByFieldCriteria(item, condition, value, key)
         })
             return hasCriteria
@@ -188,7 +163,7 @@ export class SearchEngine
         search.wasFiltered = true
     }
 
-    filterByFieldCriteria(item: any, condition: string, criteria: string, type: string) {
+    filterByFieldCriteria(item: NodeItem, condition: keyof NodeItem, criteria: string, type: string) {
         let isFound = false
         Object.entries(item[condition]).forEach(([key, value]) => {
             if (key === type && value === criteria) {
@@ -203,9 +178,11 @@ export class SearchEngine
         const search = new SearchResults()
         let response: {
             totalCount?: number
-            results?: NodeItem[]
+            results?: { dn: string }[]
         } = {}
-        for (let filter in query as SearchQuery) {
+
+        let filter: keyof SearchQuery
+        for (filter in query as SearchQuery) {
             this.applyFilter(filter, query[filter], search)
         }
 
