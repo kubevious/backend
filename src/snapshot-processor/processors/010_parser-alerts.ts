@@ -4,16 +4,13 @@ export default Processor()
     .order(10)
     .handler(({logger, state}) => {
 
-        state.traverseNodes((dn, node) => {
-
-            var alerts = state.getAlerts(dn);
+        state.postProcessAlerts((dn, alerts) => {
             for(var alert of alerts)
             {
                 alert.source = {
                     kind: 'parser'
                 };
             }
-
         })
 
     })

@@ -23,7 +23,7 @@
   "dependencies": {
     "@kubevious/easy-data-store": "^1.0.8",
     "@kubevious/helper-backend": "^1.0.11",
-    "@kubevious/helpers": "^1.0.10",
+    "@kubevious/helpers": "^1.0.14",
     "@kubevious/worldvious-client": "^1.0.6",
     "cron": "^1.8.2",
     "flexsearch": "^0.6.32",

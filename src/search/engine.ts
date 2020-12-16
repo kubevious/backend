@@ -1,7 +1,6 @@
 import _ from 'the-lodash';
 import { Promise } from 'the-promise';
 import { ILogger } from 'the-logger' ;
-import { RegistryState } from '@kubevious/helpers/dist/registry-state';
 
 import { Context } from '../context';
 
@@ -9,6 +8,7 @@ import { Index as FlexSearchIndex  } from 'flexsearch'
 import FlexSearch from 'flexsearch'
 
 import * as DocsHelper from '@kubevious/helpers/dist/docs';
+import { RegistryBundleState } from '@kubevious/helpers/dist/registry-bundle-state';
 
 export class SearchEngine
 {
@@ -27,11 +27,11 @@ export class SearchEngine
         return this._logger;
     }
 
-    accept(state: RegistryState)
+    accept(state: RegistryBundleState)
     {
         this.reset()
 
-        for(var node of state.getNodes())
+        for(var node of state.nodeItems)
         {
             this.addSnapshotItemToIndex(node.dn, node.config);
         }

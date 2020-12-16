@@ -14,7 +14,7 @@ import { HistoryAccessor } from './db-accessor';
 
 import { Context } from '../context';
 import { Database } from '../db';
-import { RegistryState } from '@kubevious/helpers/dist/registry-state';
+import { RegistryBundleState } from '@kubevious/helpers/dist/registry-bundle-state';
 
 import { HISTORY_TABLES } from './metadata';
 
@@ -37,7 +37,7 @@ export class HistoryProcessor
     private _isDbReady : boolean = false;
     private _configHashesDict : Record<string, boolean> = {};
     private _configHashesPartition? : number;
-    private _statesQueue : RegistryState[] = [];
+    private _statesQueue : RegistryBundleState[] = [];
     private _isLocked : boolean  = false;
     private _isProcessing : boolean  = false;
     private _processFinishListeners : (() => void)[] = [];
@@ -83,7 +83,7 @@ export class HistoryProcessor
         }
     }
 
-    accept(state: RegistryState)
+    accept(state: RegistryBundleState)
     {
         this._addToQueue(state);
         return this._safeProcessQueue();
@@ -128,7 +128,7 @@ export class HistoryProcessor
             })
     }
 
-    private _processQueueItem(state: RegistryState)
+    private _processQueueItem(state: RegistryBundleState)
     {
         this._logger.info("[_processQueueItem] begin");
         var snapshot = this._produceSnapshot(state);
@@ -144,7 +144,7 @@ export class HistoryProcessor
             });
     }
 
-    private _addToQueue(state: RegistryState)
+    private _addToQueue(state: RegistryBundleState)
     {
         this._statesQueue.push(state);
         this._statesQueue = _.takeRight(this._statesQueue, 1);
@@ -621,48 +621,43 @@ export class HistoryProcessor
             .then(() => this._dbAccessor.updateConfig('STATE', this._currentState));
     }
 
-    private _produceSnapshot(state: RegistryState)
+    private _produceSnapshot(state: RegistryBundleState)
     {
         this._logger.info("[_produceSnapshot] date: %s, count: %s", state.date.toISOString(), state.getCount());
 
-        var snapshot = new Snapshot(state.date);
-        for(var node of state.getNodes())
+        const snapshot = new Snapshot(state.date);
+        for(let node of state.nodeItems)
         {
             {
                 snapshot.addItem({
                     config_kind: 'node',
                     dn: node.dn,
-                    kind: node.config.kind,
+                    kind: node.kind,
                     config: node.config
                 });
             }
             
             {
-                var props = state.getProperties(node.dn);
-                if (_.keys(props).length > 0)
+                for(var props of _.values(node.propertiesMap))
                 {
-                    for(var props of _.values(props))
-                    {
-                        snapshot.addItem({
-                            config_kind: 'props',
-                            dn: node.dn,
-                            kind: node.config.kind,
-                            name: props.id,
-                            config: props
-                        });
-                    }
+                    snapshot.addItem({
+                        config_kind: 'props',
+                        dn: node.dn,
+                        kind: node.kind,
+                        name: props.id,
+                        config: props
+                    });
                 }
             }
 
             {
-                var alerts = state.getAlerts(node.dn);
-                if (alerts.length > 0)
+                if (node.selfAlerts.length > 0)
                 {
                     snapshot.addItem({
                         config_kind: 'alerts',
                         dn: node.dn,
-                        kind: node.config.kind,
-                        config: alerts
+                        kind: node.kind,
+                        config: node.selfAlerts
                     });
                 }
             }
