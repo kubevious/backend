@@ -12,27 +12,17 @@ export interface SearchQuery {
     }[]
 }
 
-export interface NodeItem {
-    dn: string
-    config: {
-        kind: string
-        alertCount: {
-            [type: string]: number
-        }
-        selfAlertCount: {
-            [type: string]: number
-        }
-        markers: string[]
-    }
-    labels: {
-        [label: string]: string
-    }
-    annotations: {
-        [annotation: string]: string
-    }
-}
-
 export interface AlertsPayload {
     kind: string
     count: number
+}
+
+export enum Filters {
+    kind = 'kind',
+    labels = 'labels',
+    error = 'error',
+    warn = 'warn',
+    annotations = 'annotations',
+    markers = 'markers',
+    criteria = 'criteria'
 }

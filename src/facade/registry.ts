@@ -110,7 +110,7 @@ export class FacadeRegistry
             })
             .then(() => {
                 return tracker.scope("autocomplete-builder-accept", () => {
-                    return this._context.autocompleteBuilder.accept(registryState)
+                    return this._context.autocompleteBuilder.accept(bundle)
                 })
             })
             .then(() => {

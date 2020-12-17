@@ -28,23 +28,18 @@ export class AutocompleteBuilder {
     }
 
     accept(state: RegistryBundleState) {
-        for (var node of state.getNodes()) {
-            const { labels, annotations } = state.getProperties(node.dn)
-            const nodeLabels =
-                labels && Object.keys(labels.config).length > 0
-                    ? labels.config
-                    : null
-            const nodeAnnotations = annotations ? annotations.config : null
-            if (nodeLabels) {
-                this._labelsDictionary.push(nodeLabels)
-                for (let [labelsKeys, labelsValues] of Object.entries(nodeLabels as {[key: string]: string})) {
+        for (var node of state.nodeItems) {
+            const { labels, annotations } = node
+            if (labels.config) {
+                this._labelsDictionary.push(labels.config)
+                for (let [labelsKeys, labelsValues] of Object.entries(labels.config)) {
                     this.addToCounters(labelsKeys, labelsValues, 'labels')
                 }
 
             }
-            if (nodeAnnotations) {
-                this._annotationsDictionary.push(nodeAnnotations)
-                for (let [annotationsKeys, annotationsValues] of Object.entries(nodeAnnotations as {[key: string]: string})) {
+            if (annotations.config) {
+                this._annotationsDictionary.push(annotations.config)
+                for (let [annotationsKeys, annotationsValues] of Object.entries(annotations.config)) {
                     this.addToCounters(annotationsKeys, annotationsValues, 'annotations')
                 }
             }
