@@ -16,13 +16,3 @@ export interface AlertsPayload {
     kind: string
     count: number
 }
-
-export enum Filters {
-    kind = 'kind',
-    labels = 'labels',
-    error = 'error',
-    warn = 'warn',
-    annotations = 'annotations',
-    markers = 'markers',
-    criteria = 'criteria'
-}

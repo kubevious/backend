@@ -8,7 +8,7 @@ import { Index as FlexSearchIndex  } from 'flexsearch'
 import FlexSearch from 'flexsearch'
 
 import { prettyKind as helperPrettyKind } from '@kubevious/helpers/dist/docs';
-import { SearchQuery, AlertsPayload, Filters  } from '../types';
+import { SearchQuery, AlertsPayload } from '../types';
 import { RegistryBundleState } from '@kubevious/helpers/dist/registry-bundle-state';
 import { RegistryBundleNode } from '@kubevious/helpers/dist/registry-bundle-node';
 import { AlertCounter } from '@kubevious/helpers/dist/registry-state';
@@ -63,116 +63,118 @@ export class SearchEngine
         this._index!.add(node.dn as any, doc);
     }
 
-    searchByKeyword(_condition: string, criteria: string, search: SearchResults) {
-        if (criteria.length > 1 || search.wasFiltered) {
-            const results = this._index!.search(criteria)
-            this.logger.silly("SEARCH: %s, result: ", criteria, results);
-            if (Array.isArray(results)) {
-                const nodes = search.wasFiltered ? search.results : this._rawItems
-                search.results = nodes.filter(item =>
-                    results.some((x: string) =>
-                        item.dn === x
-                    )
-                )
-                search.wasFiltered = true
-                return
-            }
+    private _searchByKeyword( criteria: string, search: SearchResults) {
+        if (criteria.length <= 1) {
+            return;
         }
 
-        search.results = [];
-        search.wasFiltered = true
-    }
-
-    filterByMarkers(_condition: string, criteriaMarkers: string[], search: SearchResults) {
-        const nodes = search.wasFiltered ? search.results : this._rawItems
-        search.results = nodes.filter(
-            (item: RegistryBundleNode) =>
-                criteriaMarkers.every((criteria) =>
-                    item.registryNode.markersDict[criteria]
-                    )
-            )
-        search.wasFiltered = true
-    }
-
-    filterByKind(_condition: string, value: string, search: SearchResults) {
-        const nodes = search.wasFiltered ? search.results : this._rawItems
-        search.results = nodes.filter((item) =>
-            item.config.kind === value
-        )
-        search.wasFiltered = true
-    }
-
-    filterByAlerts(condition: keyof AlertCounter, value: string, search: SearchResults) {
-        const parsedValue: AlertsPayload = JSON.parse(value)
-        const nodes = search.wasFiltered ? search.results : this._rawItems
-        search.results = nodes.filter((item) => {
-            const selfCounter = item.selfAlertCount;
-            const counter = item.alertCount;
-
-            return parsedValue.kind === 'at-least'
-                ? counter[condition] as number >= parsedValue.count || selfCounter[condition] >= parsedValue.count
-                : counter[condition] <= parsedValue.count && selfCounter[condition] <= parsedValue.count || !counter[condition] && !selfCounter[condition]
-        })
-        search.wasFiltered = true
-    }
-
-    filterByFields(condition: 'labels' | 'annotations', value: string[], search: SearchResults) {
-        const nodes: RegistryBundleNode[] = search.wasFiltered ? search.results : this._rawItems
-        search.results = nodes.filter((item: RegistryBundleNode) => {
-            let hasCriteria = value.every((filterCriteria) => {
-                const { key, value }: { key: string; value: string} = JSON.parse(filterCriteria)
-                return this.filterByFieldCriteria(item, condition, value, key)
-        })
-            return hasCriteria
-        })
-        search.wasFiltered = true
-    }
-
-    filterByFieldCriteria(item: RegistryBundleNode, condition: 'labels' | 'annotations', criteria: string, type: string) {
-        let isFound = false
-        const itemProps = item[condition].config
-        if (itemProps) {
-            Object.entries(itemProps).forEach(([key, value]) => {
-                if (key === type && value === criteria) {
-                    return isFound = true
-                }
+        const results = this._index!.search(criteria)
+        this.logger.silly("SEARCH: %s, result: ", criteria, results);
+        if (Array.isArray(results)) {
+            const resultDict = _.makeDict(results, x => <string>x, x => true);
+            search.filterResults((item) => {
+                return resultDict[item.dn];
             })
         }
-        return isFound
+    }
+
+    private _filterByMarkers(criteriaMarkers: string[], search: SearchResults) {
+        search.filterResults((item) => {
+            return criteriaMarkers.every((criteria) =>
+                item.registryNode.markersDict[criteria]
+            )
+        });
+    }
+
+    private _filterByKind(value: string, search: SearchResults) {
+        search.filterResults((item) => {
+            return item.kind === value;
+        });
+    }
+
+    private _filterByAlerts(severity: keyof AlertCounter, value: AlertsPayload, search: SearchResults) {
+        search.filterResults((item) => {
+            const currentValue = (<number>item.alertCount[severity])
+            if (value.kind === 'at-least') {
+                return currentValue >= value.count;
+            }
+            if (value.kind === 'at-most') {
+                return currentValue <= value.count;
+            }
+            return true;
+        });
+    }
+
+    private _filterByLabels(value: { [name: string]: string }[], search: SearchResults) {
+        search.filterResults((item) => {
+            return value.every(filterCriteria => {
+                return _.keys(filterCriteria).every(key => {
+                    return item.labels[key] === filterCriteria[key];
+                })
+            })
+        });
+    }
+
+    private _filterByAnnotations(value: { [name: string]: string }[], search: SearchResults) {
+        search.filterResults((item) => {
+            return value.every(filterCriteria => {
+                return _.keys(filterCriteria).every(key => {
+                    return item.annotations[key] === filterCriteria[key];
+                })
+            })
+        });
     }
 
     search(query: SearchQuery)
     {
-        const search = new SearchResults()
-        let response: {
-            totalCount?: number
-            results?: { dn: string }[]
-        } = {}
+        const search = new SearchResults(this._rawItems);
 
-        const filterMapping: Record<string, Function> = {
-            [Filters.kind]: this.filterByKind.bind(this),
-            [Filters.annotations]: this.filterByFields.bind(this),
-            [Filters.error]: this.filterByAlerts.bind(this),
-            [Filters.labels]: this.filterByFields.bind(this),
-            [Filters.markers]: this.filterByMarkers.bind(this),
-            [Filters.warn]: this.filterByAlerts.bind(this),
-            [Filters.criteria]: this.searchByKeyword.bind(this)
+        if (_.isNotNullOrUndefined(query.kind))
+        {
+            this._filterByKind(query.kind!, search);
         }
 
-        let filter: keyof SearchQuery
-        for (filter in query as SearchQuery) {
-
-            const mapCurrentFilter = filterMapping[filter]
-
-            mapCurrentFilter(filter, query[filter], search)
+        if (_.isNotNullOrUndefined(query.labels))
+        {
+            this._filterByLabels(query.labels!, search);
+        }
+        if (_.isNotNullOrUndefined(query.annotations))
+        {
+            this._filterByAnnotations(query.annotations!, search);
         }
 
-        const resultsArray = search.results
+        if (_.isNotNullOrUndefined(query.markers))
+        {
+            this._filterByMarkers(query.markers!, search);
+        }
 
-        response.totalCount = resultsArray.length
-        response.results = resultsArray.slice(0, 200).map((el: RegistryBundleNode) => ({ dn: el.dn }))
+        if (_.isNotNullOrUndefined(query.error))
+        {
+            this._filterByAlerts('error', query.error!, search);
+        }
 
-        search.wasFiltered = false
+        if (_.isNotNullOrUndefined(query.warn))
+        {
+            this._filterByAlerts('warn', query.warn!, search);
+        }
+
+        if (_.isNotNullOrUndefined(query.criteria))
+        {
+            this._searchByKeyword(query.criteria!, search);
+        }
+
+        if (!search.wasFiltered) {
+            return {
+                totalCount: 0,
+                results: []
+            }
+        }
+        
+        const resultsArray = search.results;
+        let response = {
+            totalCount: resultsArray.length,
+            results: _.take(resultsArray, 200).map((el) => ({ dn: el.dn }))
+        };
         return response
     }
 

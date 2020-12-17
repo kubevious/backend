@@ -1,4 +1,5 @@
 import { RegistryBundleState } from '@kubevious/helpers/dist/registry-bundle-state';
+import { ILogger } from 'the-logger/dist';
 import { Context } from '../context';
 
 type Counters = {
@@ -11,6 +12,7 @@ type Counters = {
 }
 
 export class AutocompleteBuilder {
+    private _logger : ILogger;
     private _context: Context
     private _labelsDictionary: Object[]
     private _annotationsDictionary: Object[]
@@ -19,6 +21,8 @@ export class AutocompleteBuilder {
 
     constructor(context: Context) {
         this._context = context
+        this._logger = this._context.logger.sublogger("AutocompleteBuilder");
+
         this._labelsDictionary = []
         this._annotationsDictionary = []
         this.counters = {
@@ -44,6 +48,8 @@ export class AutocompleteBuilder {
                 }
             }
         }
+
+        this._logger.info("this._labelsDictionary: ", this._labelsDictionary);
     }
 
     getKeys(type: string, criteria: string) {

@@ -4,11 +4,10 @@ export class SearchResults {
     private _wasFiltered: boolean
     private _results: RegistryBundleNode[]
 
-    constructor() {
+    constructor(allItems: RegistryBundleNode[]) {
         this._wasFiltered = false
-        this._results = []
+        this._results = allItems
     }
-
 
     set wasFiltered(value) {
         this._wasFiltered = value
@@ -24,5 +23,11 @@ export class SearchResults {
 
     get wasFiltered() {
         return this._wasFiltered
+    }
+
+    filterResults(cb: (item: RegistryBundleNode) => boolean) 
+    {
+        this._results = this._results.filter(x => cb(x));
+        this._wasFiltered = true;
     }
 }
