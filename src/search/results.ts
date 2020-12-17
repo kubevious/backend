@@ -1,8 +1,8 @@
-import { NodeItem } from "../types"
+import { RegistryBundleNode } from "@kubevious/helpers/dist/registry-bundle-node"
 
 export class SearchResults {
     private _wasFiltered: boolean
-    private _results: NodeItem[]
+    private _results: RegistryBundleNode[]
 
     constructor() {
         this._wasFiltered = false

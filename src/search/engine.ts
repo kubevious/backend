@@ -1,6 +1,5 @@
 import _ from 'the-lodash';
 import { ILogger } from 'the-logger' ;
-import { RegistryState } from '@kubevious/helpers/dist/registry-state';
 
 import { Context } from '../context';
 import { SearchResults } from './results';
@@ -10,41 +9,40 @@ import FlexSearch from 'flexsearch'
 
 import { prettyKind as helperPrettyKind } from '@kubevious/helpers/dist/docs';
 import { SearchQuery, NodeItem, AlertsPayload  } from '../types';
+import { RegistryBundleState } from '@kubevious/helpers/dist/registry-bundle-state';
+import { RegistryBundleNode } from '@kubevious/helpers/dist/registry-bundle-node';
 
 export class SearchEngine
 {
     private _logger : ILogger;
     private _context : Context;
     private _index?: any; //FlexSearchIndex<any>;
-    private _rawItems: NodeItem[]
+    private _rawItems: RegistryBundleNode[] = [];
 
     constructor(context: Context)
     {
         this._context = context;
         this._logger = context.logger.sublogger("SearchEngine");
-        this._rawItems = []
-        this.reset();
+        
+        this._reset();
     }
 
     get logger() {
         return this._logger;
     }
 
-    accept(state: RegistryState)
+    accept(state: RegistryBundleState)
     {
-        this.reset()
+        this._rawItems = state.nodeItems;
 
-        for(var node of state.getNodes())
+        this._reset()
+        for(var node of state.nodeItems)
         {
-            const { labels, annotations } = state.getProperties(node.dn)
-            const nodeLabels = labels ? labels.config : {}
-            const nodeAnnotations = annotations ? annotations.config : {}
-            this._rawItems.push({ ...node, labels: nodeLabels, annotations: nodeAnnotations })
-            this.addSnapshotItemToIndex(node)
+            this._addSnapshotItemToIndex(node)
         }
     }
 
-    reset()
+    private _reset()
     {
         this._index = FlexSearch.create<any>({
             encode: "icase",
@@ -55,7 +53,7 @@ export class SearchEngine
         });
     }
 
-    addSnapshotItemToIndex(node: any)
+    private _addSnapshotItemToIndex(node: RegistryBundleNode)
     {
         var doc: any = [ node.dn ];
         var prettyKind = helperPrettyKind(node.config.kind);
@@ -70,7 +68,7 @@ export class SearchEngine
             this.logger.silly("SEARCH: %s, result: ", criteria, results);
             if (Array.isArray(results)) {
                 const nodes = search.wasFiltered ? search.results : this._rawItems
-                search.results = nodes.filter((item: NodeItem) => {
+                search.results = nodes.filter(item => {
                     return results.some((x: string) => {
                         return item.dn === x
                     })
@@ -120,7 +118,7 @@ export class SearchEngine
     filterByMarkers(criteriaMarkers: string[], search: SearchResults) {
         const nodes = search.wasFiltered ? search.results : this._rawItems
         search.results = nodes.filter(
-            (item: NodeItem) =>
+            (item) =>
                 item.config!.markers &&
                 criteriaMarkers.every((criteria) =>
                     item.config!.markers.some((marker: string) => criteria === marker)
@@ -131,7 +129,7 @@ export class SearchEngine
 
     filterByKind(value: string, search: SearchResults) {
         const nodes = search.wasFiltered ? search.results : this._rawItems
-        search.results = nodes.filter((item: NodeItem) =>
+        search.results = nodes.filter((item) =>
             item.config!.kind === value
         )
         search.wasFiltered = true
@@ -140,9 +138,9 @@ export class SearchEngine
     filterByAlerts(condition: string, value: string, search: SearchResults) {
         const parsedValue: AlertsPayload = JSON.parse(value)
         const nodes = search.wasFiltered ? search.results : this._rawItems
-        search.results = nodes.filter((item: NodeItem) => {
-            const selfCounter = item.config!.selfAlertCount
-            const counter = item.config!.alertCount
+        search.results = nodes.filter((item) => {
+            const selfCounter = item.selfAlertCount;
+            const counter = item.alertCount;
 
             return parsedValue.kind === 'at-least'
                 ? counter[condition] as number >= parsedValue.count || selfCounter[condition] >= parsedValue.count

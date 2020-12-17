@@ -1,4 +1,4 @@
-import { RegistryState } from '@kubevious/helpers/dist/registry-state';
+import { RegistryBundleState } from '@kubevious/helpers/dist/registry-bundle-state';
 import { Context } from '../context';
 
 type Counters = {
@@ -27,7 +27,7 @@ export class AutocompleteBuilder {
         }
     }
 
-    accept(state: RegistryState) {
+    accept(state: RegistryBundleState) {
         for (var node of state.getNodes()) {
             const { labels, annotations } = state.getProperties(node.dn)
             const nodeLabels =

@@ -3,8 +3,9 @@ import { Promise } from 'the-promise';
 import { ILogger } from 'the-logger' ;
 
 import { Context } from '../context';
-import { SnapshotInfo } from '../collector/collector';
-import { RegistryState, StateBundle } from '@kubevious/helpers/dist/registry-state';
+import { CollectorSnapshotInfo } from '../collector/collector';
+import { RegistryState } from '@kubevious/helpers/dist/registry-state';
+import { RegistryBundleState } from '@kubevious/helpers/dist/registry-bundle-state';
 import { ProcessingTrackerScoper } from '@kubevious/helpers/dist/processing-tracker';
 
 export class FacadeRegistry
@@ -12,7 +13,7 @@ export class FacadeRegistry
     private _logger : ILogger;
     private _context : Context
 
-    private _latestSnapshot : SnapshotInfo | null = null;
+    private _latestSnapshot : CollectorSnapshotInfo | null = null;
     private _isProcessing : boolean = false;
     private _isScheduled : boolean = false;
     
@@ -30,7 +31,7 @@ export class FacadeRegistry
         return this._context.debugObjectLogger;
     }
 
-    acceptCurrentSnapshot(snapshotInfo: SnapshotInfo)
+    acceptCurrentSnapshot(snapshotInfo: CollectorSnapshotInfo)
     {
         this._latestSnapshot = snapshotInfo;
         this._triggerProcess();
@@ -73,21 +74,27 @@ export class FacadeRegistry
         })
     }
 
-    private _processCurrentSnapshot(snapshotInfo: SnapshotInfo)
+    private _processCurrentSnapshot(snapshotInfo: CollectorSnapshotInfo)
     {
         return this._context.tracker.scope("FacadeRegistry::_processCurrentSnapshot", (tracker) => {
 
             return this._context.snapshotProcessor.process(snapshotInfo, tracker)
-                .then(result => {
-                    return this._runFinalize(result.registryState, result.bundle, tracker);
+                .then(bundle => {
+                    return this._runFinalize(bundle, tracker);
                 })
         });
     }
 
-    private _runFinalize(registryState: RegistryState, bundle : StateBundle, tracker: ProcessingTrackerScoper)
+    private _runFinalize(bundle : RegistryBundleState, tracker: ProcessingTrackerScoper)
     {
         return Promise.resolve()
-            .then(() => this.debugObjectLogger.dump("latest-bundle", 0, bundle))
+            .then(() => {
+                return Promise.resolve()
+                    .then(() => this.debugObjectLogger.dump("latest-bundle-nodes", 0, bundle.nodes))
+                    .then(() => this.debugObjectLogger.dump("latest-bundle-children", 0, bundle.children))
+                    .then(() => this.debugObjectLogger.dump("latest-bundle-properties", 0, bundle.properties))
+                    .then(() => this.debugObjectLogger.dump("latest-bundle-alerts", 0, bundle.alerts));
+            })
             .then(() => {
                 this._produceCounters(bundle);
             })
@@ -98,7 +105,7 @@ export class FacadeRegistry
             })
             .then(() => {
                 return tracker.scope("registry-accept", () => {
-                    return this._context.registry.accept(registryState);
+                    return this._context.registry.accept(bundle);
                 });
             })
             .then(() => {
@@ -108,17 +115,17 @@ export class FacadeRegistry
             })
             .then(() => {
                 return tracker.scope("search-accept", () => {
-                    return this._context.searchEngine.accept(registryState);
+                    return this._context.searchEngine.accept(bundle);
                 });
             })
             .then(() => {
                 return tracker.scope("history-accept", () => {
-                    return this._context.historyProcessor.accept(registryState);
+                    return this._context.historyProcessor.accept(bundle);
                 });
             })
     }
 
-    private _produceCounters(bundle: StateBundle)
+    private _produceCounters(bundle: RegistryBundleState)
     {
         const counters = this._extractCounters(bundle);
         this.logger.info("[COUNTERS] BEGIN");
@@ -130,18 +137,18 @@ export class FacadeRegistry
         this._context.worldvious.acceptCounters(counters);
     }
 
-    private _extractCounters(bundle: StateBundle)
+    private _extractCounters(bundle: RegistryBundleState)
     {
         let nodeCountDict : Record<string, number> = {};
-        for(let node of bundle.nodes)
+        for(let node of bundle.nodeItems)
         {
-            if (!nodeCountDict[node.config.kind])
+            if (!nodeCountDict[node.kind])
             {
-                nodeCountDict[node.config.kind] = 1;
+                nodeCountDict[node.kind] = 1;
             }
             else
             {
-                nodeCountDict[node.config.kind]++;
+                nodeCountDict[node.kind]++;
             }
         }
 
@@ -153,7 +160,7 @@ export class FacadeRegistry
         return nodeCounters;
     }
 
-    private _updateWebsocket(bundle: StateBundle)
+    private _updateWebsocket(bundle: RegistryBundleState)
     {
         {
             var items = [];
