@@ -12,20 +12,20 @@ type Counters = {
     };
 };
 
-interface NodeBundleItemConfig {
+export interface NodeBundleItemConfig {
     labels: { config?: Record<string, string> };
     annotations: { config?: Record<string, string> };
 }
 
-type Dictionary = Record<string, string>
+type Dictionary = Record<string, Record<string, boolean>>
 
 type ValuesPayload = { key: string, criteria: string }
 
 export class AutocompleteBuilder {
     private _logger : ILogger;
     private _context: Context
-    private _labelsDictionary: Dictionary[]
-    private _annotationsDictionary: Dictionary[]
+    private _labelsDictionary: Dictionary
+    private _annotationsDictionary: Dictionary
     private labelsCounters: Counters
     private annotationsCounters: Counters
 
@@ -33,8 +33,8 @@ export class AutocompleteBuilder {
         this._context = context
         this._logger = this._context.logger.sublogger("AutocompleteBuilder");
 
-        this._labelsDictionary = []
-        this._annotationsDictionary = []
+        this._labelsDictionary = {}
+        this._annotationsDictionary = {}
         this.labelsCounters = {},
         this.annotationsCounters = {}
     }
@@ -43,16 +43,20 @@ export class AutocompleteBuilder {
         for (var node of state.nodeItems) {
             const { labels, annotations }: NodeBundleItemConfig = node
             if (labels.config) {
-                this._labelsDictionary.push(labels.config)
                 for (let [labelsKeys, labelsValues] of Object.entries(labels.config)) {
                     this._addToLabelsCounters(labelsKeys, labelsValues)
+                    this._labelsDictionary[labelsKeys] = this._labelsDictionary[labelsKeys]
+                        ? { ...this._labelsDictionary[labelsKeys], [labelsValues]: true }
+                        : { [labelsValues]: true }
                 }
 
             }
             if (annotations.config) {
-                this._annotationsDictionary.push(annotations.config)
                 for (let [annotationsKeys, annotationsValues] of Object.entries(annotations.config)) {
                     this._addToAnnotationsCounters(annotationsKeys, annotationsValues)
+                    this._annotationsDictionary[annotationsKeys] = this._annotationsDictionary[annotationsKeys]
+                    ? { ...this._annotationsDictionary[annotationsKeys], [annotationsValues]: true }
+                    : { [annotationsValues]: true }
                 }
             }
         }
@@ -68,17 +72,16 @@ export class AutocompleteBuilder {
         return this._getKeys(this._annotationsDictionary, criteria, this.annotationsCounters)
     }
 
-    private _getKeys(dictionary: Dictionary[], criteria: string, counter: Counters) {
+    private _getKeys(dictionary: Dictionary, criteria: string, counter: Counters) {
         let results: string[] = []
-        dictionary.map((label: Object) =>
-            Object.keys(label).forEach((key: string) => {
-                if (key.includes(criteria)) {
-                    results = results.some((resultKey: string) => resultKey === key)
-                        ? results
-                        : [...results, key]
-                }
-            })
-        )
+
+        Object.keys(dictionary).forEach((key: string) => {
+            if (key.includes(criteria)) {
+                results = results.some((resultKey: string) => resultKey === key)
+                    ? results
+                    : [...results, key]
+            }
+        })
         results = _.orderBy(results, x => counter[x].count, 'desc')
 
         return results
@@ -92,13 +95,13 @@ export class AutocompleteBuilder {
         return this._getValues(this._annotationsDictionary, key, criteria, this.annotationsCounters)
     }
 
-    private _getValues(dictionary: Dictionary[], key: string, criteria: string, counter: Counters) {
+    private _getValues(dictionary: Dictionary, key: string, criteria: string, counter: Counters) {
         let results: string[] = []
-        dictionary.map((value: {[key: string]: string}) => {
-            if (value[key] && value[key].includes(criteria)) {
-                results = results.some((resultVal: string) => resultVal === value[key])
+        Object.keys(dictionary[key]).forEach(value => {
+            if (value && value.includes(criteria)) {
+                results = results.some((resultVal: string) => resultVal === value)
                     ? results
-                    : [...results, value[key]]
+                    : [...results, value]
             }
         })
         results = _.orderBy(results, x => counter[key].values[x], 'desc')

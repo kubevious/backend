@@ -3,6 +3,7 @@ import { ILogger } from 'the-logger' ;
 
 import { Context } from '../context';
 import { SearchResults } from './results';
+import { NodeBundleItemConfig } from './autocomplete-builder'
 
 import { Index as FlexSearchIndex  } from 'flexsearch'
 import FlexSearch from 'flexsearch'
@@ -24,7 +25,7 @@ export class SearchEngine
     {
         this._context = context;
         this._logger = context.logger.sublogger("SearchEngine");
-        
+
         this._reset();
     }
 
@@ -106,21 +107,23 @@ export class SearchEngine
     }
 
     private _filterByLabels(value: { [name: string]: string }[], search: SearchResults) {
-        search.filterResults((item) => {
+        search.filterResults((item: NodeBundleItemConfig) => {
             return value.every(filterCriteria => {
-                return _.keys(filterCriteria).every(key => {
-                    return item.labels[key] === filterCriteria[key];
-                })
+                const { key, value } = filterCriteria
+                if (_.isNotNullOrUndefined(item.labels.config)) {
+                    return item.labels.config![key] === value;
+                }
             })
         });
     }
 
     private _filterByAnnotations(value: { [name: string]: string }[], search: SearchResults) {
-        search.filterResults((item) => {
+        search.filterResults((item: NodeBundleItemConfig) => {
             return value.every(filterCriteria => {
-                return _.keys(filterCriteria).every(key => {
-                    return item.annotations[key] === filterCriteria[key];
-                })
+                const { key, value } = filterCriteria
+                if (_.isNotNullOrUndefined(item.annotations.config)) {
+                    return item.annotations.config![key] === value;
+                }
             })
         });
     }
@@ -169,7 +172,7 @@ export class SearchEngine
                 results: []
             }
         }
-        
+
         const resultsArray = search.results;
         let response = {
             totalCount: resultsArray.length,

@@ -72,19 +72,19 @@ export default function (router: Router, context: Context) {
     /*************************/
 
     router
-        .get('/search', function (req, res) {
-            const criteria: SearchQuery = <SearchQuery>req.query;
+        .post('/search', function (req, res) {
+            const criteria: SearchQuery = <SearchQuery>req.body;
             return context.searchEngine.search(criteria);
         })
-        .querySchema(
+        .bodySchema(
             Joi.object({
                 criteria: Joi.string(),
                 kind: Joi.string(),
-                error: Joi.string(),
-                warn: Joi.string(),
+                error: Joi.object(),
+                warn: Joi.object(),
                 markers: Joi.array().items(Joi.string()),
-                labels: Joi.array().items(Joi.string()),
-                annotations: Joi.array().items(Joi.string()),
+                labels: Joi.array().items(Joi.object()),
+                annotations: Joi.array().items(Joi.object()),
             }),
         );
 }
