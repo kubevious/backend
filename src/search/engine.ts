@@ -3,7 +3,6 @@ import { ILogger } from 'the-logger' ;
 
 import { Context } from '../context';
 import { SearchResults } from './results';
-import { NodeBundleItemConfig } from './autocomplete-builder'
 
 import { Index as FlexSearchIndex  } from 'flexsearch'
 import FlexSearch from 'flexsearch'
@@ -107,22 +106,23 @@ export class SearchEngine
     }
 
     private _filterByLabels(value: { [name: string]: string }[], search: SearchResults) {
-        search.filterResults((item: NodeBundleItemConfig) => {
+        search.filterResults((item) => {
             return value.every(filterCriteria => {
                 const { key, value } = filterCriteria
-                if (_.isNotNullOrUndefined(item.labels.config)) {
-                    return item.labels.config![key] === value;
+                if (_.isNotNullOrUndefined(item.labels)) {
+                    return item.labels![key] === value;
+                    return false;
                 }
             })
         });
     }
 
     private _filterByAnnotations(value: { [name: string]: string }[], search: SearchResults) {
-        search.filterResults((item: NodeBundleItemConfig) => {
+        search.filterResults((item) => {
             return value.every(filterCriteria => {
                 const { key, value } = filterCriteria
-                if (_.isNotNullOrUndefined(item.annotations.config)) {
-                    return item.annotations.config![key] === value;
+                if (_.isNotNullOrUndefined(item.annotations)) {
+                    return item.annotations[key] === value;
                 }
             })
         });
@@ -172,6 +172,12 @@ export class SearchEngine
                 results: []
             }
         }
+
+        // TODO: Cleanup after done. this is for testing purposes.
+        // let resultsArray : any[] = [];
+        // for(let i = 0; i < 1000; i++) {
+        //     resultsArray.push({ dn: 'root/ns-' + i});
+        // }
 
         const resultsArray = search.results;
         let response = {

@@ -25,7 +25,7 @@ export default function (router: Router, context: Context) {
     router
         .post('/labels/values', function (req, res) {
             const query : ValueQuery = <ValueQuery>req.body;
-            return context.autocompleteBuilder.getLabelValues(query);
+            return context.autocompleteBuilder.getLabelValues(query.key, query.criteria);
         })
         .bodySchema(
             Joi.object({
@@ -48,7 +48,7 @@ export default function (router: Router, context: Context) {
     router
         .post('/annotations/values', function (req, res) {
             const query : ValueQuery = <ValueQuery>req.body;
-            return context.autocompleteBuilder.getAnnotationValues(query);
+            return context.autocompleteBuilder.getAnnotationValues(query.key, query.criteria);
         })
         .bodySchema(
             Joi.object({
