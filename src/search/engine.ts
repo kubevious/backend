@@ -11,7 +11,7 @@ import { prettyKind as helperPrettyKind } from '@kubevious/helpers/dist/docs';
 import { SearchQuery, AlertsPayload } from '../types';
 import { RegistryBundleState } from '@kubevious/helpers/dist/registry-bundle-state';
 import { RegistryBundleNode } from '@kubevious/helpers/dist/registry-bundle-node';
-import { AlertCounter } from '@kubevious/helpers/dist/registry-state';
+import { AlertCounter } from '@kubevious/helpers/dist/snapshot/types';
 
 export class SearchEngine
 {
