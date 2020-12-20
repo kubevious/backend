@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import * as DateUtils from '@kubevious/helpers/dist/date-utils';
 
 import { Context } from '../context';
-import { SnapshotItemInfo } from '@kubevious/helpers/dist/registry-state';
+import { SnapshotItemInfo } from '@kubevious/helpers/dist/snapshot/types';
 
 export interface UserMetricItem
 {

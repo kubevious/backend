@@ -109,6 +109,11 @@ export class FacadeRegistry
                 });
             })
             .then(() => {
+                return tracker.scope("autocomplete-builder-accept", () => {
+                    return this._context.autocompleteBuilder.accept(bundle)
+                })
+            })
+            .then(() => {
                 return tracker.scope("search-accept", () => {
                     return this._context.searchEngine.accept(bundle);
                 });

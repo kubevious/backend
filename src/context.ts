@@ -8,6 +8,7 @@ import { ProcessingTracker } from '@kubevious/helpers/dist/processing-tracker';
 
 import { FacadeRegistry } from './facade/registry';
 import { SearchEngine } from './search/engine';
+import { AutocompleteBuilder } from './search/autocomplete-builder';
 import { Database } from './db';
 import { HistoryProcessor } from './history/processor';
 import { HistoryCleanupProcessor } from './history/history-cleanup-processor';
@@ -34,7 +35,9 @@ import VERSION from './version'
 export class Context
 {
     private _backend : Backend;
-    private _logger : ILogger;
+    private _logger: any; //  ILogger;
+    /* Both of the 'DumpWriter' class (inside the-logger and worldvious-client/node_modules/the-logger)
+    should have public _writer and _indent prorerties to be able to uncomment */
     private _tracker: ProcessingTracker;
     private _worldvious : WorldviousClient;
 
@@ -46,6 +49,7 @@ export class Context
     private _historyProcessor: HistoryProcessor;
     private _collector: Collector;
     private _registry: Registry;
+    private _autocompleteBuilder: AutocompleteBuilder;
 
     private _facadeRegistry: FacadeRegistry;
 
@@ -82,6 +86,7 @@ export class Context
         this._historyProcessor = new HistoryProcessor(this);
         this._collector = new Collector(this);
         this._registry = new Registry(this);
+        this._autocompleteBuilder = new AutocompleteBuilder(this);
 
         this._facadeRegistry = new FacadeRegistry(this);
 
@@ -205,6 +210,10 @@ export class Context
 
     get notificationsApp() {
         return this._notificationsApp;
+    }
+
+    get autocompleteBuilder() {
+        return this._autocompleteBuilder;
     }
 
     run()

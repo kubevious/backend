@@ -104,7 +104,7 @@ export class HistoryCleanupProcessor
 
     private _process(tracker: ProcessingTrackerScoper)
     {
-        return new Promise((resolve, reject) => {
+        return Promise.construct((resolve, reject) => {
 
             this._context.historyProcessor.lockForCleanup(historyLock => {
 
