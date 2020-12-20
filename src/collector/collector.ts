@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import * as DateUtils from '@kubevious/helpers/dist/date-utils';
 
 import { Context } from '../context';
+import { SnapshotItemInfo } from '@kubevious/helpers/dist/snapshot/types';
 
 export interface UserMetricItem
 {
@@ -23,17 +24,17 @@ export interface MetricItem
     durationSeconds: number | null
 }
 
-export interface SnapshotInfo
+export interface CollectorSnapshotInfo
 {
     date: Date,
     metric: MetricItem,
-    items: Record<string, any>
+    items: Record<string, SnapshotItemInfo>
 }
 
-export interface SnapshotItem
+export interface CollectorSnapshotItem
 {
     hash: string,
-    data: any
+    data: SnapshotItemInfo
 }
 
 export interface DiffItem
@@ -46,7 +47,7 @@ export class Collector
     private _logger : ILogger;
     private _context : Context
 
-    private _snapshots : Record<string, SnapshotInfo> = {};
+    private _snapshots : Record<string, CollectorSnapshotInfo> = {};
     private _diffs : Record<string, any> = {};
 
     private _iteration : number = 0;
@@ -169,7 +170,7 @@ export class Collector
         };
     }
 
-    acceptSnapshotItems(snapshotId: string, items: SnapshotItem[])
+    acceptSnapshotItems(snapshotId: string, items: CollectorSnapshotItem[])
     {
         var snapshotInfo = this._snapshots[snapshotId];
         if (!snapshotInfo) {
@@ -250,7 +251,7 @@ export class Collector
             }
     
             var newSnapshotId = uuidv4();
-            var newSnapshotInfo : SnapshotInfo = {
+            var newSnapshotInfo : CollectorSnapshotInfo = {
                 date: new Date(diffInfo.date),
                 metric: diffInfo.metric,
                 items: _.clone(snapshotInfo.items)
@@ -279,7 +280,7 @@ export class Collector
         });
     }
 
-    private _acceptSnapshot(snapshotInfo: SnapshotInfo)
+    private _acceptSnapshot(snapshotInfo: CollectorSnapshotInfo)
     {
         this._endMetric(snapshotInfo.metric);
 
