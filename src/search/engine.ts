@@ -182,7 +182,8 @@ export class SearchEngine
         const resultsArray = search.results;
         let response = {
             totalCount: resultsArray.length,
-            results: _.take(resultsArray, 200).map((el) => ({ dn: el.dn }))
+            results: _.take(resultsArray, 200).map((el) => ({ dn: el.dn })),
+            wasFiltered: true
         };
         return response
     }
