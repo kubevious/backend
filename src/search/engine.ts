@@ -111,7 +111,6 @@ export class SearchEngine
                 const { key, value } = filterCriteria
                 if (_.isNotNullOrUndefined(item.labels)) {
                     return item.labels![key] === value;
-                    return false;
                 }
             })
         });

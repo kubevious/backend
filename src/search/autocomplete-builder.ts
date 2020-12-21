@@ -62,22 +62,16 @@ export class AutocompleteBuilder {
         for(let key of _.keys(sourceDict))
         {
             let value = sourceDict[key];
-            if (counters[key]) {
-                counters[key].count += 1;
-                if (counters[key].values[value]) {
-                    counters[key].values[value] = counters[key].values[value] + 1;
-                } else {
-                    counters[key].values[value] = 1
-                }
-            } else {
-                counters[key] = {
-                    key: key,
-                    count: 1,
-                    values: {
-                        [value] : 1
-                    }
-                }
-            }
+            const keyInCounters = counters[key]
+            
+            counters[key] = {
+                key: key,
+                count: ~~keyInCounters?.count + 1,
+                values: {
+                    ...keyInCounters?.values,
+                    [value]: ~~keyInCounters?.values[value] + 1
+                },
+            };
         }
     }
 
