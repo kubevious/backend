@@ -9,9 +9,9 @@ import { RegistryState } from '@kubevious/helpers/dist/registry-state';
 import { ProcessingTrackerScoper } from '@kubevious/helpers/dist/processing-tracker';
 import { ExecutionContext } from './execution-context';
 
-const KubikRuleProcessor = require('kubevious-kubik').RuleProcessor;
+import { RuleProcessor as KubikRuleProcessor } from '@kubevious/kubik';
+import { RuleItem, RuleObject } from './types';
 
-export type RuleItem = Record<string, any>;
 
 export class RuleProcessor
 {
@@ -55,7 +55,7 @@ export class RuleProcessor
             state.date.toISOString(),
             state.getCount())
 
-        var executionContext = {
+        let executionContext = {
             ruleStatuses: {},
             ruleItems: [],
             ruleLogs: [],
@@ -76,13 +76,13 @@ export class RuleProcessor
             })
     }
 
-    private _fetchRules() : Promise<RuleItem[]>
+    private _fetchRules() : Promise<RuleObject[]>
     {
         return this._context.ruleAccessor
             .queryEnabledRules();
     }
 
-    private _processRules(state : RegistryState, rules: RuleItem[], executionContext : ExecutionContext, tracker: ProcessingTrackerScoper)
+    private _processRules(state : RegistryState, rules: RuleObject[], executionContext : ExecutionContext, tracker: ProcessingTrackerScoper)
     {
         return Promise.serial(rules, x => {
 
@@ -93,7 +93,7 @@ export class RuleProcessor
         });
     }
     
-    private _processRule(state: RegistryState, rule: RuleItem, executionContext : ExecutionContext)
+    private _processRule(state: RegistryState, rule: RuleObject, executionContext : ExecutionContext)
     {
         this.logger.info('[_processRule] Begin: %s', rule.name);
         this.logger.verbose('[_processRule] Begin: ', rule);
@@ -106,26 +106,26 @@ export class RuleProcessor
             item_count: 0
         };
 
-        var processor = new KubikRuleProcessor(state, rule);
+        let processor = new KubikRuleProcessor(state, rule);
         return processor.process()
-            .then((result : any) => {
+            .then((result) => {
                 this.logger.silly('[_processRule] RESULT: ', result);
                 this.logger.silly('[_processRule] RESULT ITEMS: ', result.ruleItems);
 
                 if (result.success)
                 {
-                    for(var dn of _.keys(result.ruleItems))
+                    for(let dn of _.keys(result.ruleItems))
                     {
                         this.logger.debug('[_processRule] RuleItem: %s', dn);
 
-                        var ruleItemInfo = result.ruleItems[dn];
+                        let ruleItemInfo = result.ruleItems[dn];
 
                         let ruleItem : RuleItem = {
                             errors: 0,
                             warnings: 0
                         };
 
-                        var alertsToRaise = [];
+                        let alertsToRaise = [];
 
                         if (ruleItemInfo.errors) {
 
@@ -133,7 +133,7 @@ export class RuleProcessor
                                 ruleItemInfo.errors.messages.length > 0)
                             {
                                 ruleItem.errors = ruleItemInfo.errors.messages.length;
-                                for(var msg of ruleItemInfo.errors.messages)
+                                for(let msg of ruleItemInfo.errors.messages)
                                 {
                                     alertsToRaise.push({ 
                                         severity: 'error',
@@ -156,7 +156,7 @@ export class RuleProcessor
                                 ruleItemInfo.warnings.messages.length > 0)
                             {
                                 ruleItem.warnings = ruleItemInfo.warnings.messages.length;
-                                for(var msg of ruleItemInfo.warnings.messages)
+                                for(let msg of ruleItemInfo.warnings.messages)
                                 {
                                     alertsToRaise.push({ 
                                         severity: 'warn',
@@ -174,9 +174,9 @@ export class RuleProcessor
                             }
                         }
 
-                        var shouldUseRuleItem = false;
+                        let shouldUseRuleItem = false;
 
-                        for(var alertInfo of alertsToRaise)
+                        for(let alertInfo of alertsToRaise)
                         {
                             shouldUseRuleItem = true;
 
@@ -193,7 +193,7 @@ export class RuleProcessor
 
                         if (ruleItemInfo.marks)
                         {
-                            for(var marker of _.keys(ruleItemInfo.marks))
+                            for(let marker of _.keys(ruleItemInfo.marks))
                             {
                                 state.raiseMarker(dn, marker);
                                 shouldUseRuleItem = true;
@@ -223,7 +223,7 @@ export class RuleProcessor
                 {
                     this.logger.error('[_processRule] Failed: ', result.messages);
 
-                    for(var msg of result.messages)
+                    for(let msg of result.messages)
                     {
                         executionContext.ruleLogs.push({
                             rule_name: rule.name,

@@ -7,6 +7,7 @@ import { Context } from '../context';
 import { DataStore } from '@kubevious/easy-data-store';
 
 import * as HashUtils from '@kubevious/helpers/dist/hash-utils'
+import { RuleObject } from './types';
 
 export class RuleAccessor
 {
@@ -29,10 +30,10 @@ export class RuleAccessor
             .queryMany();
     }
 
-    queryEnabledRules()
+    queryEnabledRules() : Promise<RuleObject[]>
     {
-        return this._dataStore.table('rules')
-            .queryMany({ enabled: true });
+        return <Promise<RuleObject[]>>(<any>(this._dataStore.table('rules')
+            .queryMany({ enabled: true })));
     }
 
     queryAllRuleStatuses()
