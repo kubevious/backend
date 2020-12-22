@@ -111,7 +111,6 @@ export class SearchEngine
                 const { key, value } = filterCriteria
                 if (_.isNotNullOrUndefined(item.labels)) {
                     return item.labels![key] === value;
-                    return false;
                 }
             })
         });
@@ -182,7 +181,8 @@ export class SearchEngine
         const resultsArray = search.results;
         let response = {
             totalCount: resultsArray.length,
-            results: _.take(resultsArray, 200).map((el) => ({ dn: el.dn }))
+            results: _.take(resultsArray, 200).map((el) => ({ dn: el.dn })),
+            wasFiltered: true
         };
         return response
     }
