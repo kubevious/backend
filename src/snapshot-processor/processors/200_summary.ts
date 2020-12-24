@@ -179,35 +179,35 @@ export default Processor()
 
         function getClusterCPU()
         {
-            const value = getInfraCapacity('cpu allocatable') as string;
-
-            const cpuPers = parseFloat(value.replace('%', ''));
-            const coreCount = (Math.round(cpuPers) / 100);
+            let value = getInfraCapacity('cpu allocatable') as PropertyValueWithUnit;
+            if (!value) {
+                value = {
+                    value: 0,
+                    unit: 'cores'
+                }
+            }
 
             return {
-                title: 'CPU Cores',
-                value: coreCount
+                title: 'Cluster CPU',
+                value: value.value,
+                unit: value.unit
             }
         }
 
         function getClusterRAM()
         {
-            let counterValue : any;
-            let counterUnit : any;
-
-            const value = getInfraCapacity('memory allocatable') as string;
+            let value = getInfraCapacity('memory allocatable') as PropertyValueWithUnit;
             if (!value) {
-                counterValue = '?';
-            } else {
-                const parts = value.split(' ');
-                counterValue = parseFloat(parts[0]);
-                counterUnit = parts[1];
+                value = {
+                    value: 0,
+                    unit: 'bytes'
+                }
             }
 
             return {
                 title: 'Cluster RAM',
-                value: counterValue,
-                unit: counterUnit
+                value: value.value,
+                unit: value.unit
             }
         }
 
@@ -232,4 +232,10 @@ interface NamespaceAlertCounters
 {
     totalIssues: number;
     alertCount: AlertCounter;
+}
+
+interface PropertyValueWithUnit
+{
+    value: number,
+    unit: string
 }
