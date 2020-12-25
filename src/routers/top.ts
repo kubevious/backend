@@ -1,7 +1,7 @@
 import _ from 'the-lodash';
 import { Context } from '../context';
 import { Router } from '@kubevious/helper-backend'
-import Version from '../version';
+import VERSION from '../version';
 
 export default function (router: Router, context: Context) {
     router.url('/');
@@ -11,7 +11,9 @@ export default function (router: Router, context: Context) {
     });
 
     router.get('/api/v1/version', (req, res) => {
-        return Version;
+        return {
+            version: VERSION
+        };
     });
 
     router.get('/api/v1/metrics', (req, res) => {
