@@ -89,11 +89,7 @@ export class FacadeRegistry
     {
         return Promise.resolve()
             .then(() => {
-                return Promise.resolve()
-                    .then(() => this.debugObjectLogger.dump("latest-bundle-nodes", 0, bundle.nodes))
-                    .then(() => this.debugObjectLogger.dump("latest-bundle-children", 0, bundle.children))
-                    .then(() => this.debugObjectLogger.dump("latest-bundle-properties", 0, bundle.properties))
-                    .then(() => this.debugObjectLogger.dump("latest-bundle-alerts", 0, bundle.alerts));
+                return this._debugOutput(bundle);
             })
             .then(() => {
                 this._produceCounters(bundle);
@@ -123,6 +119,56 @@ export class FacadeRegistry
                     return this._context.historyProcessor.accept(bundle);
                 });
             })
+    }
+
+    private _debugOutput(bundle : RegistryBundleState)
+    {
+        return;
+        return Promise.resolve()
+            .then(() => this.debugObjectLogger.dump("latest-bundle-nodes", 0, bundle.nodes))
+            .then(() => this.debugObjectLogger.dump("latest-bundle-children", 0, bundle.children))
+            .then(() => this.debugObjectLogger.dump("latest-bundle-properties", 0, bundle.properties))
+            .then(() => this.debugObjectLogger.dump("latest-bundle-alerts", 0, bundle.alerts))
+            .then(() => {
+
+                const snapshotInfo = {
+                    date: bundle.date.toISOString(),
+                    items: <any[]>[]
+                }
+
+                for (let x of bundle.nodes)
+                {
+                    snapshotInfo.items.push({
+                        dn: x.dn,
+                        config_kind: 'node',
+                        config: x.config
+                    })
+                }
+                for (let x of bundle.properties)
+                {
+                    for(let propName of _.keys(x.config))
+                    {
+                        snapshotInfo.items.push({
+                            dn: x.dn,
+                            config_kind: 'props',
+                            name: propName,
+                            config: x.config[propName]
+                        })
+                    }
+                }
+                for (let x of bundle.alerts)
+                {
+                    snapshotInfo.items.push({
+                        dn: x.dn,
+                        config_kind: 'alerts',
+                        config: x.config
+                    })
+                }
+
+                this.debugObjectLogger.dump("latest-bundle", 0, snapshotInfo)
+                
+            })
+            ;
     }
 
     private _produceCounters(bundle: RegistryBundleState)
