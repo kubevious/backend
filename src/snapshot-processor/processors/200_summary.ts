@@ -57,7 +57,8 @@ export default Processor()
                     value: state.countByKind('vol')
                 }, 
                 getClusterCPU(), 
-                getClusterRAM()
+                getClusterRAM(),
+                getClusterStorage()
                 ]
             }
         });
@@ -211,6 +212,23 @@ export default Processor()
             }
         }
 
+        function getClusterStorage() 
+        {
+            let value = getStorageCapacity('Capacity') as PropertyValueWithUnit;
+            if (!value) {
+                value = {
+                    value: 0,
+                    unit: 'bytes'
+                }
+            }
+
+            return {
+                title: 'Cluster Storage',
+                value: value.value,
+                unit: value.unit
+            } 
+        }
+
         function getInfraCapacity(key: string)
         {
             const item = state.findByDn('root/infra-[Infrastructure]/nodes-[Nodes]');
@@ -218,6 +236,20 @@ export default Processor()
                 return '?';
             }
             const config = item.getProperties('cluster-resources');
+            if (!config) {
+                return '?';
+            }
+            const value = config.config[key];
+            return value;
+        }
+
+        function getStorageCapacity(key: string)
+        {
+            const item = state.findByDn('root/infra-[Infrastructure]/storage-[Storage]');
+            if (!item) {
+                return '?';
+            }
+            const config = item.getProperties('properties');
             if (!config) {
                 return '?';
             }
