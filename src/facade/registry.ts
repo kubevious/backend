@@ -8,6 +8,7 @@ import { RegistryState } from '@kubevious/helpers/dist/registry-state';
 import { RegistryBundleState } from '@kubevious/helpers/dist/registry-bundle-state';
 import { ProcessingTrackerScoper } from '@kubevious/helpers/dist/processing-tracker';
 
+
 export class FacadeRegistry
 {
     private _logger : ILogger;
@@ -96,7 +97,7 @@ export class FacadeRegistry
             })
             .then(() => {
                 return tracker.scope("websocket-update", () => {
-                    return this._updateWebsocket(bundle);
+                    return this._context.websocket.accept(bundle);
                 });
             })
             .then(() => {
@@ -125,10 +126,6 @@ export class FacadeRegistry
     {
         return;
         return Promise.resolve()
-            .then(() => this.debugObjectLogger.dump("latest-bundle-nodes", 0, bundle.nodes))
-            .then(() => this.debugObjectLogger.dump("latest-bundle-children", 0, bundle.children))
-            .then(() => this.debugObjectLogger.dump("latest-bundle-properties", 0, bundle.properties))
-            .then(() => this.debugObjectLogger.dump("latest-bundle-alerts", 0, bundle.alerts))
             .then(() => {
 
                 const snapshotInfo = {
@@ -136,33 +133,32 @@ export class FacadeRegistry
                     items: <any[]>[]
                 }
 
-                for (let x of bundle.nodes)
+                for (let x of bundle.nodeItems)
                 {
                     snapshotInfo.items.push({
                         dn: x.dn,
                         config_kind: 'node',
                         config: x.config
                     })
-                }
-                for (let x of bundle.properties)
-                {
-                    for(let propName of _.keys(x.config))
+
+                    for(let propName of _.keys(x.propertiesMap))
                     {
                         snapshotInfo.items.push({
                             dn: x.dn,
                             config_kind: 'props',
                             name: propName,
-                            config: x.config[propName]
+                            config: x.propertiesMap[propName]
                         })
                     }
-                }
-                for (let x of bundle.alerts)
-                {
-                    snapshotInfo.items.push({
-                        dn: x.dn,
-                        config_kind: 'alerts',
-                        config: x.config
-                    })
+
+                    if (x.selfAlerts.length > 0)
+                    {
+                        snapshotInfo.items.push({
+                            dn: x.dn,
+                            config_kind: 'alerts',
+                            config: x.selfAlerts
+                        })
+                    }
                 }
 
                 this.debugObjectLogger.dump("latest-bundle", 0, snapshotInfo)
@@ -204,61 +200,6 @@ export class FacadeRegistry
         }))
 
         return nodeCounters;
-    }
-
-    private _updateWebsocket(bundle: RegistryBundleState)
-    {
-        {
-            var items = [];
-            for(var x of bundle.nodes)
-            {
-                items.push({
-                    target: { dn: x.dn },
-                    value: _.cloneDeep(x.config),
-                    value_hash: x.config_hash,
-                });
-            }
-            this._context.websocket.updateScope({ kind: 'node' }, items);
-        }
-
-        {
-            var items = [];
-            for(var x of bundle.children)
-            {
-                items.push({
-                    target: { dn: x.dn },
-                    value: _.cloneDeep(x.config),
-                    value_hash: x.config_hash,
-                });
-            }
-            this._context.websocket.updateScope({ kind: 'children' }, items);
-        }
-
-        {
-            var items = [];
-            for(var x of bundle.properties)
-            {
-                items.push({
-                    target: { dn: x.dn },
-                    value: _.cloneDeep(x.config),
-                    value_hash: x.config_hash,
-                });
-            }
-            this._context.websocket.updateScope({ kind: 'props' }, items);
-        }
-
-        {
-            var items = [];
-            for(var x of bundle.alerts)
-            {
-                items.push({
-                    target: { dn: x.dn },
-                    value: _.cloneDeep(x.config),
-                    value_hash: x.config_hash,
-                });
-            }
-            this._context.websocket.updateScope({ kind: 'alerts' }, items);
-        }
     }
 
 }

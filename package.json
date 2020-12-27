@@ -23,7 +23,7 @@
   "dependencies": {
     "@kubevious/easy-data-store": "^1.0.9",
     "@kubevious/helper-backend": "^1.0.11",
-    "@kubevious/helpers": "^1.0.29",
+    "@kubevious/helpers": "^1.0.30",
     "@kubevious/kubik": "^1.0.5",
     "@kubevious/worldvious-client": "^1.0.6",
     "cron": "^1.8.2",
