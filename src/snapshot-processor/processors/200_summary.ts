@@ -52,10 +52,8 @@ export default Processor()
                 config: [{
                     title: 'Nodes',
                     value: state.countByKind('node')
-                }, {
-                    title: 'Volumes',
-                    value: state.countByKind('vol')
                 }, 
+                getVolumeCount(), 
                 getClusterCPU(), 
                 getClusterRAM(),
                 getClusterStorage()
@@ -210,6 +208,19 @@ export default Processor()
                 value: value.value,
                 unit: value.unit
             }
+        }
+
+        function getVolumeCount() 
+        {
+            let value = getStorageCapacity('Volume Count');
+            if (!value) {
+                value = 0;
+            }
+
+            return {
+                title: 'Volumes',
+                value: value
+            } 
         }
 
         function getClusterStorage() 
