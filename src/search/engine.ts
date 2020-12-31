@@ -34,10 +34,11 @@ export class SearchEngine
 
     accept(state: RegistryBundleState)
     {
-        this._rawItems = state.nodeItems;
+        // TODO: make this nicer.
+        this._rawItems = state.nodeItems.filter(x => (x.dn !== 'root') && (x.dn !== 'summary'));
 
         this._reset()
-        for(var node of state.nodeItems)
+        for(var node of this._rawItems)
         {
             this._addSnapshotItemToIndex(node)
         }
