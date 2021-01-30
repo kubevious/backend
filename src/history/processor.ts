@@ -172,8 +172,6 @@ export class HistoryProcessor
                 this._cleanupSnapshot(snapshot);
 
                 return Promise.resolve()
-                    .then(() => {
-                    })
                     .then(() => this._queryDatabasePartitions())
                     .then(result => {
                         tablesPartitionsData = result;
