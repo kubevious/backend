@@ -11,7 +11,7 @@ import { ProcessorBuilder, ProcessorInfo, Handler as ProcessorHandler } from './
 
 import { Context } from '../context';
 import { ProcessingTrackerScoper } from '@kubevious/helpers/dist/processing-tracker';
-import { CollectorSnapshotInfo } from '../collector/collector';
+import { CollectorSnapshotInfo } from '../collector/types';
 
 interface ProcessorEntry
 {
@@ -80,34 +80,36 @@ export class SnapshotProcessor
     {
         return tracker.scope("SnapshotProcessor::process", (innerTracker) => {
 
-            var registryState : RegistryState | null = null;
-            var bundle : RegistryBundleState | null = null;
-            return Promise.resolve()
-                .then(() => this._makeState(snapshotInfo, innerTracker))
-                .then(result => {
-                    registryState = result;
-                })
-                .then(() => this._runProcessors(registryState!, extraParams, innerTracker))
-                .then(() => {
-                    return innerTracker.scope("buildBundle", () => {
-                        bundle = registryState!.buildBundle();
-                    });
-                })
-                .then(() => {
-                    return bundle!;
-                })
+            // TODO: Fix Me
+            // var registryState : RegistryState | null = null;
+            // var bundle : RegistryBundleState | null = null;
+            // return Promise.resolve()
+            //     .then(() => this._makeState(snapshotInfo, innerTracker))
+            //     .then(result => {
+            //         registryState = result;
+            //     })
+            //     .then(() => this._runProcessors(registryState!, extraParams, innerTracker))
+            //     .then(() => {
+            //         return innerTracker.scope("buildBundle", () => {
+            //             bundle = registryState!.buildBundle();
+            //         });
+            //     })
+            //     .then(() => {
+            //         return bundle!;
+            //     })
         });
     }
 
     private _makeState(snapshotInfo: CollectorSnapshotInfo, tracker: ProcessingTrackerScoper)
     {
-        return tracker.scope("_makeState", () => {
-            var registryState = new RegistryState({
-                date: snapshotInfo.date,
-                items: _.values(snapshotInfo.items)
-            })
-            return registryState;
-        });
+        // TODO: Fix me 
+        // return tracker.scope("_makeState", () => {
+        //     var registryState = new RegistryState({
+        //         date: snapshotInfo.date,
+        //         items: _.values(snapshotInfo.items)
+        //     })
+        //     return registryState;
+        // });
     }
 
     private _runProcessors(registryState: RegistryState, extraParams: any, tracker : ProcessingTrackerScoper)

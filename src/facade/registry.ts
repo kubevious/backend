@@ -3,10 +3,11 @@ import { Promise } from 'the-promise';
 import { ILogger } from 'the-logger' ;
 
 import { Context } from '../context';
-import { CollectorSnapshotInfo } from '../collector/collector';
+import { CollectorSnapshotInfo } from '../collector/types';
 import { RegistryState } from '@kubevious/helpers/dist/registry-state';
 import { RegistryBundleState } from '@kubevious/helpers/dist/registry-bundle-state';
 import { ProcessingTrackerScoper } from '@kubevious/helpers/dist/processing-tracker';
+import { ConcreteRegistry } from '../concrete/registry';
 
 
 export class FacadeRegistry
@@ -32,10 +33,11 @@ export class FacadeRegistry
         return this._context.debugObjectLogger;
     }
 
-    acceptCurrentSnapshot(snapshotInfo: CollectorSnapshotInfo)
+    acceptConcreteRegistry(registry: ConcreteRegistry)
     {
-        this._latestSnapshot = snapshotInfo;
-        this._triggerProcess();
+        this.logger.info('[acceptConcreteRegistry] count: %s', registry.allItems.length);
+        // this._latestSnapshot = snapshotInfo;
+        // this._triggerProcess();
     }
 
     private _triggerProcess()
@@ -79,10 +81,11 @@ export class FacadeRegistry
     {
         return this._context.tracker.scope("FacadeRegistry::_processCurrentSnapshot", (tracker) => {
 
-            return this._context.snapshotProcessor.process(snapshotInfo, tracker)
-                .then(bundle => {
-                    return this._runFinalize(bundle, tracker);
-                })
+            // TODO: Fix Me
+            // return this._context.snapshotProcessor.process(snapshotInfo, tracker)
+            //     .then(bundle => {
+            //         return this._runFinalize(bundle, tracker);
+            //     })
         });
     }
 

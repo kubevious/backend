@@ -7,6 +7,10 @@ import * as DateUtils from '@kubevious/helpers/dist/date-utils';
 
 import { Context } from '../context';
 import { SnapshotItemInfo } from '@kubevious/helpers/dist/snapshot/types';
+import { ReportableSnapshotItem, ResponseReportSnapshot, ResponseReportSnapshotItems } from '@kubevious/helpers/dist/reportable/types';
+import { CollectorSnapshotInfo, MetricItem } from './types';
+import { ConcreteRegistry } from '../concrete/registry';
+import { ItemId } from '../concrete/types';
 
 export interface UserMetricItem
 {
@@ -15,21 +19,6 @@ export interface UserMetricItem
     value: string | number
 }
 
-export interface MetricItem
-{
-    origDate: Date,
-    dateStart: Date,
-    dateEnd: Date | null,
-    kind: string,
-    durationSeconds: number | null
-}
-
-export interface CollectorSnapshotInfo
-{
-    date: Date,
-    metric: MetricItem,
-    items: Record<string, SnapshotItemInfo>
-}
 
 export interface CollectorSnapshotItem
 {
@@ -56,6 +45,9 @@ export class Collector
     private _currentMetric : any;
     private _latestMetric : any;
     private _recentDurations : number[] = [];
+
+    private _configHashes : Record<string, any> = {};
+
 
     constructor(context: Context)
     {
@@ -152,17 +144,28 @@ export class Collector
         return metric;
     }
     
-    newSnapshot(date: Date, parserVersion: string)
+    newSnapshot(date: Date, parserVersion: string, baseSnapshotId?: string) : ResponseReportSnapshot
     {
         this._parserVersion = parserVersion;
 
         let metric = this._newMetric(date, 'snapshot');
 
-        var id = uuidv4();
+        let item_hashes : Record<string, string> = {};
+        if (baseSnapshotId)
+        {
+            let baseSnapshot = this._snapshots[baseSnapshotId!];
+            if (baseSnapshot) {
+                item_hashes = _.clone(baseSnapshot.item_hashes);
+            } else {
+                return RESPONSE_NEED_NEW_SNAPSHOT;
+            }
+        }
+
+        let id = uuidv4();
         this._snapshots[id] = {
             date: date,
             metric: metric,
-            items: {}
+            item_hashes: item_hashes
         };
 
         return {
@@ -170,124 +173,77 @@ export class Collector
         };
     }
 
-    acceptSnapshotItems(snapshotId: string, items: CollectorSnapshotItem[])
+    acceptSnapshotItems(snapshotId: string, items: ReportableSnapshotItem[])
     {
-        var snapshotInfo = this._snapshots[snapshotId];
+        let snapshotInfo = this._snapshots[snapshotId];
         if (!snapshotInfo) {
             return RESPONSE_NEED_NEW_SNAPSHOT;
         }
 
-        for(var item of items)
+        let missingHashes : string[] = [];
+
+        for (let item of items)
         {
-            snapshotInfo.items[item.hash] = item.data;
+            if (item.present)
+            {
+                snapshotInfo.item_hashes[item.idHash] = item.configHash!;
+
+                if (!(item.idHash in this._configHashes)) {
+                    missingHashes.push(item.configHash!)
+                }
+            }
+            else
+            {
+                delete snapshotInfo.item_hashes[item.idHash];
+            }
         }
 
-        return {};
+        let response : ResponseReportSnapshotItems = {}
+        if (missingHashes.length > 0)
+        {
+            response.needed_configs = missingHashes;
+        }
+
+        return response;
     }
 
     activateSnapshot(snapshotId: string)
     {
         return this._context.tracker.scope("collector::activateSnapshot", (tracker) => {
-            var snapshotInfo = this._snapshots[snapshotId];
+            let snapshotInfo = this._snapshots[snapshotId];
             if (!snapshotInfo) {
                 return RESPONSE_NEED_NEW_SNAPSHOT;
             }
 
-            this._acceptSnapshot(snapshotInfo);
+            this._endMetric(snapshotInfo.metric);
+
+            this.logger.info("[_acceptSnapshot] item count: %s", _.keys(snapshotInfo.item_hashes).length);
+            this.logger.info("[_acceptSnapshot] metric: ", snapshotInfo.metric);
+            
+            const registry = new ConcreteRegistry(this._logger);
+            for(let itemHash of _.keys(snapshotInfo.item_hashes))
+            {
+                let configHash = snapshotInfo.item_hashes[itemHash];
+                let config = this._configHashes[configHash];
+                let itemId : ItemId = {
+                    infra: 'k8s',
+                    api: config.apiVersion,
+                    kind: config.kind,
+                    namespace: config.metadata.namespace, 
+                    name: config.metadata.name
+                }
+                registry.add(itemId, config);
+            }
+            
+            this._context.facadeRegistry.acceptConcreteRegistry(registry);
 
             return {};
         });
     }
 
-    newDiff(snapshotId: string, date: Date)
+    storeConfig(hash: string, config: object)
     {
-        var snapshotInfo = this._snapshots[snapshotId];
-        if (!snapshotInfo) {
-            return RESPONSE_NEED_NEW_SNAPSHOT;
-        }
-
-        let metric = this._newMetric(date, 'snapshot');
-        metric.kind = 'diff';
-
-        var id = uuidv4();
-        this._diffs[id] = {
-            date: date,
-            metric: metric,
-            snapshotId: snapshotId,
-            items: []
-        };
-
-        return {
-            id: id
-        };
-    }
-
-    acceptDiffItems(diffId: string, items: DiffItem[])
-    {
-        var diffInfo = this._diffs[diffId];
-        if (!diffInfo) {
-            return RESPONSE_NEED_NEW_SNAPSHOT;
-        }
-
-        for(var item of items)
-        {
-            diffInfo.items.push(item);
-        }
-
-        return {};
-    }
-
-    activateDiff(diffId: string)
-    {
-        return this._context.tracker.scope("collector::activateDiff", (tracker) => {
-            var diffInfo = this._diffs[diffId];
-            if (!diffInfo) {
-                return RESPONSE_NEED_NEW_SNAPSHOT;
-            }
-    
-            var snapshotInfo = this._snapshots[diffInfo.snapshotId];
-            if (!snapshotInfo) {
-                return RESPONSE_NEED_NEW_SNAPSHOT;
-            }
-    
-            var newSnapshotId = uuidv4();
-            var newSnapshotInfo : CollectorSnapshotInfo = {
-                date: new Date(diffInfo.date),
-                metric: diffInfo.metric,
-                items: _.clone(snapshotInfo.items)
-            };
-            this._snapshots[newSnapshotId] = newSnapshotInfo;
-    
-            for(var diffItem of diffInfo.items)
-            {
-                if (diffItem.present)
-                {
-                    newSnapshotInfo.items[diffItem.hash] = diffItem.data;
-                }
-                else
-                {
-                    delete newSnapshotInfo.items[diffItem.hash];
-                }
-            }
-    
-            delete this._snapshots[diffInfo.snapshotId];
-    
-            this._acceptSnapshot(newSnapshotInfo);
-    
-            return {
-                id: newSnapshotId
-            };
-        });
-    }
-
-    private _acceptSnapshot(snapshotInfo: CollectorSnapshotInfo)
-    {
-        this._endMetric(snapshotInfo.metric);
-
-        this.logger.info("[_acceptSnapshot] item count: %s", _.keys(snapshotInfo.items).length);
-        this.logger.info("[_acceptSnapshot] metric: ", snapshotInfo.metric);
-        var safeSnapshot = _.cloneDeep(snapshotInfo);
-        this._context.facadeRegistry.acceptCurrentSnapshot(safeSnapshot);
+        this._configHashes[hash] = config;
     }
 
 }
