@@ -220,7 +220,7 @@ export class Collector
             this.logger.info("[_acceptSnapshot] item count: %s", _.keys(snapshotInfo.item_hashes).length);
             this.logger.info("[_acceptSnapshot] metric: ", snapshotInfo.metric);
             
-            const registry = new ConcreteRegistry(this._logger);
+            const registry = new ConcreteRegistry(this._logger, snapshotInfo.date);
             for(let itemHash of _.keys(snapshotInfo.item_hashes))
             {
                 let configHash = snapshotInfo.item_hashes[itemHash];

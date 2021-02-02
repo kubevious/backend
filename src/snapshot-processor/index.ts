@@ -76,27 +76,21 @@ export class SnapshotProcessor
         }
     }
 
-    process(snapshotInfo: CollectorSnapshotInfo, tracker: ProcessingTrackerScoper, extraParams?: any)
+    process(registryState : RegistryState, tracker: ProcessingTrackerScoper, extraParams?: any)
     {
         return tracker.scope("SnapshotProcessor::process", (innerTracker) => {
 
-            // TODO: Fix Me
-            // var registryState : RegistryState | null = null;
-            // var bundle : RegistryBundleState | null = null;
-            // return Promise.resolve()
-            //     .then(() => this._makeState(snapshotInfo, innerTracker))
-            //     .then(result => {
-            //         registryState = result;
-            //     })
-            //     .then(() => this._runProcessors(registryState!, extraParams, innerTracker))
-            //     .then(() => {
-            //         return innerTracker.scope("buildBundle", () => {
-            //             bundle = registryState!.buildBundle();
-            //         });
-            //     })
-            //     .then(() => {
-            //         return bundle!;
-            //     })
+            var bundle : RegistryBundleState | null = null;
+            return Promise.resolve()
+                .then(() => this._runProcessors(registryState, extraParams, innerTracker))
+                .then(() => {
+                    return innerTracker.scope("buildBundle", () => {
+                        bundle = registryState!.buildBundle();
+                    });
+                })
+                .then(() => {
+                    return bundle!;
+                })
         });
     }
 

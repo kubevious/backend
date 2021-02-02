@@ -4,6 +4,7 @@ import { ILogger } from 'the-logger' ;
 
 import { Context } from '../context';
 import { CollectorSnapshotInfo } from '../collector/types';
+import { LogicItem, LogicProcessor } from '@kubevious/helper-logic-processor'
 import { RegistryState } from '@kubevious/helpers/dist/registry-state';
 import { RegistryBundleState } from '@kubevious/helpers/dist/registry-bundle-state';
 import { ProcessingTrackerScoper } from '@kubevious/helpers/dist/processing-tracker';
@@ -38,6 +39,8 @@ export class FacadeRegistry
         this.logger.info('[acceptConcreteRegistry] count: %s', registry.allItems.length);
         // this._latestSnapshot = snapshotInfo;
         // this._triggerProcess();
+
+        return this._processCurrentSnapshot(registry);
     }
 
     private _triggerProcess()
@@ -64,28 +67,34 @@ export class FacadeRegistry
                 this._logger.verbose('[_triggerProcess] No Latest snapshot...');
                 return;
             }
-            var snapshot = this._latestSnapshot;
-            this._latestSnapshot = null;
-            this._isProcessing = true;
-            return this._processCurrentSnapshot(snapshot)
-                .catch(reason => {
-                    this._logger.error('[_triggerProcess] failed: ', reason);
-                })
-                .finally(() => {
-                    this._isProcessing = false;
-                });
+            // var snapshot = this._latestSnapshot;
+            // this._latestSnapshot = null;
+            // this._isProcessing = true;
+            // return this._processCurrentSnapshot(snapshot)
+            //     .catch(reason => {
+            //         this._logger.error('[_triggerProcess] failed: ', reason);
+            //     })
+            //     .finally(() => {
+            //         this._isProcessing = false;
+            //     });
         })
     }
 
-    private _processCurrentSnapshot(snapshotInfo: CollectorSnapshotInfo)
+    private _processCurrentSnapshot(registry: ConcreteRegistry)
     {
         return this._context.tracker.scope("FacadeRegistry::_processCurrentSnapshot", (tracker) => {
 
-            // TODO: Fix Me
-            // return this._context.snapshotProcessor.process(snapshotInfo, tracker)
-            //     .then(bundle => {
-            //         return this._runFinalize(bundle, tracker);
-            //     })
+            let logicProcessor = new LogicProcessor(this.logger, tracker, registry);
+            return logicProcessor.process()
+                .then(registryState => {
+                    this.logger.info("LogicProcessor Complete.")
+                    this.logger.info("RegistryState Item Count: %s", registryState.getCount());
+
+                    return this._context.snapshotProcessor.process(registryState, tracker);
+                })
+                .then(bundle => {
+                    return this._runFinalize(bundle, tracker);
+                })
         });
     }
 

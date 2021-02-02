@@ -10,17 +10,23 @@ import { ItemId } from './types'
 export class ConcreteRegistry implements IConcreteRegistry
 {
     private _logger : ILogger;
+    private _date : Date;
 
     private _flatItemsDict : Record<any, ConcreteItem> = {};
     private _itemsKindDict : Record<any, Record<any, ConcreteItem>> = {};
 
-    constructor(logger: ILogger)
+    constructor(logger: ILogger, date: Date)
     {
         this._logger = logger.sublogger("ConcreteRegistry");
+        this._date =  date
     }
 
     get logger() : ILogger {
         return this._logger;
+    }
+
+    get date() {
+        return this._date;
     }
 
     get allItems() : ConcreteItem[] {
