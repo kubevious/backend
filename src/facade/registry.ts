@@ -84,11 +84,21 @@ export class FacadeRegistry
     {
         return this._context.tracker.scope("FacadeRegistry::_processCurrentSnapshot", (tracker) => {
 
+            for(let x of registry.allItems)
+            {
+                this.logger.info("[ConcreteRegistry] %s :: %s", x.id.kind, x.id.name, x.id);
+            }
+
             let logicProcessor = new LogicProcessor(this.logger, tracker, registry);
             return logicProcessor.process()
                 .then(registryState => {
                     this.logger.info("LogicProcessor Complete.")
                     this.logger.info("RegistryState Item Count: %s", registryState.getCount());
+
+                    // for(let x of registryState.getNodes())
+                    // {
+                    //     this.logger.info("[RegistryState] %s", x.dn);
+                    // }
 
                     return this._context.snapshotProcessor.process(registryState, tracker);
                 })

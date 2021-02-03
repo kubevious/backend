@@ -10,7 +10,7 @@ import { SnapshotItemInfo } from '@kubevious/helpers/dist/snapshot/types';
 import { ReportableSnapshotItem, ResponseReportSnapshot, ResponseReportSnapshotItems } from '@kubevious/helpers/dist/reportable/types';
 import { CollectorSnapshotInfo, MetricItem } from './types';
 import { ConcreteRegistry } from '../concrete/registry';
-import { ItemId } from '../concrete/types';
+import { ItemId, K8sConfig, extractK8sConfigId } from '@kubevious/helper-logic-processor';
 
 export interface UserMetricItem
 {
@@ -37,7 +37,6 @@ export class Collector
     private _context : Context
 
     private _snapshots : Record<string, CollectorSnapshotInfo> = {};
-    private _diffs : Record<string, any> = {};
 
     private _iteration : number = 0;
 
@@ -225,13 +224,7 @@ export class Collector
             {
                 let configHash = snapshotInfo.item_hashes[itemHash];
                 let config = this._configHashes[configHash];
-                let itemId : ItemId = {
-                    infra: 'k8s',
-                    api: config.apiVersion,
-                    kind: config.kind,
-                    namespace: config.metadata.namespace, 
-                    name: config.metadata.name
-                }
+                let itemId = this._extractId(config);
                 registry.add(itemId, config);
             }
             
@@ -244,6 +237,12 @@ export class Collector
     storeConfig(hash: string, config: object)
     {
         this._configHashes[hash] = config;
+    }
+
+    private _extractId(config: any)
+    {
+        let c = <K8sConfig>config;
+        return extractK8sConfigId(c);
     }
 
 }

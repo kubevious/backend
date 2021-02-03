@@ -4,9 +4,7 @@ import { ILogger } from 'the-logger';
 
 import { ConcreteItem } from './item';
 
-import { IConcreteRegistry } from '@kubevious/helper-logic-processor'
-
-import { ItemId } from './types'
+import { ItemId, IConcreteRegistry } from '@kubevious/helper-logic-processor'
 export class ConcreteRegistry implements IConcreteRegistry
 {
     private _logger : ILogger;
