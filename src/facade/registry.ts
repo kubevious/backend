@@ -54,11 +54,6 @@ export class FacadeRegistry
     {
         return this._context.tracker.scope("FacadeRegistry::_processCurrentSnapshot", (tracker) => {
 
-            for(let x of registry.allItems)
-            {
-                this.logger.info("[ConcreteRegistry] %s :: %s", x.id.kind, x.id.name, x.id);
-            }
-
             let logicProcessor = new LogicProcessor(this.logger, tracker, registry);
             return logicProcessor.process()
                 .then(registryState => {
