@@ -44,7 +44,7 @@ export class Collector
     private _recentDurations : number[] = [];
 
     private _configHashes : Record<string, any> = {};
-
+    // TODO: Need strategy to cleanup config hashes.
 
     constructor(context: Context)
     {
