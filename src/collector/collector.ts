@@ -31,6 +31,8 @@ export interface DiffItem
 
 }
 
+const SNAPSHOT_QUEUE_SIZE = 5;
+
 export class Collector
 {
     private _logger : ILogger;
@@ -44,7 +46,6 @@ export class Collector
     private _recentDurations : number[] = [];
 
     private _configHashes : Record<string, any> = {};
-    // TODO: Need strategy to cleanup config hashes.
 
     constructor(context: Context)
     {
@@ -166,6 +167,8 @@ export class Collector
 
         let id = uuidv4();
         this._snapshots[id] = {
+            id: id,
+            reportDate: new Date(),
             date: date,
             metric: metric,
             item_hashes: item_hashes
@@ -232,6 +235,8 @@ export class Collector
                 registry.add(itemId, config);
             }
             
+            this._cleanup();
+
             this._context.facadeRegistry.acceptConcreteRegistry(registry);
 
             return {};
@@ -247,6 +252,28 @@ export class Collector
     {
         let c = <K8sConfig>config;
         return extractK8sConfigId(c);
+    }
+
+    private _cleanup()
+    {
+        let snapshots = _.orderBy(_.values(this._snapshots), x => x.date, ['desc']);
+        let liveSnapshots = _.take(snapshots, SNAPSHOT_QUEUE_SIZE);
+        let toDeleteSnapshots = _.drop(snapshots, SNAPSHOT_QUEUE_SIZE);
+
+        for(let snapshot of toDeleteSnapshots) {
+            delete this._snapshots[snapshot.id];
+        }
+
+        let configHashesList = liveSnapshots.map(x => _.values(x.item_hashes));
+
+        let finalConfigHashes = <string[]>_.union.apply(null, configHashesList);
+
+        let configHashesToDelete = _.difference(_.keys(this._configHashes), finalConfigHashes);
+
+        for(let configHash of configHashesToDelete)
+        {
+            delete this._configHashes[configHash];
+        }
     }
 
 }

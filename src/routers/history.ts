@@ -106,8 +106,8 @@ export default function (router: Router, context: Context) {
         })
     )
 
-    router.post('/cleanup', function (req, res) {
-        return context.historyCleanupProcessor.processCleanup()
-    })
+    // router.post('/cleanup', function (req, res) {
+    //     return context.historyCleanupProcessor.processCleanup()
+    // })
 
 }
