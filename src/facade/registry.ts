@@ -3,12 +3,11 @@ import { Promise } from 'the-promise';
 import { ILogger } from 'the-logger' ;
 
 import { Context } from '../context';
-import { CollectorSnapshotInfo } from '../collector/types';
-import { LogicItem, LogicProcessor } from '@kubevious/helper-logic-processor'
-import { RegistryState } from '@kubevious/helpers/dist/registry-state';
+import { LogicProcessor } from '@kubevious/helper-logic-processor'
 import { RegistryBundleState } from '@kubevious/helpers/dist/registry-bundle-state';
 import { ProcessingTrackerScoper } from '@kubevious/helpers/dist/processing-tracker';
 import { ConcreteRegistry } from '../concrete/registry';
+import { JobDampener } from '@kubevious/helpers';
 
 
 export class FacadeRegistry
@@ -16,14 +15,14 @@ export class FacadeRegistry
     private _logger : ILogger;
     private _context : Context
 
-    private _latestSnapshot : CollectorSnapshotInfo | null = null;
-    private _isProcessing : boolean = false;
-    private _isScheduled : boolean = false;
+    private _jobDampener : JobDampener<ConcreteRegistry>;
     
     constructor(context : Context)
     {
         this._context = context;
         this._logger = context.logger.sublogger("FacadeRegistry");
+
+        this._jobDampener = new JobDampener<ConcreteRegistry>(this._logger.sublogger("FacadeDampener"), this._processConcreteRegistry.bind(this));
     }
 
     get logger() {
@@ -34,50 +33,21 @@ export class FacadeRegistry
         return this._context.debugObjectLogger;
     }
 
+    get jobDampener() {
+        return this._jobDampener;
+    }
+
     acceptConcreteRegistry(registry: ConcreteRegistry)
     {
         this.logger.info('[acceptConcreteRegistry] count: %s', registry.allItems.length);
-        // this._latestSnapshot = snapshotInfo;
-        // this._triggerProcess();
-
-        return this._processCurrentSnapshot(registry);
+        this._jobDampener.acceptJob(registry);
     }
 
-    private _triggerProcess()
+    private _processConcreteRegistry(data: ConcreteRegistry, date: Date)
     {
-        this._logger.verbose('[_triggerProcess] Begin');
+        this._logger.info("[_processConcreteRegistry] Date: %s. item count: %s", date.toISOString(), data.allItems.length);
 
-        if (this._isScheduled) {
-            this._logger.verbose('[_triggerProcess] Timer scheduled...');
-            return;
-        }
-        if (this._isProcessing) {
-            this._logger.verbose('[_triggerProcess] Is Processing...');
-            return;
-        }
-
-        this._isScheduled = true;
-
-        this._context.backend.timer(5000, () => {
-            this._logger.verbose('[_triggerProcess] Timer Triggered...');
-
-            this._isScheduled = false;
-
-            if (!this._latestSnapshot) {
-                this._logger.verbose('[_triggerProcess] No Latest snapshot...');
-                return;
-            }
-            // var snapshot = this._latestSnapshot;
-            // this._latestSnapshot = null;
-            // this._isProcessing = true;
-            // return this._processCurrentSnapshot(snapshot)
-            //     .catch(reason => {
-            //         this._logger.error('[_triggerProcess] failed: ', reason);
-            //     })
-            //     .finally(() => {
-            //         this._isProcessing = false;
-            //     });
-        })
+        return this._processCurrentSnapshot(data);
     }
 
     private _processCurrentSnapshot(registry: ConcreteRegistry)
@@ -94,11 +64,6 @@ export class FacadeRegistry
                 .then(registryState => {
                     this.logger.info("LogicProcessor Complete.")
                     this.logger.info("RegistryState Item Count: %s", registryState.getCount());
-
-                    // for(let x of registryState.getNodes())
-                    // {
-                    //     this.logger.info("[RegistryState] %s", x.dn);
-                    // }
 
                     return this._context.snapshotProcessor.process(registryState, tracker);
                 })

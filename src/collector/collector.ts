@@ -10,7 +10,7 @@ import { SnapshotItemInfo } from '@kubevious/helpers/dist/snapshot/types';
 import { ReportableSnapshotItem, ResponseReportSnapshot, ResponseReportSnapshotItems } from '@kubevious/helpers/dist/reportable/types';
 import { CollectorSnapshotInfo, MetricItem } from './types';
 import { ConcreteRegistry } from '../concrete/registry';
-import { ItemId, K8sConfig, extractK8sConfigId } from '@kubevious/helper-logic-processor';
+import { K8sConfig, extractK8sConfigId } from '@kubevious/helper-logic-processor';
 
 export interface UserMetricItem
 {
@@ -37,8 +37,6 @@ export class Collector
     private _context : Context
 
     private _snapshots : Record<string, CollectorSnapshotInfo> = {};
-
-    private _iteration : number = 0;
 
     private _parserVersion? : string;
     private _currentMetric : any;
@@ -146,6 +144,12 @@ export class Collector
     newSnapshot(date: Date, parserVersion: string, baseSnapshotId?: string) : ResponseReportSnapshot
     {
         this._parserVersion = parserVersion;
+
+        if (this._context.facadeRegistry.jobDampener.isBusy) {
+            return {
+                delay: true
+            };
+        }
 
         let metric = this._newMetric(date, 'snapshot');
 

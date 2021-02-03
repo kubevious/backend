@@ -14,5 +14,4 @@ export interface CollectorSnapshotInfo
     date: Date
     metric: MetricItem
     item_hashes: Record<string, string>
-    // item_hashes: Record<string, ReportableSnapshotItem>
 }
