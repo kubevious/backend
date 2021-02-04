@@ -508,6 +508,10 @@ export class HistoryProcessor
     private _produceDelta(targetSnapshot: DBSnapshot<SnapItemWithConfig>, currentSnapshot: DBSnapshot<DBRawSnapItem>) : DBRawDiffItem[]
     {
         this.logger.info("[_produceDelta] target count: %s, current count: %s.",  targetSnapshot.count, currentSnapshot.count);
+
+        this.debugObjectLogger.dump("produce-delta-target-snapshot-keys", this._interation, targetSnapshot.keys);
+        this.debugObjectLogger.dump("produce-delta-current-snapshot-keys", this._interation, currentSnapshot.keys);
+
         let itemsDelta : DBRawDiffItem[] = [];
 
         for(let key of targetSnapshot.keys)
