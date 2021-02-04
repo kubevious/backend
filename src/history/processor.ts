@@ -162,7 +162,6 @@ export class HistoryProcessor
 
                 let itemsDelta = this._produceDelta(snapshot, this._latestSnapshot!);
                 let deltaSummary = this._constructDeltaSummary(snapshot, itemsDelta);
-                // this._cleanupSnapshot(snapshot);
 
                 return Promise.resolve()
                     .then(() => this._queryDatabasePartitions())
@@ -518,7 +517,6 @@ export class HistoryProcessor
         {
             let targetItem = targetSnapshot.findById(key)!;
             let currentItem = currentSnapshot.findById(key);
-            // currentItem = this._sanitizeSnapshotItem(currentItem);
             let shouldAdd = true;
 
             if (currentItem)
@@ -537,7 +535,6 @@ export class HistoryProcessor
                     kind: targetItem.kind,
                     config_kind: targetItem.config_kind,
                     name: targetItem.name,
-                    // config: targetItem.config,
                     config_hash: targetItem.config_hash
                 });
             }
@@ -554,33 +551,13 @@ export class HistoryProcessor
                     kind: currentItem.kind,
                     config_kind: currentItem.config_kind,
                     name: currentItem.name,
-                    // config: targetItem.config,
                     config_hash: currentItem.config_hash
                 }
-                // currentItem = this._sanitizeSnapshotItem(currentItem);
-                // currentItem.present = 0;
                 itemsDelta.push(diffItem);
             }
         }
 
         return itemsDelta;
-    }
-
-    private _sanitizeSnapshotItem(item: any)
-    {
-        if (!item) {
-            return null;
-        }
-        let config: any = {
-            dn: item.dn,
-            kind: item.kind,
-            config_kind: item.config_kind,
-            config_hash: item.config_hash
-        }
-        if (item.name) {
-            config.name = item.name;
-        }
-        return config;
     }
 
     private _persistConfig()
@@ -748,19 +725,15 @@ interface DeltaSummary
 }
 
 type AlertsSummary = Record<string, Record<string, AlertCounter > >;
-
 interface AlertCounter {
     error: number,
     warn: number
 }
-
-
 interface SnapshotSummary
 {
     items: number,
     kinds: Record<string, number>
 }
-
 interface ProcessableSnapshot
 {
     configHashes : ConfigHash[],
