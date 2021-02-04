@@ -12,6 +12,9 @@ import { Context } from '../context';
 import { Database } from '../db';
 import { MySqlDriver } from '@kubevious/easy-data-store'
 import { ConfigHash } from './entities';
+import { SnapItemWithConfig } from './processor';
+import { DBSnapshot } from '@kubevious/helpers/dist/history/snapshot';
+import { DBRawDiffItem, DBRawSnapItem } from '@kubevious/helpers/dist/history/entities';
 
 export class HistoryAccessor
 {
@@ -80,13 +83,13 @@ export class HistoryAccessor
 
     updateConfig(key: string, value: any)
     {
-        var params = [key, value, value]; 
+        let params = [key, value, value]; 
         return this._execute('SET_CONFIG', params);
     }
 
     queryConfig(key: string) : Promise<object>
     {
-        var params = [key]; 
+        let params = [key]; 
         return this._execute('GET_CONFIG', params)
             .then((results: any[]) => {
                 if (results.length == 0) {
@@ -96,9 +99,9 @@ export class HistoryAccessor
             });
     }
 
-    querySnapshot(id: string)
+    querySnapshot(snapshot_id: number)
     {
-        var params = [id]; 
+        let params = [snapshot_id]; 
         return this._execute('GET_SNAPSHOT', params)
             .then((results: any[]) => {
                 if (!results.length) {
@@ -113,13 +116,13 @@ export class HistoryAccessor
     {
         date = DateUtils.makeDate(date);
 
-        var params = [ partition, date ]; 
+        let params = [ partition, date ]; 
         return this._execute('FIND_SNAPSHOT', params)
             .then(results => {
                 if (!results.length) {
                     return this._execute('INSERT_SNAPSHOT', params)
                         .then(insertResult => {
-                            var newObj = {
+                            let newObj = {
                                 id: insertResult.insertId,
                                 part: partition,
                                 date: date.toISOString()
@@ -134,22 +137,6 @@ export class HistoryAccessor
 
     /* SNAPSHOT ITEMS BEGIN */
 
-    private _makeDbSnapshotFromItems(items : SnapshotItem[])
-    {
-        const snapshot = new Snapshot(null);
-        for(var x of items)
-        {
-            var key = Helpers.makeKey(x);
-            if (!snapshot.findById(key)) {
-                snapshot.addItemByKey(key, {});
-            }
-            var id = x.id;
-            delete x.id;
-            snapshot.findById(key)[id] = x;
-        }
-        return snapshot;
-    }
-
     persistConfigHashes(configHashes: ConfigHash[], partition: number)
     {
         this.logger.info("[persistConfigHashes] BEGIN, count: %s", configHashes.length);
@@ -157,7 +144,7 @@ export class HistoryAccessor
         return Promise.resolve()
             .then(() => {
 
-                var statements = configHashes.map(x => {
+                let statements = configHashes.map(x => {
                     return { 
                         id: 'INSERT_CONFIG_HASH',
                         params: [
@@ -175,71 +162,27 @@ export class HistoryAccessor
             });
     }
 
-    syncSnapshotItems(partition: number, snapshotId: string, snapshot: any)
+    syncSnapshotItems(partition: number, snapshotId: number, snapshot: DBSnapshot<DBRawSnapItem>)
     {
         this.logger.info("[syncSnapshotItems] BEGIN, partition: %s, item count: %s", partition, snapshot.count);
+        this.debugObjectLogger.dump("history-snapshot-target", 0, snapshot);
 
-        return this._snapshotReader.querySnapshotItems(partition, snapshotId)
-            .then(dbItems => {
-                var dbSnapshot = this._makeDbSnapshotFromItems(dbItems);
-                this.logger.info("[syncSnapshotItems] dbSnapshot count: %s", dbSnapshot.count);
+        let statements = snapshot.getItems().map(x => {
+            return { 
+                id: 'INSERT_SNAPSHOT_ITEM',
+                params: [
+                    partition,
+                    snapshotId,
+                    x.dn,
+                    x.kind,
+                    x.config_kind,
+                    x.name,
+                    x.config_hash
+                ]
+            }
+        })
 
-                this.debugObjectLogger.dump("history-snapshot-target", 0, snapshot);
-                this.debugObjectLogger.dump("history-snapshot-db", 0, dbSnapshot);
-
-                var itemsDelta = this._produceDelta(snapshot, dbSnapshot);
-                this.logger.info("[syncSnapshotItems] itemsDelta count: %s", itemsDelta.length);
-
-                this.debugObjectLogger.dump("history-items-delta", 0, itemsDelta);
-
-                var statements = itemsDelta.map(x => {
-                    if (x.action == 'C')
-                    {
-                        return { 
-                            id: 'INSERT_SNAPSHOT_ITEM',
-                            params: [
-                                partition,
-                                snapshotId,
-                                x.item.dn,
-                                x.item.kind,
-                                x.item.config_kind,
-                                x.item.name,
-                                x.item.config_hash
-                            ]
-                        };
-                    }
-                    else if (x.action == 'U')
-                    {
-                        return { 
-                            id: 'UPDATE_SNAPSHOT_ITEM',
-                            params: [
-                                x.item.dn,
-                                x.item.kind,
-                                x.item.config_kind,
-                                x.item.name,
-                                x.item.config_hash,
-                                partition,
-                                x.oldItemId
-                            ]
-                        };
-                    } 
-                    else if (x.action == 'D')
-                    {
-                        return { 
-                            id: 'DELETE_SNAPSHOT_ITEM',
-                            params: [
-                                partition,
-                                x.id
-                            ]
-                        };
-                    }
-
-                    this.logger.info("[syncSnapshotItems] INVALID delta: ", x);
-                    throw new Error("INVALID");
-                })
-
-                return this._executeMany(statements);
-            })
+        return this._executeMany(statements)
             .then(() => {
                 this.logger.info("[syncSnapshotItems] END");
             });
@@ -249,17 +192,17 @@ export class HistoryAccessor
 
     /* DIFF BEGIN */
 
-    fetchDiff(snapshotId: string, partition: number, date: any, in_snapshot: any, summary: any)
+    fetchDiff(snapshotId: number, partition: number, date: any, in_snapshot: any, summary: any)
     {
         date = DateUtils.makeDate(date);
-        var params = [partition, snapshotId, date, in_snapshot]; 
+        let params = [partition, snapshotId, date, in_snapshot]; 
         return this._execute('FIND_DIFF', params)
             .then((results : any[]) => {
                 if (!results.length) {
                     params = [partition, snapshotId, date, in_snapshot, summary]; 
                     return this._execute('INSERT_DIFF', params)
                         .then(insertResult => {
-                            var newObj = {
+                            let newObj = {
                                 id: insertResult.insertId,
                                 snapshot_id: snapshotId,
                                 date: date.toISOString()
@@ -276,68 +219,29 @@ export class HistoryAccessor
 
     /* DIFF ITEMS BEGIN */
 
-    syncDiffItems(partition: number, diffId: string, diffSnapshot: any)
+    syncDiffItems(partition: number, diffId: string, diffSnapshot: DBSnapshot<DBRawDiffItem>)
     {
         this.logger.info("[syncDiffItems] partition: %s, item count: %s", partition, diffSnapshot.count);
 
-        return this._snapshotReader.queryDiffItems(partition, diffId)
-            .then(dbItems => {
-                var dbSnapshot = this._makeDbSnapshotFromItems(dbItems);
+        let statements = diffSnapshot.getItems().map(x => {
+            return { 
+                id: 'INSERT_DIFF_ITEM',
+                params: [
+                    partition,
+                    diffId,
+                    x.dn,
+                    x.kind,
+                    x.config_kind,
+                    x.name,
+                    x.present,
+                    x.config_hash
+                ]
+            };
+        });
 
-                var itemsDelta = this._produceDelta(diffSnapshot, dbSnapshot);
-
-                var statements = itemsDelta.map(x => {
-
-                    if (x.action == 'C')
-                    {
-                        return { 
-                            id: 'INSERT_DIFF_ITEM',
-                            params: [
-                                partition,
-                                diffId,
-                                x.item.dn,
-                                x.item.kind,
-                                x.item.config_kind,
-                                x.item.name,
-                                x.item.present,
-                                x.item.config_hash
-                            ]
-                        };
-                    }
-                    else if (x.action == 'U')
-                    {
-                        return { 
-                            id: 'UPDATE_DIFF_ITEM',
-                            params: [
-                                x.item.dn,
-                                x.item.kind,
-                                x.item.config_kind,
-                                x.item.name,
-                                x.item.present,
-                                x.item.config_hash,
-                                partition,
-                                x.oldItemId
-                            ]
-                        };
-                    } 
-                    else if (x.action == 'D')
-                    {
-                        return { 
-                            id: 'DELETE_DIFF_ITEM',
-                            params: [
-                                partition,
-                                x.id
-                            ]
-                        };
-                    }
-
-                    this.logger.error("[syncDiffItems] INVALID delta: ", x);
-                    throw new Error("INVALID");
-                })
-                // this.logger.info('[syncDiffItems] ', statements);
-                // throw new Error("INVALID");
-
-                return this._executeMany(statements);
+        return this._executeMany(statements)
+            .then(() => {
+                this.logger.info("[syncDiffItems] END");
             });
     }
 
@@ -446,22 +350,22 @@ export class HistoryAccessor
     /* SUMMARY COUNTERS END */
 
 
-    private _produceDelta(targetSnapshot: any, dbSnapshot: any)
+    private _produceDelta(targetSnapshot: DBSnapshot<DBRawSnapItem>, dbSnapshot: any)
     {
         this.logger.info("[produceDelta] targetSnapshot count: %s",  targetSnapshot.count);
-        var itemsDelta = [];
+        let itemsDelta = [];
 
-        for(var key of targetSnapshot.keys)
+        for(let key of targetSnapshot.keys)
         {
-            var shouldCreate = true;
-            var targetItem = targetSnapshot.findById(key);
+            let targetItem = targetSnapshot.findById(key)!;
+            let shouldCreate = true;
 
-            var dbItemDict = dbSnapshot.findById(key)
+            let dbItemDict = dbSnapshot.findById(key)
             if (dbItemDict)
             {
-                for(var id of _.keys(dbItemDict))
+                for(let id of _.keys(dbItemDict))
                 {
-                    var dbItem = dbItemDict[id];
+                    let dbItem = dbItemDict[id];
                     if (shouldCreate)
                     {
                         shouldCreate = false;
@@ -498,11 +402,11 @@ export class HistoryAccessor
             }
         }
 
-        for(var key of dbSnapshot.keys)
+        for(let key of dbSnapshot.keys)
         {
             if (!targetSnapshot.findById(key))
             {
-                for(var id of _.keys(dbSnapshot[key]))
+                for(let id of _.keys(dbSnapshot[key]))
                 {
                     itemsDelta.push({
                         action: 'D',

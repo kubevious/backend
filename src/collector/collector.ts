@@ -2,6 +2,8 @@ import _ from 'the-lodash';
 import { Promise } from 'the-promise';
 import { ILogger } from 'the-logger' ;
 
+import moment from 'moment';
+
 import { v4 as uuidv4 } from 'uuid';
 import * as DateUtils from '@kubevious/helpers/dist/date-utils';
 
@@ -16,7 +18,7 @@ export interface UserMetricItem
 {
     category: string,
     name: string,
-    value: string | number
+    value: string | number | Date
 }
 
 
@@ -41,11 +43,13 @@ export class Collector
     private _snapshots : Record<string, CollectorSnapshotInfo> = {};
 
     private _parserVersion? : string;
-    private _currentMetric : any;
-    private _latestMetric : any;
+    private _currentMetric : MetricItem | null = null;
+    private _latestMetric : MetricItem | null = null;
     private _recentDurations : number[] = [];
 
     private _configHashes : Record<string, any> = {};
+
+    private _lastReportDate : moment.Moment | null = null;
 
     constructor(context: Context)
     {
@@ -109,11 +113,13 @@ export class Collector
                 value: this._latestMetric.kind
             })
 
-            metrics.push({
-                category: 'Collector',
-                name: 'Latest Report Duration(sec)',
-                value: this._latestMetric.durationSeconds
-            })
+            if (this._latestMetric.durationSeconds) {
+                metrics.push({
+                    category: 'Collector',
+                    name: 'Latest Report Duration(sec)',
+                    value: this._latestMetric.durationSeconds
+                })
+            }
         }
 
         return metrics;
@@ -146,7 +152,7 @@ export class Collector
     {
         this._parserVersion = parserVersion;
 
-        if (this._context.facadeRegistry.jobDampener.isBusy) {
+        if (!this._canAcceptNewSnapshot()) {
             return {
                 delay: true
             };
@@ -173,6 +179,8 @@ export class Collector
             metric: metric,
             item_hashes: item_hashes
         };
+
+        this._lastReportDate = moment();
 
         return {
             id: id
@@ -220,6 +228,8 @@ export class Collector
             if (!snapshotInfo) {
                 return RESPONSE_NEED_NEW_SNAPSHOT;
             }
+
+            this._lastReportDate = moment();
 
             this._endMetric(snapshotInfo.metric);
 
@@ -275,6 +285,28 @@ export class Collector
             delete this._configHashes[configHash];
         }
     }
+
+    private _canAcceptNewSnapshot() : boolean
+    {
+        if (this._context.facadeRegistry.jobDampener.isBusy) {
+            return false;
+        }
+
+        if (!this._context.historyProcessor.isDbReady) {
+            return false;
+        }
+
+        if (this._lastReportDate)
+        {
+            let diff = moment().diff(this._lastReportDate, "second");
+            if (diff < 60) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
 
 }
 
