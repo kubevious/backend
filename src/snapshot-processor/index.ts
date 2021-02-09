@@ -11,7 +11,6 @@ import { ProcessorBuilder, ProcessorInfo, Handler as ProcessorHandler } from './
 
 import { Context } from '../context';
 import { ProcessingTrackerScoper } from '@kubevious/helpers/dist/processing-tracker';
-import { CollectorSnapshotInfo } from '../collector/collector';
 
 interface ProcessorEntry
 {
@@ -41,10 +40,10 @@ export class SnapshotProcessor
 
     private _extractProcessors()
     {
-        var location = 'processors';
+        let location = 'processors';
         const processorsDir = Path.join(__dirname, location);
         this.logger.info('[_extractProcessors] from %s', processorsDir);
-        var files = fs.readdirSync(processorsDir);
+        let files = fs.readdirSync(processorsDir);
         files = _.filter(files, x => x.endsWith('.d.ts'));
 
         for(let fileName of files)
@@ -68,7 +67,7 @@ export class SnapshotProcessor
         }
         this._processors = _.orderBy(this._processors, x => x.order);
 
-        for(var processor of this._processors)
+        for(let processor of this._processors)
         {
             this._logger.info("[_extractProcessors] HANDLER: %s :: %s", 
                 processor.order, 
@@ -76,18 +75,13 @@ export class SnapshotProcessor
         }
     }
 
-    process(snapshotInfo: CollectorSnapshotInfo, tracker: ProcessingTrackerScoper, extraParams?: any)
+    process(registryState : RegistryState, tracker: ProcessingTrackerScoper, extraParams?: any)
     {
         return tracker.scope("SnapshotProcessor::process", (innerTracker) => {
 
-            var registryState : RegistryState | null = null;
-            var bundle : RegistryBundleState | null = null;
+            let bundle : RegistryBundleState | null = null;
             return Promise.resolve()
-                .then(() => this._makeState(snapshotInfo, innerTracker))
-                .then(result => {
-                    registryState = result;
-                })
-                .then(() => this._runProcessors(registryState!, extraParams, innerTracker))
+                .then(() => this._runProcessors(registryState, extraParams, innerTracker))
                 .then(() => {
                     return innerTracker.scope("buildBundle", () => {
                         bundle = registryState!.buildBundle();
@@ -99,24 +93,13 @@ export class SnapshotProcessor
         });
     }
 
-    private _makeState(snapshotInfo: CollectorSnapshotInfo, tracker: ProcessingTrackerScoper)
-    {
-        return tracker.scope("_makeState", () => {
-            var registryState = new RegistryState({
-                date: snapshotInfo.date,
-                items: _.values(snapshotInfo.items)
-            })
-            return registryState;
-        });
-    }
-
     private _runProcessors(registryState: RegistryState, extraParams: any, tracker : ProcessingTrackerScoper)
     {
         return tracker.scope("handlers", (procTracker) => {
             return Promise.serial(this._processors, processor => {
                 return procTracker.scope(processor.name, (innerTracker) => {
 
-                    var params;
+                    let params;
                     if (extraParams) {
                         params = _.clone(extraParams);
                     } else {

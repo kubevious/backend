@@ -22,8 +22,9 @@
   "homepage": "https://github.com/kubevious/kubevious",
   "dependencies": {
     "@kubevious/easy-data-store": "^1.0.9",
-    "@kubevious/helper-backend": "^1.0.12",
-    "@kubevious/helpers": "^1.0.31",
+    "@kubevious/helper-backend": "^1.0.17",
+    "@kubevious/helper-logic-processor": "^1.0.9",
+    "@kubevious/helpers": "^1.0.49",
     "@kubevious/kubik": "^1.0.5",
     "@kubevious/worldvious-client": "^1.0.6",
     "cron": "^1.8.2",
@@ -33,7 +34,7 @@
     "moment": "^2.29.1",
     "the-lodash": "^2.0.0",
     "the-logger": "^2.0.5",
-    "the-promise": "^2.0.3",
+    "the-promise": "^2.0.4",
     "uuid": "^7.0.2",
     "uuid-parse": "^1.1.0",
     "websocket-subscription-server": "^1.0.27"

@@ -7,4 +7,4 @@ rm -rf node_modules/
 
 npm install
 npm install --only=dev
-npm update @kubevious/helpers @kubevious/easy-data-store @kubevious/helper-backend @kubevious/kubik websocket-subscription-server @kubevious/worldvious-client the-lodash the-logger the-promise
+npm update @kubevious/helpers @kubevious/easy-data-store @kubevious/helper-backend @kubevious/kubik websocket-subscription-server @kubevious/worldvious-client @kubevious/helper-logic-processor the-lodash the-logger the-promise

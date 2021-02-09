@@ -65,9 +65,9 @@ export class Context
 
     private _snapshotProcessor: SnapshotProcessor;
 
-    private _historyCleanupProcessor: any;
+    private _historyCleanupProcessor: HistoryCleanupProcessor;
 
-    private _seriesResamplerHelper : SeriesResampler;
+    private _seriesResamplerHelper: SeriesResampler;
 
     private _notificationsApp: NotificationsApp;
 

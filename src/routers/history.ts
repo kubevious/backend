@@ -4,6 +4,9 @@ import { Router } from '@kubevious/helper-backend'
 import Joi from 'joi';
 
 import * as DateUtils from '@kubevious/helpers/dist/date-utils';
+import { Snapshot } from '@kubevious/helpers/dist/history';
+
+import { parentDn as makeParentDn } from '@kubevious/helpers/dist/dn-utils';
 
 export default function (router: Router, context: Context) {
 
@@ -43,7 +46,7 @@ export default function (router: Router, context: Context) {
                 if (!snapshot) {
                     return {};
                 }
-                return snapshot.generateTree();
+                return generateTree(snapshot);
             })
     })
     .querySchema(
@@ -110,4 +113,54 @@ export default function (router: Router, context: Context) {
         return context.historyCleanupProcessor.processCleanup()
     })
 
+
+    function generateTree(snapshot: Snapshot)
+    {
+        var lookup : Record<string, any> = {};
+
+        let makeNode = (dn: string, config: any) => {
+            var node = _.clone(config);
+            node.children = [];
+            lookup[dn] = node;
+        };
+
+        for (var item of snapshot.getItems().filter(x => x.config_kind == 'node'))
+        {
+            makeNode(item.dn, item.config);
+        }
+
+        let getNode = (dn: string) => {
+            var node = lookup[dn];
+            if (!node) {
+                node = {
+                    children: []
+                };
+                lookup[dn] = node;
+                markParent(dn);
+            }
+            return node;
+        };
+
+        let markParent = (dn: string) => {
+            var node = lookup[dn];
+
+            var parentDn = makeParentDn(dn);
+            if (parentDn.length > 0) {
+                var parentNode = getNode(parentDn);
+                parentNode.children.push(node);
+            }
+        };
+
+        for (var item of snapshot.getItems().filter(x => x.config_kind == 'node'))
+        {
+            markParent(item.dn);
+        }
+
+        var rootNode = lookup['root'];
+        if (!rootNode) {
+            rootNode = null;
+        }
+
+        return rootNode;
+    }
 }

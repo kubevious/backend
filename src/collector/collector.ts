@@ -2,34 +2,25 @@ import _ from 'the-lodash';
 import { Promise } from 'the-promise';
 import { ILogger } from 'the-logger' ;
 
+import moment from 'moment';
+
 import { v4 as uuidv4 } from 'uuid';
 import * as DateUtils from '@kubevious/helpers/dist/date-utils';
 
 import { Context } from '../context';
 import { SnapshotItemInfo } from '@kubevious/helpers/dist/snapshot/types';
+import { ReportableSnapshotItem, ResponseReportSnapshot, ResponseReportSnapshotItems } from '@kubevious/helpers/dist/reportable/types';
+import { CollectorSnapshotInfo, MetricItem } from './types';
+import { ConcreteRegistry } from '../concrete/registry';
+import { K8sConfig, extractK8sConfigId } from '@kubevious/helper-logic-processor';
 
 export interface UserMetricItem
 {
     category: string,
     name: string,
-    value: string | number
+    value: string | number | Date
 }
 
-export interface MetricItem
-{
-    origDate: Date,
-    dateStart: Date,
-    dateEnd: Date | null,
-    kind: string,
-    durationSeconds: number | null
-}
-
-export interface CollectorSnapshotInfo
-{
-    date: Date,
-    metric: MetricItem,
-    items: Record<string, SnapshotItemInfo>
-}
 
 export interface CollectorSnapshotItem
 {
@@ -42,20 +33,23 @@ export interface DiffItem
 
 }
 
+const SNAPSHOT_QUEUE_SIZE = 5;
+
 export class Collector
 {
     private _logger : ILogger;
     private _context : Context
 
     private _snapshots : Record<string, CollectorSnapshotInfo> = {};
-    private _diffs : Record<string, any> = {};
-
-    private _iteration : number = 0;
 
     private _parserVersion? : string;
-    private _currentMetric : any;
-    private _latestMetric : any;
+    private _currentMetric : MetricItem | null = null;
+    private _latestMetric : MetricItem | null = null;
     private _recentDurations : number[] = [];
+
+    private _configHashes : Record<string, any> = {};
+
+    private _lastReportDate : moment.Moment | null = null;
 
     constructor(context: Context)
     {
@@ -119,11 +113,13 @@ export class Collector
                 value: this._latestMetric.kind
             })
 
-            metrics.push({
-                category: 'Collector',
-                name: 'Latest Report Duration(sec)',
-                value: this._latestMetric.durationSeconds
-            })
+            if (this._latestMetric.durationSeconds) {
+                metrics.push({
+                    category: 'Collector',
+                    name: 'Latest Report Duration(sec)',
+                    value: this._latestMetric.durationSeconds
+                })
+            }
         }
 
         return metrics;
@@ -152,143 +148,165 @@ export class Collector
         return metric;
     }
     
-    newSnapshot(date: Date, parserVersion: string)
+    newSnapshot(date: Date, parserVersion: string, baseSnapshotId?: string) : ResponseReportSnapshot
     {
         this._parserVersion = parserVersion;
 
+        if (!this._canAcceptNewSnapshot()) {
+            return {
+                delay: true
+            };
+        }
+
         let metric = this._newMetric(date, 'snapshot');
 
-        var id = uuidv4();
+        let item_hashes : Record<string, string> = {};
+        if (baseSnapshotId)
+        {
+            let baseSnapshot = this._snapshots[baseSnapshotId!];
+            if (baseSnapshot) {
+                item_hashes = _.clone(baseSnapshot.item_hashes);
+            } else {
+                return RESPONSE_NEED_NEW_SNAPSHOT;
+            }
+        }
+
+        let id = uuidv4();
         this._snapshots[id] = {
+            id: id,
+            reportDate: new Date(),
             date: date,
             metric: metric,
-            items: {}
+            item_hashes: item_hashes
         };
+
+        this._lastReportDate = moment();
 
         return {
             id: id
         };
     }
 
-    acceptSnapshotItems(snapshotId: string, items: CollectorSnapshotItem[])
+    acceptSnapshotItems(snapshotId: string, items: ReportableSnapshotItem[])
     {
-        var snapshotInfo = this._snapshots[snapshotId];
+        let snapshotInfo = this._snapshots[snapshotId];
         if (!snapshotInfo) {
             return RESPONSE_NEED_NEW_SNAPSHOT;
         }
 
-        for(var item of items)
+        let missingHashes : string[] = [];
+
+        for (let item of items)
         {
-            snapshotInfo.items[item.hash] = item.data;
+            if (item.present)
+            {
+                snapshotInfo.item_hashes[item.idHash] = item.configHash!;
+
+                if (!(item.idHash in this._configHashes)) {
+                    missingHashes.push(item.configHash!)
+                }
+            }
+            else
+            {
+                delete snapshotInfo.item_hashes[item.idHash];
+            }
         }
 
-        return {};
+        let response : ResponseReportSnapshotItems = {}
+        if (missingHashes.length > 0)
+        {
+            response.needed_configs = missingHashes;
+        }
+
+        return response;
     }
 
     activateSnapshot(snapshotId: string)
     {
         return this._context.tracker.scope("collector::activateSnapshot", (tracker) => {
-            var snapshotInfo = this._snapshots[snapshotId];
+            let snapshotInfo = this._snapshots[snapshotId];
             if (!snapshotInfo) {
                 return RESPONSE_NEED_NEW_SNAPSHOT;
             }
 
-            this._acceptSnapshot(snapshotInfo);
+            this._lastReportDate = moment();
+
+            this._endMetric(snapshotInfo.metric);
+
+            this.logger.info("[_acceptSnapshot] item count: %s", _.keys(snapshotInfo.item_hashes).length);
+            this.logger.info("[_acceptSnapshot] metric: ", snapshotInfo.metric);
+            
+            const registry = new ConcreteRegistry(this._logger, snapshotInfo.date);
+            for(let itemHash of _.keys(snapshotInfo.item_hashes))
+            {
+                let configHash = snapshotInfo.item_hashes[itemHash];
+                let config = this._configHashes[configHash];
+                let itemId = this._extractId(config);
+                registry.add(itemId, config);
+            }
+            
+            this._cleanup();
+
+            this._context.facadeRegistry.acceptConcreteRegistry(registry);
 
             return {};
         });
     }
 
-    newDiff(snapshotId: string, date: Date)
+    storeConfig(hash: string, config: object)
     {
-        var snapshotInfo = this._snapshots[snapshotId];
-        if (!snapshotInfo) {
-            return RESPONSE_NEED_NEW_SNAPSHOT;
-        }
-
-        let metric = this._newMetric(date, 'snapshot');
-        metric.kind = 'diff';
-
-        var id = uuidv4();
-        this._diffs[id] = {
-            date: date,
-            metric: metric,
-            snapshotId: snapshotId,
-            items: []
-        };
-
-        return {
-            id: id
-        };
+        this._configHashes[hash] = config;
     }
 
-    acceptDiffItems(diffId: string, items: DiffItem[])
+    private _extractId(config: any)
     {
-        var diffInfo = this._diffs[diffId];
-        if (!diffInfo) {
-            return RESPONSE_NEED_NEW_SNAPSHOT;
+        let c = <K8sConfig>config;
+        return extractK8sConfigId(c);
+    }
+
+    private _cleanup()
+    {
+        let snapshots = _.orderBy(_.values(this._snapshots), x => x.date, ['desc']);
+        let liveSnapshots = _.take(snapshots, SNAPSHOT_QUEUE_SIZE);
+        let toDeleteSnapshots = _.drop(snapshots, SNAPSHOT_QUEUE_SIZE);
+
+        for(let snapshot of toDeleteSnapshots) {
+            delete this._snapshots[snapshot.id];
         }
 
-        for(var item of items)
+        let configHashesList = liveSnapshots.map(x => _.values(x.item_hashes));
+
+        let finalConfigHashes = <string[]>_.union.apply(null, configHashesList);
+
+        let configHashesToDelete = _.difference(_.keys(this._configHashes), finalConfigHashes);
+
+        for(let configHash of configHashesToDelete)
         {
-            diffInfo.items.push(item);
+            delete this._configHashes[configHash];
+        }
+    }
+
+    private _canAcceptNewSnapshot() : boolean
+    {
+        if (this._context.facadeRegistry.jobDampener.isBusy) {
+            return false;
         }
 
-        return {};
+        if (!this._context.historyProcessor.isDbReady) {
+            return false;
+        }
+
+        if (this._lastReportDate)
+        {
+            let diff = moment().diff(this._lastReportDate, "second");
+            if (diff < 60) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 
-    activateDiff(diffId: string)
-    {
-        return this._context.tracker.scope("collector::activateDiff", (tracker) => {
-            var diffInfo = this._diffs[diffId];
-            if (!diffInfo) {
-                return RESPONSE_NEED_NEW_SNAPSHOT;
-            }
-    
-            var snapshotInfo = this._snapshots[diffInfo.snapshotId];
-            if (!snapshotInfo) {
-                return RESPONSE_NEED_NEW_SNAPSHOT;
-            }
-    
-            var newSnapshotId = uuidv4();
-            var newSnapshotInfo : CollectorSnapshotInfo = {
-                date: new Date(diffInfo.date),
-                metric: diffInfo.metric,
-                items: _.clone(snapshotInfo.items)
-            };
-            this._snapshots[newSnapshotId] = newSnapshotInfo;
-    
-            for(var diffItem of diffInfo.items)
-            {
-                if (diffItem.present)
-                {
-                    newSnapshotInfo.items[diffItem.hash] = diffItem.data;
-                }
-                else
-                {
-                    delete newSnapshotInfo.items[diffItem.hash];
-                }
-            }
-    
-            delete this._snapshots[diffInfo.snapshotId];
-    
-            this._acceptSnapshot(newSnapshotInfo);
-    
-            return {
-                id: newSnapshotId
-            };
-        });
-    }
-
-    private _acceptSnapshot(snapshotInfo: CollectorSnapshotInfo)
-    {
-        this._endMetric(snapshotInfo.metric);
-
-        this.logger.info("[_acceptSnapshot] item count: %s", _.keys(snapshotInfo.items).length);
-        this.logger.info("[_acceptSnapshot] metric: ", snapshotInfo.metric);
-        var safeSnapshot = _.cloneDeep(snapshotInfo);
-        this._context.facadeRegistry.acceptCurrentSnapshot(safeSnapshot);
-    }
 
 }
 
