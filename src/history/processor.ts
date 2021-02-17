@@ -448,7 +448,9 @@ export class HistoryProcessor
         let dns : Record<string, boolean> = {};
         let summary : SnapshotSummary= {
             items: 0,
-            kinds: {}
+            kinds: {},
+            alerts: {},
+            alertsByKind: {}
         };
 
         for(let item of items.filter(x => x.config_kind == 'alerts'))
@@ -632,10 +634,13 @@ export class HistoryProcessor
         return Promise.resolve()
             .then(() => this._dbAccessor.queryConfig('STATE'))
             .then((config : any) => {
-                if (!config) {
-                    this._currentState = this._makeNewConfigState()
-                } else {
+                this._logger.info("[_onDbConnected] config: ", config);
+
+                if (config) {
                     this._currentState = <ConfigState>config.value;
+                }
+                if (!this._currentState) {
+                    this._currentState = this._makeNewConfigState();
                 }
 
                 this._logger.info("[_onDbConnected] state: ", this._currentState);
@@ -720,8 +725,8 @@ type TablePartitionMap = Record<string, boolean>
 
 interface DeltaSummary
 {
-    snapshot: any,
-    delta: any,
+    snapshot: SnapshotSummary,
+    delta: SnapshotSummary,
 }
 
 type AlertsSummary = Record<string, Record<string, AlertCounter > >;
@@ -732,7 +737,9 @@ interface AlertCounter {
 interface SnapshotSummary
 {
     items: number,
-    kinds: Record<string, number>
+    kinds: Record<string, number>,
+    alerts: any,
+    alertsByKind: any
 }
 interface ProcessableSnapshot
 {
