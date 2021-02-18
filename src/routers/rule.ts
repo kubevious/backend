@@ -62,11 +62,13 @@ export default function (router: Router, context: Context) {
     })
     .bodySchema(
         Joi.object({
-            kind: Joi.string().valid('rules').required(),
+            data: {
+                kind: Joi.string().valid('rules').required(),
+                items: Joi.array().required().items(
+                    Joi.object()
+                )
+            },
             deleteExtra: Joi.boolean().optional(),
-            items: Joi.array().required().items(
-                Joi.object()
-            )
         })
     )
 
