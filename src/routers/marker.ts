@@ -67,11 +67,13 @@ export default function (router: Router, context: Context) {
     })
     .bodySchema(
         Joi.object({
-            kind: Joi.string().valid('markers').required(),
+            data: {
+                kind: Joi.string().valid('markers').required(),
+                items: Joi.array().required().items(
+                    Joi.object()
+                )
+            },
             deleteExtra: Joi.boolean().optional(),
-            items: Joi.array().required().items(
-                Joi.object()
-            )
         })
     )
 
