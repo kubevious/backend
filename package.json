@@ -24,8 +24,9 @@
     "@kubevious/easy-data-store": "^1.0.9",
     "@kubevious/helper-backend": "^1.0.19",
     "@kubevious/helper-logic-processor": "^1.0.11",
-    "@kubevious/helpers": "^1.0.51",
+    "@kubevious/helpers": "^1.0.52",
     "@kubevious/kubik": "^1.0.5",
+    "@kubevious/websocket-server": "^1.0.4",
     "@kubevious/worldvious-client": "^1.0.6",
     "cron": "^1.8.2",
     "flexsearch": "^0.6.32",
@@ -36,8 +37,7 @@
     "the-logger": "^2.0.7",
     "the-promise": "^2.0.4",
     "uuid": "^7.0.2",
-    "uuid-parse": "^1.1.0",
-    "websocket-subscription-server": "^1.0.27"
+    "uuid-parse": "^1.1.0"
   },
   "devDependencies": {
     "@types/js-yaml": "^3.12.5",
