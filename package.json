@@ -26,7 +26,7 @@
     "@kubevious/helper-logic-processor": "^1.0.11",
     "@kubevious/helpers": "^1.0.52",
     "@kubevious/kubik": "^1.0.5",
-    "@kubevious/websocket-server": "^1.0.4",
+    "@kubevious/websocket-server": "^1.0.5",
     "@kubevious/worldvious-client": "^1.0.6",
     "cron": "^1.8.2",
     "flexsearch": "^0.6.32",

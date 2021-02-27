@@ -6,5 +6,4 @@ cd $MY_DIR
 rm -rf node_modules/
 
 npm install
-npm install --only=dev
 npm update @kubevious/helpers @kubevious/easy-data-store @kubevious/helper-backend @kubevious/kubik @kubevious/worldvious-client @kubevious/helper-logic-processor the-lodash the-logger the-promise @kubevious/websocket-server
