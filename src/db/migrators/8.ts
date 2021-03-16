@@ -105,7 +105,7 @@ if (value) {
         script:
 `for(var container of item.config.spec.containers)
 {
-  if (!container.resources.limit)
+  if (!container.resources.limits)
   {
     warning('No resource limit set');
   }
