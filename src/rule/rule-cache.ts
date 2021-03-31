@@ -4,12 +4,16 @@ import { ILogger } from 'the-logger' ;
 
 import { Context } from '../context';
 
-import { ExecutionContext } from './execution-context';
+import { ExecutionContext, RuleResult as RuleEngineRuleResult } from '@kubevious/helper-rule-engine';
 
 export type UserRule = Record<string, any>;
 
-export type RuleStatus = Record<string, any>;
-export type RuleResult = Record<string, any>;
+export type UserRuleStatus = Record<string, any>;
+export type UserRuleResult = Record<string, any>;
+
+export interface MyRuleResult {
+    engineResult: RuleEngineRuleResult
+}
 
 export class RuleCache
 {
@@ -17,11 +21,12 @@ export class RuleCache
     private _context : Context;
 
     private _userRules : any[] = [];
+    
     private _ruleConfigDict : Record<string, any> = {};
+    private _engineRuleResultsDict : Record<string, RuleEngineRuleResult> = {};
 
-    private _listRuleStatuses : any[] = [];
-    private _ruleExecResultDict : Record<string, any> = {};
-    private _ruleResultsDict : Record<string, any> = {};
+    private _listRuleStatuses : UserRuleStatus[] = [];
+    private _ruleResultsDict : Record<string, UserRuleResult> = {};
 
     constructor(context : Context)
     {
@@ -105,7 +110,7 @@ export class RuleCache
         return userRules;
     }
 
-    private _buildRuleStatusList() : RuleStatus[]
+    private _buildRuleStatusList() : UserRuleStatus[]
     {
         var userRules = [];
         for(var rule of _.values(this._ruleConfigDict))
@@ -122,27 +127,62 @@ export class RuleCache
     private _refreshExecutionStatuses()
     {
         let executionContext : ExecutionContext = {
-            ruleStatuses: {},
-            ruleItems: [],
-            ruleLogs: [],
-            markerItems: []
+            rules: {},
+            markers: {}
         }
 
         return Promise.all([
             this._context.ruleAccessor.queryAllRuleStatuses()
                 .then(result => {
-                    executionContext.ruleStatuses = _.makeDict(result, x => x.rule_id, x => x);
+                    for(let row of result)
+                    {
+                        const ruleResult = this._getRuleResult(executionContext, row.rule_name);
+                        ruleResult.error_count = row.error_count;
+                    }
                 }),
             this._context.ruleAccessor.queryAllRuleItems()
                 .then(result => {
-                    executionContext.ruleItems = result;
+                    for(let row of result)
+                    {
+                        const ruleResult = this._getRuleResult(executionContext, row.rule_name);
+                        ruleResult.items.push({
+                            errors: row.errors,
+                            warnings: row.warnings,
+                            markers: row.markers,
+                            dn: row.dn
+                        })
+                    }
                 }),
             this._context.ruleAccessor.queryAllRuleLogs()
                 .then(result => {
-                    executionContext.ruleLogs = result;
+                    for(let row of result)
+                    {
+                        const ruleResult = this._getRuleResult(executionContext, row.rule_name);
+                        ruleResult.logs.push({
+                            kind: row.kind,
+                            msg: row.msg
+                        })
+                    }
                 })
         ])
         .then(() => this._acceptExecutionContext(executionContext));
+    }
+
+    private _getRuleResult(executionContext : ExecutionContext, name: string) : RuleEngineRuleResult
+    {
+        let value = executionContext.rules[name];
+        if (value) {
+            return value;
+        }
+        value = {
+            name: name,
+            items: [],
+            logs: [],
+            markers: {},
+            error_count: 0
+        }
+        executionContext.rules[name] = value;
+        return value;
     }
 
     acceptExecutionContext(executionContext: ExecutionContext)
@@ -154,32 +194,15 @@ export class RuleCache
 
     private _acceptExecutionContext(executionContext: ExecutionContext)
     {
-        this._ruleExecResultDict = {};
-
-        for(var status of _.values(executionContext.ruleStatuses))
-        {
-            this._fetchRuleExecResult(status.rule_name).status = status;
-            status.hash = status.hash.toString('hex');
-            delete status.rule_name;
-        }
-        for(var item of executionContext.ruleItems)
-        {
-            this._fetchRuleExecResult(item.rule_name).items.push(item);
-            delete item.rule_name;
-        }
-        for(var log of executionContext.ruleLogs)
-        {
-            this._fetchRuleExecResult(log.rule_name).logs.push(log);
-            delete log.rule_name;
-        }
+        this._engineRuleResultsDict = executionContext.rules;
     }
 
     private _notifyRuleResults()
     {
         this._ruleResultsDict = {};
-        for(var ruleResult of _.values(this._ruleExecResultDict))
+        for(var rule of _.values(this._ruleConfigDict))
         {
-            this._ruleResultsDict[ruleResult.name] = this._buildRuleResult(ruleResult.name);
+            this._ruleResultsDict[rule.name] = this._buildRuleResult(rule.name);
         }
 
         var data = _.values(this._ruleResultsDict).map(x => ({
@@ -198,19 +221,6 @@ export class RuleCache
         return null;
     }
 
-    private _fetchRuleExecResult(name: string)
-    {
-        if (!this._ruleExecResultDict[name]) {
-            this._ruleExecResultDict[name] = {
-                name: name,
-                status: null,
-                items: [],
-                logs: []
-            }
-        }
-        return this._ruleExecResultDict[name];
-    }
-
     private _buildRuleConfig(rule: any) : UserRule
     {
         var userRule = {
@@ -222,22 +232,7 @@ export class RuleCache
         return userRule;
     }
 
-    private _buildRuleStatus(name: string) : RuleStatus
-    {
-        var info = this._buildRuleInfo(name);
-        delete info.items;
-        delete info.logs;
-        return info;
-    }
-
-    private _buildRuleResult(name: string) : RuleResult
-    {
-        var info = this._buildRuleInfo(name);
-        delete info.item_count;
-        return info;
-    }
-
-    private _buildRuleInfo(name: string) : any
+    private _buildRuleStatus(name: string) : UserRuleStatus
     {
         var info : any = {
             name: name,
@@ -245,6 +240,45 @@ export class RuleCache
             is_current: false,
             error_count: 0,
             item_count: 0,
+        };
+
+        var ruleConfig = this._ruleConfigDict[name];
+        if (ruleConfig)
+        {
+            info.enabled = ruleConfig.enabled;
+            if (ruleConfig.enabled)
+            {
+                var ruleExecResult = this._engineRuleResultsDict[name];
+                if (ruleExecResult)
+                {
+                    info.item_count = ruleExecResult.items.length;
+                    info.error_count = ruleExecResult.logs.length;
+
+                    // var status = ruleExecResult.status;
+                    // if (status)
+                    // {
+                    //     if (ruleConfig.hash == status.hash) {
+                    //         info.is_current = true;
+                    //     }
+                    // }
+                }
+            }
+            else
+            {
+                info.is_current = true;
+            }
+        }
+
+        return info;
+    }
+
+    private _buildRuleResult(name: string) : UserRuleResult
+    {
+        var info : any = {
+            name: name,
+            enabled: false,
+            is_current: false,
+            error_count: 0,
             items: [],
             logs: []
         };
@@ -255,20 +289,27 @@ export class RuleCache
             info.enabled = ruleConfig.enabled;
             if (ruleConfig.enabled)
             {
-                var ruleExecResult = this._ruleExecResultDict[name];
+                var ruleExecResult = this._engineRuleResultsDict[name];
                 if (ruleExecResult)
                 {
-                    var status = ruleExecResult.status;
-                    if (status)
-                    {
-                        if (ruleConfig.hash == status.hash) {
-                            info.is_current = true;
-                        }
-                        info.error_count = status.error_count;
-                        info.item_count = status.item_count;
-                    }
+                    info.error_count = ruleExecResult.logs.length;
+
+                    // var status = ruleExecResult.status;
+                    // if (status)
+                    // {
+                    //     if (ruleConfig.hash == status.hash) {
+                    //         info.is_current = true;
+                    //     }
+                    // }
     
-                    info.items = ruleExecResult.items;
+                    info.items = ruleExecResult.items.map(x => {
+                        return {
+                            dn: x.dn,
+                            has_error: (x.errors > 0),
+                            has_warning: (x.warnings > 0),
+                            markers: x.markers
+                        }
+                    });
                     info.logs = ruleExecResult.logs;
                 }
             }

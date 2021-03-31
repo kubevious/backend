@@ -12,7 +12,7 @@ export default Migrator()
             "`name` varchar(128) NOT NULL," +
             "`enabled` TINYINT NOT NULL," +
             "`date` DATETIME NOT NULL," +
-            " `target` TEXT NOT NULL," +
+            "`target` TEXT NOT NULL," +
             "`script` TEXT NOT NULL," +
             "`hash` BINARY(32) NULL," +
             "PRIMARY KEY (`name`)" +

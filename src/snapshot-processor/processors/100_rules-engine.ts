@@ -4,6 +4,6 @@ export default Processor()
     .order(100)
     .handler(({logger, state, tracker, context }) => {
 
-        return context.ruleProcessor.execute(state, tracker);
+        return context.ruleEngine.execute(state, tracker);
 
     })

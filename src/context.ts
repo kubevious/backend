@@ -19,7 +19,7 @@ import { MarkerAccessor } from './rule/marker-accessor';
 import { MarkerCache } from './rule/marker-cache';
 import { RuleAccessor } from './rule/rule-accessor';
 import { RuleCache } from './rule/rule-cache';
-import { RuleProcessor } from './rule/rule-processor';
+import { RuleEngine } from './rule/rule-engine';
 import { SnapshotProcessor } from './snapshot-processor';
 import { NotificationsApp } from './apps/notifications';
 import { WorldviousClient } from '@kubevious/worldvious-client';
@@ -59,7 +59,7 @@ export class Context
     private _markerCache: MarkerCache;
     private _ruleAccessor: RuleAccessor;
     private _ruleCache: RuleCache;
-    private _ruleProcessor: RuleProcessor;
+    private _ruleEngine: RuleEngine;
 
     private _historySnapshotReader: HistorySnapshotReader;
 
@@ -96,7 +96,7 @@ export class Context
         this._markerCache = new MarkerCache(this);
         this._ruleAccessor = new RuleAccessor(this, this.database.dataStore);
         this._ruleCache = new RuleCache(this);
-        this._ruleProcessor = new RuleProcessor(this, this.database.dataStore);
+        this._ruleEngine = new RuleEngine(this, this.database.dataStore);
 
         this._historySnapshotReader = new HistorySnapshotReader(this.logger, this._database.driver);
 
@@ -180,8 +180,8 @@ export class Context
         return this._ruleCache;
     }
 
-    get ruleProcessor() {
-        return this._ruleProcessor;
+    get ruleEngine() {
+        return this._ruleEngine;
     }
 
     get historySnapshotReader() {
