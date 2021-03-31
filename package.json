@@ -24,7 +24,7 @@
     "@kubevious/easy-data-store": "^1.0.9",
     "@kubevious/helper-backend": "^1.0.19",
     "@kubevious/helper-logic-processor": "^1.0.11",
-    "@kubevious/helper-rule-engine": "^1.0.12",
+    "@kubevious/helper-rule-engine": "^1.0.13",
     "@kubevious/helpers": "^1.0.52",
     "@kubevious/websocket-server": "^1.0.13",
     "@kubevious/worldvious-client": "^1.0.6",

@@ -9,8 +9,7 @@ import { RegistryState } from '@kubevious/helpers/dist/registry-state';
 import { ProcessingTrackerScoper } from '@kubevious/helpers/dist/processing-tracker';
 
 import { RulesProcessor, ExecutionContext } from '@kubevious/helper-rule-engine';
-import { RuleItem, RuleObject } from './types';
-
+import { RuleObject } from './types';
 
 export class RuleEngine
 {
@@ -70,7 +69,6 @@ export class RuleEngine
             })
     }
 
-
     private _fetchRules() : Promise<RuleObject[]>
     {
         return this._context.ruleAccessor
@@ -81,154 +79,10 @@ export class RuleEngine
     {
         return Promise.resolve()
             .then(() => this._saveRuleData(executionContext, rulesDict))
-            .then(() => this._context.ruleCache.acceptExecutionContext(executionContext))
+            .then(() => this._context.ruleCache.acceptExecutionContext(executionContext, rulesDict))
             .then(() => this._context.markerCache.acceptExecutionContext(executionContext))
     }
     
-    // private _processRule(state: RegistryState, rule: RuleObject, executionContext : ExecutionContext)
-    // {
-    //     this.logger.info('[_processRule] Begin: %s', rule.name);
-    //     this.logger.verbose('[_processRule] Begin: ', rule);
-
-    //     executionContext.ruleStatuses[rule.name] = {
-    //         rule_name: rule.name,
-    //         hash: rule.hash,
-    //         date: new Date(),
-    //         error_count: 0,
-    //         item_count: 0
-    //     };
-
-    //     let processor = new KubikRuleProcessor(state, rule);
-    //     return processor.process()
-    //         .then((result) => {
-    //             this.logger.silly('[_processRule] RESULT: ', result);
-    //             this.logger.silly('[_processRule] RESULT ITEMS: ', result.ruleItems);
-
-    //             if (result.success)
-    //             {
-    //                 for(let dn of _.keys(result.ruleItems))
-    //                 {
-    //                     this.logger.debug('[_processRule] RuleItem: %s', dn);
-
-    //                     let ruleItemInfo = result.ruleItems[dn];
-
-    //                     let ruleItem : RuleItem = {
-    //                         errors: 0,
-    //                         warnings: 0
-    //                     };
-
-    //                     let alertsToRaise = [];
-
-    //                     if (ruleItemInfo.errors) {
-
-    //                         if (ruleItemInfo.errors.messages &&
-    //                             ruleItemInfo.errors.messages.length > 0)
-    //                         {
-    //                             ruleItem.errors = ruleItemInfo.errors.messages.length;
-    //                             for(let msg of ruleItemInfo.errors.messages)
-    //                             {
-    //                                 alertsToRaise.push({ 
-    //                                     severity: 'error',
-    //                                     message:  'Rule ' + rule.name + ' failed. ' + msg
-    //                                 });
-    //                             }
-    //                         }
-    //                         else
-    //                         {
-    //                             ruleItem.errors = 1;
-    //                             alertsToRaise.push({ 
-    //                                 severity: 'error',
-    //                                 message:  'Rule ' + rule.name + ' failed.'
-    //                             });
-    //                         }
-    //                     }
-    //                     else if (ruleItemInfo.warnings)
-    //                     {
-    //                         if (ruleItemInfo.warnings.messages && 
-    //                             ruleItemInfo.warnings.messages.length > 0)
-    //                         {
-    //                             ruleItem.warnings = ruleItemInfo.warnings.messages.length;
-    //                             for(let msg of ruleItemInfo.warnings.messages)
-    //                             {
-    //                                 alertsToRaise.push({ 
-    //                                     severity: 'warn',
-    //                                     message:  'Rule ' + rule.name + ' failed. ' + msg
-    //                                 });
-    //                             }
-    //                         }
-    //                         else
-    //                         {
-    //                             ruleItem.warnings = 1;
-    //                             alertsToRaise.push({ 
-    //                                 severity: 'warn',
-    //                                 message:  'Rule ' + rule.name + ' failed.'
-    //                             });
-    //                         }
-    //                     }
-
-    //                     let shouldUseRuleItem = false;
-
-    //                     for(let alertInfo of alertsToRaise)
-    //                     {
-    //                         shouldUseRuleItem = true;
-
-    //                         state.raiseAlert(dn, {
-    //                             id: 'rule-' + rule.name,
-    //                             severity: alertInfo.severity,
-    //                             msg: alertInfo.message,
-    //                             source: {
-    //                                 kind: 'rule',
-    //                                 id: rule.name
-    //                             }
-    //                         });
-    //                     }
-
-    //                     if (ruleItemInfo.marks)
-    //                     {
-    //                         for(let marker of _.keys(ruleItemInfo.marks))
-    //                         {
-    //                             state.raiseMarker(dn, marker);
-    //                             shouldUseRuleItem = true;
-    //                             if (!ruleItem.markers) {
-    //                                 ruleItem.markers = [];
-    //                             }
-    //                             ruleItem.markers.push(marker);
-
-    //                             executionContext.markerItems.push({
-    //                                 marker_name: marker,
-    //                                 dn: dn
-    //                             });
-    //                         }
-    //                     }
-
-    //                     if (shouldUseRuleItem)
-    //                     {
-    //                         executionContext.ruleStatuses[rule.name].item_count++;
-
-    //                         ruleItem.rule_name = rule.name;
-    //                         ruleItem.dn = dn;
-    //                         executionContext.ruleItems.push(ruleItem);
-    //                     }
-    //                 }
-    //             }
-    //             else
-    //             {
-    //                 this.logger.error('[_processRule] Failed: ', result.messages);
-
-    //                 for(let msg of result.messages)
-    //                 {
-    //                     executionContext.ruleLogs.push({
-    //                         rule_name: rule.name,
-    //                         kind: 'error',
-    //                         msg: msg
-    //                     });
-
-    //                     executionContext.ruleStatuses[rule.name].error_count++;
-    //                 }
-    //             }
-    //         });
-    // }
-
     private _saveRuleData(executionContext : ExecutionContext, rulesDict: Record<string, RuleObject>)
     {
         return this._context.database.driver.executeInTransaction(() => {

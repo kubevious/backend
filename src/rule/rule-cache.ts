@@ -5,6 +5,7 @@ import { ILogger } from 'the-logger' ;
 import { Context } from '../context';
 
 import { ExecutionContext, RuleResult as RuleEngineRuleResult } from '@kubevious/helper-rule-engine';
+import { RuleObject } from './types';
 
 export type UserRule = Record<string, any>;
 
@@ -23,6 +24,8 @@ export class RuleCache
     private _userRules : any[] = [];
     
     private _ruleConfigDict : Record<string, any> = {};
+
+    private _currentRuleHashes : Record<string, string> = {};
     private _engineRuleResultsDict : Record<string, RuleEngineRuleResult> = {};
 
     private _listRuleStatuses : UserRuleStatus[] = [];
@@ -131,6 +134,8 @@ export class RuleCache
             markers: {}
         }
 
+        this._currentRuleHashes = {};
+
         return Promise.all([
             this._context.ruleAccessor.queryAllRuleStatuses()
                 .then(result => {
@@ -138,6 +143,8 @@ export class RuleCache
                     {
                         const ruleResult = this._getRuleResult(executionContext, row.rule_name);
                         ruleResult.error_count = row.error_count;
+
+                        this._currentRuleHashes[row.rule_name] = row.hash.toString('hex');
                     }
                 }),
             this._context.ruleAccessor.queryAllRuleItems()
@@ -185,9 +192,12 @@ export class RuleCache
         return value;
     }
 
-    acceptExecutionContext(executionContext: ExecutionContext)
+    acceptExecutionContext(executionContext: ExecutionContext, rulesDict: Record<string, RuleObject>)
     {
+        this._currentRuleHashes = _.makeDict(_.values(rulesDict), x => x.name, x => x.hash);
+
         this._acceptExecutionContext(executionContext);
+
         this._recalculateRuleList();
         this._notifyRuleResults();
     }
@@ -254,13 +264,11 @@ export class RuleCache
                     info.item_count = ruleExecResult.items.length;
                     info.error_count = ruleExecResult.logs.length;
 
-                    // var status = ruleExecResult.status;
-                    // if (status)
-                    // {
-                    //     if (ruleConfig.hash == status.hash) {
-                    //         info.is_current = true;
-                    //     }
-                    // }
+                    const latestHash = this._currentRuleHashes[name];
+                    if (latestHash && (ruleConfig.hash == latestHash))
+                    {
+                        info.is_current = true;
+                    }
                 }
             }
             else
@@ -294,19 +302,17 @@ export class RuleCache
                 {
                     info.error_count = ruleExecResult.logs.length;
 
-                    // var status = ruleExecResult.status;
-                    // if (status)
-                    // {
-                    //     if (ruleConfig.hash == status.hash) {
-                    //         info.is_current = true;
-                    //     }
-                    // }
+                    const latestHash = this._currentRuleHashes[name];
+                    if (latestHash && (ruleConfig.hash == latestHash))
+                    {
+                        info.is_current = true;
+                    }
     
                     info.items = ruleExecResult.items.map(x => {
                         return {
                             dn: x.dn,
-                            has_error: (x.errors > 0),
-                            has_warning: (x.warnings > 0),
+                            errors: x.errors,
+                            warnings: x.warnings,
                             markers: x.markers
                         }
                     });
