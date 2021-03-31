@@ -96,6 +96,7 @@ export class MarkerCache
                             items: [],
                         }
                     }
+                    executionContext.markers[row.marker_name].items.push(row.dn);
                 }
                 this._acceptMarkerItems(executionContext);
             })
