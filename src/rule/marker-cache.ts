@@ -3,7 +3,7 @@ import { Promise } from 'the-promise';
 import { ILogger } from 'the-logger' ;
 
 import { Context } from '../context';
-import { ExecutionContext } from './execution-context';
+import { ExecutionContext } from '@kubevious/helper-rule-engine';
 
 export type Marker = Record<string, any>;
 export interface MarkerResult 
@@ -60,26 +60,23 @@ export class MarkerCache
     
     acceptExecutionContext(executionContext: ExecutionContext)
     {
-        this._acceptMarkerItems(executionContext.markerItems);
+        this._acceptMarkerItems(executionContext);
     }
 
-    private _acceptMarkerItems(items : Record<string, any> [])
+    private _acceptMarkerItems(executionContext: ExecutionContext)
     {
         this._markerResultsDict = {};
-        for(var x of items)
-        {
-            if(!this._markerResultsDict[x.marker_name])
-            {
-                this._markerResultsDict[x.marker_name] = {
-                    name: x.marker_name,
-                    items: []
-                }
-            } 
 
-            this._markerResultsDict[x.marker_name].items.push({
-                dn: x.dn
-            })
+        for(let markerResult of _.values(executionContext.markers))
+        {
+            this._markerResultsDict[markerResult.name] = {
+                name: markerResult.name,
+                items: markerResult.items.map((x => ({
+                    dn: x
+                })))
+            }
         }
+        
         this._updateMarkerOperationData();
     }
 
@@ -87,7 +84,21 @@ export class MarkerCache
     {
         return this._context.markerAccessor.getAllMarkersItems()
             .then(result => {
-                this._acceptMarkerItems(result);
+                let executionContext : ExecutionContext = {
+                    rules: {},
+                    markers: {},
+                }
+                for(let row of result)
+                {
+                    if (!executionContext.markers[row.marker_name]) {
+                        executionContext.markers[row.marker_name] = {
+                            name: row.marker_name,
+                            items: [],
+                        }
+                    }
+                    executionContext.markers[row.marker_name].items.push(row.dn);
+                }
+                this._acceptMarkerItems(executionContext);
             })
     }
 
