@@ -22,7 +22,7 @@
   "homepage": "https://github.com/kubevious/kubevious",
   "dependencies": {
     "@kubevious/easy-data-store": "^1.0.9",
-    "@kubevious/helper-backend": "^1.0.19",
+    "@kubevious/helper-backend": "^1.0.29",
     "@kubevious/helper-logic-processor": "^1.0.11",
     "@kubevious/helper-rule-engine": "^1.0.13",
     "@kubevious/helpers": "^1.0.52",
@@ -33,7 +33,7 @@
     "joi": "^17.3.0",
     "js-yaml": "^3.13.1",
     "moment": "^2.29.1",
-    "the-lodash": "^2.0.8",
+    "the-lodash": "^2.0.9",
     "the-logger": "^2.0.9",
     "the-promise": "^2.0.12",
     "uuid": "^7.0.2",
