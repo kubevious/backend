@@ -8,7 +8,7 @@ import { Index as FlexSearchIndex  } from 'flexsearch'
 import FlexSearch from 'flexsearch'
 
 import { prettyKind as helperPrettyKind } from '@kubevious/helpers/dist/docs';
-import { SearchQuery, AlertsPayload } from '../types';
+import { SearchQuery, AlertsPayload, CriteriaMarkers, CriteriaAnnotations, CriteriaKinds, CriteriaLabels } from '../types';
 import { RegistryBundleState } from '@kubevious/helpers/dist/registry-bundle-state';
 import { RegistryBundleNode } from '@kubevious/helpers/dist/registry-bundle-node';
 import { AlertCounter } from '@kubevious/helpers/dist/snapshot/types';
@@ -72,57 +72,62 @@ export class SearchEngine
         const results = this._index!.search(criteria)
         this.logger.silly("SEARCH: %s, result: ", criteria, results);
         if (Array.isArray(results)) {
-            const resultDict = _.makeDict(results, x => <string>x, x => true);
+            const resultDict = _.makeDict(results, (x: string) => x, x => true);
             search.filterResults((item) => {
                 return resultDict[item.dn];
             })
         }
     }
 
-    private _filterByMarkers(criteriaMarkers: string[], search: SearchResults) {
+    private _filterByMarkers(criteriaMarkers: CriteriaMarkers, search: SearchResults) {
         search.filterResults((item) => {
-            return criteriaMarkers.every((criteria) =>
-                item.registryNode.markersDict[criteria]
-            )
+            const markersKeys = Object.keys(criteriaMarkers)
+            return markersKeys.every((criteria: string | number) => {
+                return item.registryNode.markersDict[criteria]
+            })
         });
     }
 
-    private _filterByKind(value: string, search: SearchResults) {
+    private _filterByKind(value: CriteriaKinds, search: SearchResults) {
         search.filterResults((item) => {
-            return item.kind === value;
+            const criteria = Object.keys(value)[0]
+
+            return item.kind === criteria;
         });
     }
 
-    private _filterByAlerts(severity: keyof AlertCounter, value: AlertsPayload, search: SearchResults) {
+    private _filterByAlerts(severity: keyof AlertCounter, alert: AlertsPayload, search: SearchResults) {
         search.filterResults((item) => {
-            const currentValue = (<number>item.alertCount[severity])
-            if (value.kind === 'at-least') {
-                return currentValue >= value.count;
+            const currentValue: number = (item.alertCount[severity])
+            if (alert.value.kind === 'at-least') {
+                return currentValue >= alert.value.count;
             }
-            if (value.kind === 'at-most') {
-                return currentValue <= value.count;
+            if (alert.value.kind === 'at-most') {
+                return currentValue <= alert.value.count;
             }
             return true;
         });
     }
 
-    private _filterByLabels(value: { [name: string]: string }[], search: SearchResults) {
+    private _filterByLabels(value: CriteriaLabels, search: SearchResults) {
         search.filterResults((item) => {
-            return value.every(filterCriteria => {
-                const { key, value } = filterCriteria
+            const criteria = Object.keys(value)
+            return criteria.every(filterCriteria => {
+                const labelValue = value[filterCriteria]
                 if (_.isNotNullOrUndefined(item.labels)) {
-                    return item.labels![key] === value;
+                    return item.labels![filterCriteria] === labelValue;
                 }
             })
         });
     }
 
-    private _filterByAnnotations(value: { [name: string]: string }[], search: SearchResults) {
+    private _filterByAnnotations(value: CriteriaAnnotations, search: SearchResults) {
         search.filterResults((item) => {
-            return value.every(filterCriteria => {
-                const { key, value } = filterCriteria
+            const criteria = Object.keys(value)
+            return criteria.every(filterCriteria => {
+                const annotationValue = value[filterCriteria]
                 if (_.isNotNullOrUndefined(item.annotations)) {
-                    return item.annotations[key] === value;
+                    return item.annotations[filterCriteria] === annotationValue;
                 }
             })
         });
@@ -132,9 +137,9 @@ export class SearchEngine
     {
         const search = new SearchResults(this._rawItems);
 
-        if (_.isNotNullOrUndefined(query.kind))
+        if (_.isNotNullOrUndefined(query.kinds))
         {
-            this._filterByKind(query.kind!, search);
+            this._filterByKind(query.kinds!, search);
         }
 
         if (_.isNotNullOrUndefined(query.labels))
@@ -151,14 +156,14 @@ export class SearchEngine
             this._filterByMarkers(query.markers!, search);
         }
 
-        if (_.isNotNullOrUndefined(query.error))
+        if (_.isNotNullOrUndefined(query.errors))
         {
-            this._filterByAlerts('error', query.error!, search);
+            this._filterByAlerts('error', query.errors!, search);
         }
 
-        if (_.isNotNullOrUndefined(query.warn))
+        if (_.isNotNullOrUndefined(query.warnings))
         {
-            this._filterByAlerts('warn', query.warn!, search);
+            this._filterByAlerts('warn', query.warnings!, search);
         }
 
         if (_.isNotNullOrUndefined(query.criteria))

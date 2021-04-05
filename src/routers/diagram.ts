@@ -79,12 +79,22 @@ export default function (router: Router, context: Context) {
         .bodySchema(
             Joi.object({
                 criteria: Joi.string(),
-                kind: Joi.string(),
-                error: Joi.object(),
-                warn: Joi.object(),
-                markers: Joi.array().items(Joi.string()),
-                labels: Joi.array().items(Joi.object()),
-                annotations: Joi.array().items(Joi.object()),
+                kinds: Joi.object(),
+                errors: Joi.object({
+                    value: Joi.object({
+                        kind: Joi.string(),
+                        count: Joi.number(),
+                    })
+                }),
+                warnings: Joi.object({
+                    value: Joi.object({
+                        kind: Joi.string(),
+                        count: Joi.number(),
+                    })
+                }),
+                markers: Joi.object(),
+                labels: Joi.object(),
+                annotations: Joi.object(),
             }),
         );
 }

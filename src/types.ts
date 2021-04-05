@@ -1,18 +1,32 @@
 export interface SearchQuery {
     criteria?: string
-    kind?: string
-    error?: AlertsPayload
-    warn?: AlertsPayload
-    markers?: string[]
-    labels?: {
-        [name: string]: string
-    }[]
-    annotations?: {
-        [name: string]: string
-    }[]
+    kinds?: CriteriaKinds
+    errors?: AlertsPayload
+    warnings?: AlertsPayload
+    markers?: CriteriaMarkers
+    labels?: CriteriaLabels
+    annotations?: CriteriaAnnotations
 }
 
 export interface AlertsPayload {
-    kind: string
-    count: number
+    value: {
+        kind: string
+        count: number
+    }
+}
+
+export type CriteriaMarkers = {
+    [marker:string]: boolean
+}
+
+export type CriteriaLabels = {
+    [label:string]: string
+}
+
+export type CriteriaAnnotations = {
+    [annotation:string]: string
+}
+
+export type CriteriaKinds = {
+    [kind:string]: boolean
 }
