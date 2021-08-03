@@ -34,6 +34,7 @@ export interface DiffItem
 }
 
 const SNAPSHOT_QUEUE_SIZE = 5;
+const SNAPSHOT_ACCEPT_DELAY_SECONDS = 3 * 60;
 
 export class Collector
 {
@@ -152,9 +153,14 @@ export class Collector
     {
         this._parserVersion = parserVersion;
 
-        if (!this._canAcceptNewSnapshot()) {
+        const canAccept = this._canAcceptNewSnapshot();
+        if (!canAccept.success) {
+            const delaySeconds = canAccept.delaySec || 60;
+            this.logger.info("Postponing reporting for %s seconds", delaySeconds);
+
             return {
-                delay: true
+                delay: true,
+                delaySeconds: delaySeconds
             };
         }
 
@@ -249,6 +255,9 @@ export class Collector
 
             this._context.facadeRegistry.acceptConcreteRegistry(registry);
 
+            // Use only for debugging.
+            // registry.debugOutputRegistry(`source-snapshot/${snapshotId}`);
+
             return {};
         });
     }
@@ -286,25 +295,29 @@ export class Collector
         }
     }
 
-    private _canAcceptNewSnapshot() : boolean
+    private _canAcceptNewSnapshot() : { success: boolean, delaySec? : number}
     {
         if (this._context.facadeRegistry.jobDampener.isBusy) {
-            return false;
+            return { success: false, delaySec: 60 };
         }
 
         if (!this._context.historyProcessor.isDbReady) {
-            return false;
+            return { success: false, delaySec: 30 };
         }
 
         if (this._lastReportDate)
         {
-            let diff = moment().diff(this._lastReportDate, "second");
-            if (diff < 60) {
-                return false;
+            // this.logger.info("[_canAcceptNewSnapshot] Last Report Date: %s", this._lastReportDate.toISOString());
+            const nextAcceptDate = moment(this._lastReportDate).add(SNAPSHOT_ACCEPT_DELAY_SECONDS, "seconds");
+
+            let diff = nextAcceptDate.diff(moment(), "second");
+
+            if (diff >= 5) {
+                return { success: false, delaySec: diff };
             }
         }
         
-        return true;
+        return { success: true };
     }
 
 

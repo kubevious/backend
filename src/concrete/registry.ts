@@ -3,6 +3,7 @@ import { Promise } from 'the-promise';
 import { ILogger } from 'the-logger';
 
 import { ConcreteItem } from './item';
+import yaml from 'js-yaml';
 
 import { ItemId, IConcreteRegistry } from '@kubevious/helper-logic-processor'
 export class ConcreteRegistry implements IConcreteRegistry
@@ -158,7 +159,8 @@ export class ConcreteRegistry implements IConcreteRegistry
             });
     }
 
-    dump() {
+    dump()
+    {
         let result : Record<any, any> = {};
         let ids = _.keys(this._flatItemsDict);
         ids.sort();
@@ -167,5 +169,30 @@ export class ConcreteRegistry implements IConcreteRegistry
             result[id] = item.dump();
         }
         return result;
+    }
+
+    debugOutputRegistry(registryName: string)
+    {
+        for(let item of this.allItems)
+        {
+            const content = yaml.dump(item.config, { indent: 4 });
+            let fileDir = `${registryName}`;
+            if (item.config && item.config.synthetic) {
+                fileDir = `${fileDir}/synthetic`;
+            } else {
+                fileDir = `${fileDir}/k8s`;
+            }
+            fileDir = `${fileDir}//${item.groupKey}`;
+
+            let fileName = '';
+            if (item.id.namespace) {
+                fileName = `${item.id.namespace}-`;
+            }
+            fileName = `${fileName}${item.id.name}.yaml`
+
+            let filePath = `${fileDir}/${fileName}`;
+
+            this.logger.outputFile(filePath, content);
+        }
     }
 }
