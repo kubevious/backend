@@ -5,7 +5,6 @@
 ![Kubevious High-Level Architecture](https://github.com/kubevious/kubevious/blob/master/diagrams/high-level-architecture.png?raw=true)
 
 
-
 ## Local Setup and Development
 ```sh
 # Install NPM dependencies
@@ -18,4 +17,4 @@ $ ./mysql/recreate.sh
 $ ./run-dev.sh
 ```
 
-Make sure to also run the **Frontend** and **Parser** components.
+Make sure to also run the **[Frontend](https://github.com/kubevious/ui#local-setup-and-development)** and **[Parser](https://github.com/kubevious/parser#local-setup-and-development)** components.
