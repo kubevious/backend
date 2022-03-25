@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/kubevious/kubevious",
   "dependencies": {
+    "@kubevious/data-models": "^1.0.7",
     "@kubevious/easy-data-store": "^1.0.9",
     "@kubevious/helper-backend": "^1.0.34",
     "@kubevious/helper-logic-processor": "^1.0.18",
@@ -40,6 +41,7 @@
     "uuid-parse": "^1.1.0"
   },
   "devDependencies": {
+    "@types/uuid-parse": "^1.0.0",
     "@types/js-yaml": "^3.12.5",
     "@types/mocha": "^8.0.3",
     "@types/node": "^14.14.5",

@@ -1,9 +1,13 @@
 import { Backend } from '@kubevious/helper-backend'
+import { LogLevel } from 'the-logger';
 import { Context } from './context'
 
-const backend = new Backend("backend");
-
-backend.initialize(() => {
-    const context = new Context(backend);
-    return context.run();
+const backend = new Backend("backend", {
+    logLevels: {
+        // 'DriverMysql': LogLevel.warn
+    }
 });
+
+new Context(backend);
+
+backend.run();

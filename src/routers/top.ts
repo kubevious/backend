@@ -18,7 +18,7 @@ export default function (router: Router, context: Context) {
 
     router.get('/api/v1/metrics', (req, res) => {
         let metrics : any[] = [];
-        metrics = _.concat(metrics, context.collector.extractMetrics());
+        // metrics = _.concat(metrics, context.collector.extractMetrics());
 
         return {
             metrics: metrics

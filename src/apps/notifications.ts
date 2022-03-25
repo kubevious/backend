@@ -2,15 +2,21 @@ import _ from 'the-lodash';
 import { Promise } from 'the-promise';
 import { ILogger } from 'the-logger' ;
 
-const uuidParse = require('uuid-parse');
+import { parse as uuidParse, unparse as uuidUnparse } from 'uuid-parse'
+
 import moment from 'moment';
 
 import { Context } from '../context';
 import { WorldviousClient, NotificationItem, FeedbackRequest } from '@kubevious/worldvious-client';
+import { NotificationSnoozeRow } from '@kubevious/data-models/dist/models/notification';
+
+import { Database } from '../db/index';
+
 
 export class NotificationsApp
 {
     private context : Context;
+    private _dataStore : Database;
     private _logger : ILogger;
     
     private _worldvious : WorldviousClient;
@@ -24,6 +30,8 @@ export class NotificationsApp
     {
         this.context = context;
         this._logger = context.logger.sublogger('NotificationsApp');
+
+        this._dataStore = context.dataStore;
         
         this._worldvious = this.context.worldvious;
        
@@ -48,17 +56,16 @@ export class NotificationsApp
 
     snooze(kind: string, id: string, days?: number)
     {
-        const dbData : Record<string, any> = {
+        const dbData : Partial<NotificationSnoozeRow> = {
             kind: kind,
-            feedback: Buffer.from(uuidParse.parse(id)),
-            snooze: null
+            feedback: Buffer.from(uuidParse(id)),
         };
         if (days) {
             dbData.snooze = moment().add(days, 'days').toDate();
         }
 
-        return this.context.database.dataStore.table('notification_snooze')
-            .createOrUpdate(dbData)
+        return this._dataStore.dataStore.table(this._dataStore.notification.NotificationSnooze)
+            .create(dbData)
             .then(() => {
                 return this._loadSnoozedNotifications();
             });
@@ -73,16 +80,13 @@ export class NotificationsApp
 
     private _loadSnoozedNotifications()
     {
-        return this.context.database.dataStore.table('notification_snooze')
+        return this._dataStore.dataStore.table(this._dataStore.notification.NotificationSnooze)
             .queryMany()
             .then(results => {
                 this._isDictLoaded = true;
-                for(let item of results)
-                {
-                    item.feedback = uuidParse.unparse(item.feedback);
-                }
+
                 this._snooseDict = _.makeDict(results, 
-                    x => this._makeKey(x.kind, x.feedback),
+                    x => this._makeKey(x.kind!, uuidUnparse(x.feedback!)),
                     x => {
                         if (x.snooze == null) {
                             return { isRead : true }
