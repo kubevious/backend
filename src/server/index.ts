@@ -19,7 +19,6 @@ export class WebServer
         this.helpers = {
         };
         this.server = new Server(this.logger, context, this.helpers, {
-            port: 4001,
             routersDir: Path.join(__dirname, '..', 'routers')
         });
         this.server.initializer((app) => {

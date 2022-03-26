@@ -11,13 +11,13 @@ export default function (router: Router, context: Context) {
 
     // List Rules
     router.get('/rules/', function (req, res) {
-        let result = context.ruleCache.queryRuleList();
+        const result = context.ruleCache.queryRuleList();
         return result;
     })
 
     // Get Rule
     router.get('/rule/:name', function (req, res) {
-        let result = context.ruleCache.queryRule(req.params.name);
+        const result = context.ruleCache.queryRule(req.params.name);
         return result;
     })
 
@@ -76,12 +76,12 @@ export default function (router: Router, context: Context) {
 
     // List Rules Statuses
     router.get('/rules-statuses/', function (req, res) {
-        let result = context.ruleCache.queryRuleStatusList();
+        const result = context.ruleCache.queryRuleStatusList();
         return result;
     })
 
     router.get('/rule-result/:name', function (req, res) {
-        let result = context.ruleCache.getRuleResult(req.params.name);
+        const result = context.ruleCache.getRuleResult(req.params.name);
         return result;
     })
 
