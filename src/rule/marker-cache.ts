@@ -58,16 +58,39 @@ export class MarkerCache
             .then(() => this._updateMarkerOperationData())
     }
     
-    acceptExecutionContext(executionContext: ExecutionContext)
+    // acceptExecutionContext(executionContext: ExecutionContext)
+    // {
+    //     this._acceptMarkerItems(executionContext);
+    // }
+
+    private _refreshMarkerItems()
     {
-        this._acceptMarkerItems(executionContext);
+        return this._context.markerAccessor.getAllMarkersItems()
+            .then(markerItems => {
+                const executionContext : ExecutionContext = {
+                    rules: {},
+                    markers: {},
+                }
+                for(const row of markerItems)
+                {
+                    const markerName = row.marker_name!;
+                    if (!executionContext.markers[markerName]) {
+                        executionContext.markers[markerName] = {
+                            name: markerName,
+                            items: [],
+                        }
+                    }
+                    executionContext.markers[markerName].items.push(row.dn!);
+                }
+                this._acceptMarkerItems(executionContext);
+            })
     }
 
     private _acceptMarkerItems(executionContext: ExecutionContext)
     {
         this._markerResultsDict = {};
 
-        for(let markerResult of _.values(executionContext.markers))
+        for(const markerResult of _.values(executionContext.markers))
         {
             this._markerResultsDict[markerResult.name] = {
                 name: markerResult.name,
@@ -80,34 +103,12 @@ export class MarkerCache
         this._updateMarkerOperationData();
     }
 
-    private _refreshMarkerItems()
-    {
-        return this._context.markerAccessor.getAllMarkersItems()
-            .then(result => {
-                let executionContext : ExecutionContext = {
-                    rules: {},
-                    markers: {},
-                }
-                for(let row of result)
-                {
-                    if (!executionContext.markers[row.marker_name]) {
-                        executionContext.markers[row.marker_name] = {
-                            name: row.marker_name,
-                            items: [],
-                        }
-                    }
-                    executionContext.markers[row.marker_name].items.push(row.dn);
-                }
-                this._acceptMarkerItems(executionContext);
-            })
-    }
-
     private _refreshMarkerConfigs()
     {
         return this._context.markerAccessor.queryAll()
             .then(result => {
-                this._markerDict = _.makeDict(result, x => x.name, x => x);
-                this._markerList = _.orderBy(result, x => x.name);
+                this._markerDict = _.makeDict(result, x => x.name!, x => x);
+                this._markerList = _.orderBy(result, x => x.name!);
             })
             ;
     }
@@ -126,23 +127,19 @@ export class MarkerCache
 
     private _makeMarkerStatus(marker: Marker) : MarkerStatus
     {
-        var item_count = 0;
-        var result = this._markerResultsDict[marker.name];
-        if (result) {
-            item_count = result.items.length;
-        }
+        const results = this._markerResultsDict[marker.name];
         
         return {
             name: marker.name,
             shape: marker.shape,
             color: marker.color,
-            item_count: item_count
+            item_count: results?.items?.length ?? 0
         }
     }
 
     private _updateMarkerResults()
     {
-        var items = _.values(this._markerResultsDict).map(x => ({
+        const items = _.values(this._markerResultsDict).map(x => ({
             target: { name: x.name },
             value: x
         }));
@@ -169,7 +166,7 @@ export class MarkerCache
 
     queryMarker(name: string) : Marker | null
     {
-        var marker = this._markerDict[name];
+        const marker = this._markerDict[name];
         if (!marker) {
             return null;
         }

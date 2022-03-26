@@ -6,7 +6,7 @@ import { WebServer } from './';
 
 import { WebSocketServer, WebSocketItem } from '@kubevious/websocket-server'
 
-import * as HashUtils from '@kubevious/helpers/dist/hash-utils';
+import { HashUtils } from '@kubevious/data-models';
 
 export class WebSocket
 {

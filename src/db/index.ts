@@ -5,7 +5,7 @@ import { ILogger } from 'the-logger' ;
 import * as fs from 'fs';
 import * as Path from 'path';
 
-import { DataStore, MySqlDriver, MySqlStatement } from '@kubevious/easy-data-store';
+import { DataStore, DataStoreTableAccessor, MySqlDriver, MySqlStatement } from '@kubevious/easy-data-store';
 
 import { Context } from '../context' ;
 
@@ -74,6 +74,12 @@ export class Database
                 this._logger.info("[init] post connect.")
             })
     }
+
+    table<TRow>(accessor: DataStoreTableAccessor<TRow>)
+    {
+        return this._dataStore.table(accessor);
+    }
+
 
     onConnect(cb: () => Resolvable<any>)
     {

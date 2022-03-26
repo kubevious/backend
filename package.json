@@ -21,12 +21,12 @@
   },
   "homepage": "https://github.com/kubevious/kubevious",
   "dependencies": {
-    "@kubevious/data-models": "^1.0.7",
-    "@kubevious/easy-data-store": "^1.0.9",
-    "@kubevious/helper-backend": "^1.0.34",
-    "@kubevious/helper-logic-processor": "^1.0.18",
-    "@kubevious/helper-rule-engine": "^1.0.14",
-    "@kubevious/helpers": "^1.0.57",
+    "@kubevious/data-models": "^1.0.11",
+    "@kubevious/easy-data-store": "^1.0.11",
+    "@kubevious/helper-backend": "^1.0.38",
+    "@kubevious/helper-logic-processor": "^1.0.70",
+    "@kubevious/helper-rule-engine": "^1.0.22",
+    "@kubevious/helpers": "^1.0.62",
     "@kubevious/websocket-server": "^1.0.26",
     "@kubevious/worldvious-client": "^1.0.6",
     "cron": "^1.8.2",
@@ -35,7 +35,7 @@
     "js-yaml": "^3.13.1",
     "moment": "^2.29.1",
     "the-lodash": "^2.0.9",
-    "the-logger": "^2.0.9",
+    "the-logger": "^2.0.14",
     "the-promise": "^2.0.13",
     "uuid": "^7.0.2",
     "uuid-parse": "^1.1.0"
@@ -55,5 +55,18 @@
     "should": "^13.2.3",
     "ts-node": "^9.0.0",
     "typescript": "^4.0.2"
+  },
+  "resolutions": {
+    "the-lodash": "^2.0.9",
+    "the-logger": "^2.0.14",
+    "the-promise": "^2.0.13",
+    "@kubevious/easy-data-store": "^1.0.11",
+    "@kubevious/helper-backend": "^1.0.38",
+    "@kubevious/helper-logic-processor": "^1.0.70",
+    "@kubevious/helper-rule-engine": "^1.0.22",
+    "@kubevious/helpers": "^1.0.62",
+    "@kubevious/websocket-server": "^1.0.26",
+    "@kubevious/worldvious-client": "^1.0.6",
+    "@kubevious/data-models": "^1.0.11"
   }
 }

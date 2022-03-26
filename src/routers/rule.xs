@@ -11,19 +11,19 @@ export default function (router: Router, context: Context) {
 
     // List Rules
     router.get('/rules/', function (req, res) {
-        var result = context.ruleCache.queryRuleList();
+        let result = context.ruleCache.queryRuleList();
         return result;
     })
 
     // Get Rule
     router.get('/rule/:name', function (req, res) {
-        var result = context.ruleCache.queryRule(req.params.name);
+        let result = context.ruleCache.queryRule(req.params.name);
         return result;
     })
 
     // Create Rule
     router.post('/rule/:name', function (req, res) {
-        var newRule : any;
+        let newRule : any;
         return context.ruleAccessor
             .createRule(req.body, { name: req.params.name })
             .then(result => {
@@ -76,12 +76,12 @@ export default function (router: Router, context: Context) {
 
     // List Rules Statuses
     router.get('/rules-statuses/', function (req, res) {
-        var result = context.ruleCache.queryRuleStatusList();
+        let result = context.ruleCache.queryRuleStatusList();
         return result;
     })
 
     router.get('/rule-result/:name', function (req, res) {
-        var result = context.ruleCache.getRuleResult(req.params.name);
+        let result = context.ruleCache.getRuleResult(req.params.name);
         return result;
     })
 

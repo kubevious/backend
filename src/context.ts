@@ -5,13 +5,11 @@ import { Promise } from 'the-promise';
 import { Backend } from '@kubevious/helper-backend'
 
 import { Database } from './db';
-import { Registry } from './registry/registry';
 import { DebugObjectLogger } from './utils/debug-object-logger';
 import { MarkerAccessor } from './rule/marker-accessor';
 import { MarkerCache } from './rule/marker-cache';
 import { RuleAccessor } from './rule/rule-accessor';
 import { RuleCache } from './rule/rule-cache';
-import { RuleEngine } from './rule/rule-engine';
 import { NotificationsApp } from './apps/notifications';
 import { WorldviousClient } from '@kubevious/worldvious-client';
 
@@ -38,11 +36,10 @@ export class Context
 
     private _debugObjectLogger: DebugObjectLogger;
 
-    // private _markerAccessor: MarkerAccessor;
-    // private _markerCache: MarkerCache;
-    // private _ruleAccessor: RuleAccessor;
-    // private _ruleCache: RuleCache;
-    // private _ruleEngine: RuleEngine;
+    private _markerAccessor: MarkerAccessor;
+    private _markerCache: MarkerCache;
+    private _ruleAccessor: RuleAccessor;
+    private _ruleCache: RuleCache;
 
     private _seriesResamplerHelper: SeriesResampler;
 
@@ -60,10 +57,10 @@ export class Context
         this._dataStore = new Database(this._logger, this);
         this._debugObjectLogger = new DebugObjectLogger(this);
 
-        // this._markerAccessor = new MarkerAccessor(this, this.database.dataStore);
-        // this._markerCache = new MarkerCache(this);
-        // this._ruleAccessor = new RuleAccessor(this, this.database.dataStore);
-        // this._ruleCache = new RuleCache(this);
+        this._markerAccessor = new MarkerAccessor(this);
+        this._markerCache = new MarkerCache(this);
+        this._ruleAccessor = new RuleAccessor(this);
+        this._ruleCache = new RuleCache(this);
         // this._ruleEngine = new RuleEngine(this, this.database.dataStore);
 
         this._seriesResamplerHelper = new SeriesResampler(200)
@@ -116,21 +113,21 @@ export class Context
         return this._debugObjectLogger;
     }
 
-    // get markerAccessor() {
-    //     return this._markerAccessor;
-    // }
+    get markerAccessor() {
+        return this._markerAccessor;
+    }
 
-    // get markerCache() {
-    //     return this._markerCache;
-    // }
+    get markerCache() {
+        return this._markerCache;
+    }
 
-    // get ruleAccessor() {
-    //     return this._ruleAccessor;
-    // }
+    get ruleAccessor() {
+        return this._ruleAccessor;
+    }
 
-    // get ruleCache() {
-    //     return this._ruleCache;
-    // }
+    get ruleCache() {
+        return this._ruleCache;
+    }
 
     // get ruleEngine() {
     //     return this._ruleEngine;

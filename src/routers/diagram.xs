@@ -11,7 +11,7 @@ export default function (router: Router, context: Context) {
     router
         .get('/node', function (req, res) {
             const dn : string = <string>req.query.dn;
-            var state = context.registry.getCurrentState();
+            let state = context.registry.getCurrentState();
             const node = state.getNodeItem(dn);
             if (node) {
                 return node.config;
@@ -27,7 +27,7 @@ export default function (router: Router, context: Context) {
     router
         .get('/children', function (req, res) {
             const dn: string = <string>req.query.dn;
-            var state = context.registry.getCurrentState();
+            let state = context.registry.getCurrentState();
             return state.getChildren(dn);
         })
         .querySchema(
@@ -39,8 +39,8 @@ export default function (router: Router, context: Context) {
     router
         .get('/props', function (req, res) {
             const dn : string = <string>req.query.dn;
-            var state = context.registry.getCurrentState();
-            var nodeItem = state.getNodeItem(dn);
+            let state = context.registry.getCurrentState();
+            let nodeItem = state.getNodeItem(dn);
             if (!nodeItem) {
                 return [];
             }
@@ -55,8 +55,8 @@ export default function (router: Router, context: Context) {
     router
         .get('/alerts', function (req, res) {
             const dn : string = <string>req.query.dn;
-            var state = context.registry.getCurrentState();
-            var nodeItem = state.getNodeItem(dn);
+            let state = context.registry.getCurrentState();
+            let nodeItem = state.getNodeItem(dn);
             if (!nodeItem) {
                 return [];
             }

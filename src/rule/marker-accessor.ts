@@ -4,17 +4,17 @@ import { ILogger } from 'the-logger' ;
 
 import { Context } from '../context';
 
-import { DataStore } from '@kubevious/easy-data-store';
+import { Database } from '../db';
 
 export class MarkerAccessor
 {
     private _logger : ILogger;
-    private _dataStore : DataStore;
+    private _dataStore : Database;
 
-    constructor(context : Context, dataStore: DataStore)
+    constructor(context : Context)
     {
         this._logger = context.logger.sublogger("MarkerAccessor");
-        this._dataStore = dataStore;
+        this._dataStore = context.dataStore;
     }
 
     get logger() {
@@ -23,7 +23,7 @@ export class MarkerAccessor
 
     queryAll()
     {
-        return this._dataStore.table('markers')
+        return this._dataStore.table(this._dataStore.ruleEngine.Markers)
             .queryMany();
     }
 
@@ -40,8 +40,8 @@ export class MarkerAccessor
 
     getMarker(name: string)
     {
-        return this._dataStore.table('markers')
-            .querySingle({ name: name });
+        return this._dataStore.table(this._dataStore.ruleEngine.Markers)
+            .queryOne({ name: name });
     }
 
     createMarker(config: any, target: any)
@@ -50,14 +50,14 @@ export class MarkerAccessor
             .then((() => {
                 if (target) {
                     if (config.name != target.name) {
-                        return this._dataStore.table('markers')
+                        return this._dataStore.table(this._dataStore.ruleEngine.Markers)
                             .delete(target);
                     }
                 }
             }))
             .then(() => {
-                return this._dataStore.table('markers')
-                    .createOrUpdate({ 
+                return this._dataStore.table(this._dataStore.ruleEngine.Markers)
+                    .create({ 
                         name: config.name,
                         shape: config.shape,
                         color: config.color,
@@ -68,7 +68,7 @@ export class MarkerAccessor
 
     deleteMarker(name: string)
     {
-        return this._dataStore.table('markers')
+        return this._dataStore.table(this._dataStore.ruleEngine.Markers)
             .delete({ 
                 name: name
             });
@@ -76,20 +76,20 @@ export class MarkerAccessor
 
     importMarkers(markers : { items: any[]}, deleteExtra: boolean)
     {
-        return this._dataStore.table('markers')
-            .synchronizer(null, !deleteExtra)
+        return this._dataStore.table(this._dataStore.ruleEngine.Markers)
+            .synchronizer({}, !deleteExtra)
             .execute(markers.items)
     }
 
     getAllMarkersItems()
     {
-        return this._dataStore.table('marker_items')
+        return this._dataStore.table(this._dataStore.ruleEngine.MarkerItems)
             .queryMany();
     }
 
     getMarkerItems(name: string)
     {
-        return this._dataStore.table('marker_items')
+        return this._dataStore.table(this._dataStore.ruleEngine.MarkerItems)
             .queryMany({ marker_name: name });
     }
 

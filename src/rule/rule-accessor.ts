@@ -4,20 +4,23 @@ import { ILogger } from 'the-logger' ;
 
 import { Context } from '../context';
 
-import { DataStore } from '@kubevious/easy-data-store';
 
-import * as HashUtils from '@kubevious/helpers/dist/hash-utils'
+import { HashUtils } from '@kubevious/data-models';
 import { RuleObject } from './types';
+
+import { RulesRow } from '@kubevious/data-models/dist/models/rule_engine';
+
+import { Database } from '../db';
 
 export class RuleAccessor
 {
     private _logger : ILogger;
-    private _dataStore : DataStore;
+    private _dataStore : Database;
 
-    constructor(context : Context, dataStore: DataStore)
+    constructor(context : Context)
     {
         this._logger = context.logger.sublogger("RuleAccessor");
-        this._dataStore = dataStore;
+        this._dataStore = context.dataStore;
     }
 
     get logger() {
@@ -26,38 +29,38 @@ export class RuleAccessor
 
     queryAll()
     {
-        return this._dataStore.table('rules')
+        return this._dataStore.table(this._dataStore.ruleEngine.Rules)
             .queryMany();
     }
 
     queryEnabledRules() : Promise<RuleObject[]>
     {
-        return <Promise<RuleObject[]>>(<any>(this._dataStore.table('rules')
+        return <Promise<RuleObject[]>>(<any>(this._dataStore.table(this._dataStore.ruleEngine.Rules)
             .queryMany({ enabled: true })));
     }
 
     queryAllRuleStatuses()
     {
-        return this._dataStore.table('rule_statuses')
+        return this._dataStore.table(this._dataStore.ruleEngine.RuleStatuses)
             .queryMany();
     }
 
     queryAllRuleItems()
     {
-        return this._dataStore.table('rule_items')
+        return this._dataStore.table(this._dataStore.ruleEngine.RuleItems)
             .queryMany();
     }
 
     queryAllRuleLogs()
     {
-        return this._dataStore.table('rule_logs')
+        return this._dataStore.table(this._dataStore.ruleEngine.RuleLogs)
             .queryMany();
     }
 
     getRule(name: string)
     {
-        return this._dataStore.table('rules')
-            .querySingle({ name: name });
+        return this._dataStore.table(this._dataStore.ruleEngine.Rules)
+            .queryOne({ name: name });
     }
 
     createRule(config: any, target: any)
@@ -66,21 +69,21 @@ export class RuleAccessor
             .then((() => {
                 if (target) {
                     if (config.name != target.name) {
-                        return this._dataStore.table('rules')
+                        return this._dataStore.table(this._dataStore.ruleEngine.Rules)
                             .delete(target);
                     }
                 }
             }))
             .then(() => {
-                var ruleObj = this.makeDbRule(config);
-                return this._dataStore.table('rules')
-                    .createOrUpdate(ruleObj);
+                const ruleObj = this.makeDbRule(config);
+                return this._dataStore.table(this._dataStore.ruleEngine.Rules)
+                    .create(ruleObj);
             });
     }
 
     deleteRule(name: string)
     {
-        return this._dataStore.table('rules')
+        return this._dataStore.table(this._dataStore.ruleEngine.Rules)
             .delete({ name: name });
     }
 
@@ -100,24 +103,24 @@ export class RuleAccessor
             });
     }
 
-    importRules(rules: { items: any[]}, deleteExtra: boolean)
+    importRules(rules: { items: any[] }, deleteExtra: boolean)
     {
-        var items = rules.items.map(x => this.makeDbRule(x));
-        return this._dataStore.table('rules')
-            .synchronizer(null, !deleteExtra)
+        const items = rules.items.map(x => this.makeDbRule(x));
+        return this._dataStore.table(this._dataStore.ruleEngine.Rules)
+            .synchronizer({}, !deleteExtra)
             .execute(items);
     }
 
     makeDbRule(rule: any)
     {
-        var ruleObj : any = {
+        const ruleObj : Partial<RulesRow> = {
             name: rule.name,
             enabled: rule.enabled,
             target: rule.target,
             script: rule.script,
             date: new Date()
         }
-        var hash = HashUtils.calculateObjectHash(ruleObj);
+        const hash = HashUtils.calculateObjectHash(ruleObj);
         ruleObj.hash = hash;
         return ruleObj;
     }

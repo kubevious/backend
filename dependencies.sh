@@ -11,6 +11,7 @@ REPO_DEPENDENCIES=(
     "@kubevious/helpers"
     "@kubevious/websocket-server"
     "@kubevious/worldvious-client"
+    "@kubevious/data-models"
 )
 
 FORCE_RESOLVE_DEPENDENCIES=(
@@ -24,4 +25,5 @@ FORCE_RESOLVE_DEPENDENCIES=(
     "@kubevious/helpers"
     "@kubevious/websocket-server"
     "@kubevious/worldvious-client"
+    "@kubevious/data-models"
 )

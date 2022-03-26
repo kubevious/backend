@@ -3,7 +3,7 @@ import { Context } from '../context';
 import { Router } from '@kubevious/helper-backend'
 import Joi from 'joi';
 
-import * as DateUtils from '@kubevious/helpers/dist/date-utils';
+import { DateUtils } from '@kubevious/data-models';
 import { Snapshot } from '@kubevious/helpers/dist/history';
 
 import { parentDn as makeParentDn } from '@kubevious/helpers/dist/dn-utils';
@@ -13,18 +13,18 @@ export default function (router: Router, context: Context) {
     router.url('/api/v1/history');
     
     router.get('/timeline', function(req, res) {
-        var dateFrom = null;
+        let dateFrom = null;
         if (req.query.from) {
             dateFrom = DateUtils.makeDate(req.query.from);
         }
-        var dateTo = null;
+        let dateTo = null;
         if (req.query.to) {
             dateTo = DateUtils.makeDate(req.query.to);
         }
 
         return context.historySnapshotReader.queryTimeline(dateFrom, dateTo)
             .then(data => {
-                var result = data.map(x => {
+                let result = data.map(x => {
                     return {
                         date: x.date,
                         changes: x.changes,
@@ -39,7 +39,7 @@ export default function (router: Router, context: Context) {
 
 
     router.get('/snapshot', function(req, res) {
-        var date = DateUtils.makeDate(req.query.date); 
+        let date = DateUtils.makeDate(req.query.date); 
 
         return context.historySnapshotReader.querySnapshotForDate(date, 'node')
             .then(snapshot => {
@@ -59,13 +59,13 @@ export default function (router: Router, context: Context) {
     router.get('/props', function(req, res) {
         const scopeDn : string = <string>req.query.dn;
 
-        var date = DateUtils.makeDate(req.query.date); 
+        let date = DateUtils.makeDate(req.query.date); 
         return context.historySnapshotReader.queryDnSnapshotForDate(scopeDn, date, ['props'])
             .then(snapshot => {
-                var result = [];
+                let result = [];
                 if (snapshot) 
                 {
-                    for(var item of snapshot.getItems())
+                    for(let item of snapshot.getItems())
                     {
                         if (item.config_kind == 'props')
                         {
@@ -85,13 +85,13 @@ export default function (router: Router, context: Context) {
 
     router.get('/alerts', function(req, res) {
         const scopeDn : string = <string>req.query.dn;
-        var date = DateUtils.makeDate(req.query.date); 
+        let date = DateUtils.makeDate(req.query.date); 
         return context.historySnapshotReader.queryScopedSnapshotForDate(scopeDn, date, ['alerts'])
             .then(snapshot => {
-                var result : Record<string, any> = {};
+                let result : Record<string, any> = {};
                 if (snapshot) 
                 {
-                    for(var item of snapshot.getItems())
+                    for(let item of snapshot.getItems())
                     {
                         if (item.config_kind == 'alerts')
                         {
@@ -116,21 +116,21 @@ export default function (router: Router, context: Context) {
 
     function generateTree(snapshot: Snapshot)
     {
-        var lookup : Record<string, any> = {};
+        let lookup : Record<string, any> = {};
 
         let makeNode = (dn: string, config: any) => {
-            var node = _.clone(config);
+            let node = _.clone(config);
             node.children = [];
             lookup[dn] = node;
         };
 
-        for (var item of snapshot.getItems().filter(x => x.config_kind == 'node'))
+        for (let item of snapshot.getItems().filter(x => x.config_kind == 'node'))
         {
             makeNode(item.dn, item.config);
         }
 
         let getNode = (dn: string) => {
-            var node = lookup[dn];
+            let node = lookup[dn];
             if (!node) {
                 node = {
                     children: []
@@ -142,21 +142,21 @@ export default function (router: Router, context: Context) {
         };
 
         let markParent = (dn: string) => {
-            var node = lookup[dn];
+            let node = lookup[dn];
 
-            var parentDn = makeParentDn(dn);
+            let parentDn = makeParentDn(dn);
             if (parentDn.length > 0) {
-                var parentNode = getNode(parentDn);
+                let parentNode = getNode(parentDn);
                 parentNode.children.push(node);
             }
         };
 
-        for (var item of snapshot.getItems().filter(x => x.config_kind == 'node'))
+        for (let item of snapshot.getItems().filter(x => x.config_kind == 'node'))
         {
             markParent(item.dn);
         }
 
-        var rootNode = lookup['root'];
+        let rootNode = lookup['root'];
         if (!rootNode) {
             rootNode = null;
         }

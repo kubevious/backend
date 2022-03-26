@@ -6,6 +6,9 @@ import { Context } from '../context';
 
 import { ExecutionContext, RuleResult as RuleEngineRuleResult } from '@kubevious/helper-rule-engine';
 import { RuleObject } from './types';
+import { RulesRow } from '@kubevious/data-models/dist/models/rule_engine';
+
+import { BufferUtils } from '@kubevious/data-models';
 
 export type UserRule = Record<string, any>;
 
@@ -23,7 +26,7 @@ export class RuleCache
 
     private _userRules : any[] = [];
     
-    private _ruleConfigDict : Record<string, any> = {};
+    private _ruleConfigDict : Record<string, Partial<RulesRow>> = {};
 
     private _currentRuleHashes : Record<string, string> = {};
     private _engineRuleResultsDict : Record<string, RuleEngineRuleResult> = {};
@@ -66,7 +69,7 @@ export class RuleCache
     {
         return this._context.ruleAccessor.queryAll()
             .then(result => {
-                this._ruleConfigDict = _.makeDict(result, x => x.name, x => x);
+                this._ruleConfigDict = _.makeDict(result, x => x.name!, x => x);
             })
             ;
     }
@@ -91,20 +94,20 @@ export class RuleCache
 
     queryRule(name: string) : UserRule | null
     {
-        var rule = this._ruleConfigDict[name];
+        const rule = this._ruleConfigDict[name];
         if (!rule) {
             return null;
         }
-        var userRule = this._buildRuleConfig(rule);
+        const userRule = this._buildRuleConfig(rule);
         return userRule;
     }
 
     private _buildRuleList() : UserRule[]
     {
-        var userRules : UserRule[] = [];
-        for(var rule of _.values(this._ruleConfigDict))
+        let userRules : UserRule[] = [];
+        for(const rule of _.values(this._ruleConfigDict))
         {
-            var userRule = {
+            const userRule : UserRule = {
                 name: rule.name
             }
             userRules.push(userRule);
@@ -115,10 +118,10 @@ export class RuleCache
 
     private _buildRuleStatusList() : UserRuleStatus[]
     {
-        var userRules = [];
-        for(var rule of _.values(this._ruleConfigDict))
+        let userRules = [];
+        for(const rule of _.values(this._ruleConfigDict))
         {
-            var userRule = this._buildRuleStatus(rule.name);
+            const userRule = this._buildRuleStatus(rule.name!);
             userRules.push(userRule);
         }
 
@@ -127,9 +130,17 @@ export class RuleCache
         return userRules;
     }
 
+    private _hashToString(hash?: Buffer)
+    {
+        if (!hash) {
+            return '';
+        }
+        return BufferUtils.toStr(hash);
+    }
+
     private _refreshExecutionStatuses()
     {
-        let executionContext : ExecutionContext = {
+        const executionContext : ExecutionContext = {
             rules: {},
             markers: {}
         }
@@ -139,34 +150,34 @@ export class RuleCache
         return Promise.all([
             this._context.ruleAccessor.queryAllRuleStatuses()
                 .then(result => {
-                    for(let row of result)
+                    for(const row of result)
                     {
-                        const ruleResult = this._getRuleResult(executionContext, row.rule_name);
-                        ruleResult.error_count = row.error_count;
+                        const ruleResult = this._getRuleResult(executionContext, row.rule_name!);
+                        ruleResult.error_count = row.error_count!;
 
-                        this._currentRuleHashes[row.rule_name] = row.hash.toString('hex');
+                        this._currentRuleHashes[row.rule_name!] = this._hashToString(row.hash);
                     }
                 }),
             this._context.ruleAccessor.queryAllRuleItems()
                 .then(result => {
-                    for(let row of result)
+                    for(const row of result)
                     {
-                        const ruleResult = this._getRuleResult(executionContext, row.rule_name);
+                        const ruleResult = this._getRuleResult(executionContext, row.rule_name!);
                         ruleResult.items.push({
-                            errors: row.errors,
-                            warnings: row.warnings,
-                            markers: row.markers,
-                            dn: row.dn
+                            errors: row.errors!,
+                            warnings: row.warnings!,
+                            markers: row.markers!,
+                            dn: row.dn!
                         })
                     }
                 }),
             this._context.ruleAccessor.queryAllRuleLogs()
                 .then(result => {
-                    for(let row of result)
+                    for(const row of result)
                     {
-                        const ruleResult = this._getRuleResult(executionContext, row.rule_name);
+                        const ruleResult = this._getRuleResult(executionContext, row.rule_name!);
                         ruleResult.logs.push({
-                            kind: row.kind,
+                            kind: row.kind!,
                             msg: row.msg
                         })
                     }
@@ -210,12 +221,12 @@ export class RuleCache
     private _notifyRuleResults()
     {
         this._ruleResultsDict = {};
-        for(var rule of _.values(this._ruleConfigDict))
+        for(const rule of _.values(this._ruleConfigDict))
         {
-            this._ruleResultsDict[rule.name] = this._buildRuleResult(rule.name);
+            this._ruleResultsDict[rule.name!] = this._buildRuleResult(rule.name!);
         }
 
-        var data = _.values(this._ruleResultsDict).map(x => ({
+        const data = _.values(this._ruleResultsDict).map(x => ({
             target: { name: x.name },
             value: x
         }));
@@ -231,9 +242,9 @@ export class RuleCache
         return null;
     }
 
-    private _buildRuleConfig(rule: any) : UserRule
+    private _buildRuleConfig(rule: Partial<RulesRow>) : UserRule
     {
-        var userRule = {
+        const userRule : UserRule = {
             name: rule.name,
             target: rule.target,
             script: rule.script,
@@ -244,7 +255,7 @@ export class RuleCache
 
     private _buildRuleStatus(name: string) : UserRuleStatus
     {
-        var info : any = {
+        const info : UserRuleStatus = {
             name: name,
             enabled: false,
             is_current: false,
@@ -252,20 +263,21 @@ export class RuleCache
             item_count: 0,
         };
 
-        var ruleConfig = this._ruleConfigDict[name];
+        const ruleConfig = this._ruleConfigDict[name];
         if (ruleConfig)
         {
             info.enabled = ruleConfig.enabled;
             if (ruleConfig.enabled)
             {
-                var ruleExecResult = this._engineRuleResultsDict[name];
+                const ruleExecResult = this._engineRuleResultsDict[name];
                 if (ruleExecResult)
                 {
                     info.item_count = ruleExecResult.items.length;
                     info.error_count = ruleExecResult.logs.length;
 
                     const latestHash = this._currentRuleHashes[name];
-                    if (latestHash && (ruleConfig.hash == latestHash))
+                    const ruleHash = this._hashToString(ruleConfig.hash);
+                    if (latestHash && (latestHash === ruleHash))
                     {
                         info.is_current = true;
                     }
@@ -282,7 +294,7 @@ export class RuleCache
 
     private _buildRuleResult(name: string) : UserRuleResult
     {
-        var info : any = {
+        const info : UserRuleResult = {
             name: name,
             enabled: false,
             is_current: false,
@@ -291,19 +303,20 @@ export class RuleCache
             logs: []
         };
 
-        var ruleConfig = this._ruleConfigDict[name];
+        const ruleConfig = this._ruleConfigDict[name];
         if (ruleConfig)
         {
             info.enabled = ruleConfig.enabled;
             if (ruleConfig.enabled)
             {
-                var ruleExecResult = this._engineRuleResultsDict[name];
+                const ruleExecResult = this._engineRuleResultsDict[name];
                 if (ruleExecResult)
                 {
                     info.error_count = ruleExecResult.logs.length;
 
                     const latestHash = this._currentRuleHashes[name];
-                    if (latestHash && (ruleConfig.hash == latestHash))
+                    const ruleHash = this._hashToString(ruleConfig.hash);
+                    if (latestHash && (latestHash === ruleHash))
                     {
                         info.is_current = true;
                     }
