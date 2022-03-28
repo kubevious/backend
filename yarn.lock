@@ -64,12 +64,14 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@kubevious/data-models@^1.0.11":
-  version "1.0.11"
-  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.11.tgz#6e2efe3fcdead551eae32f487e8c3f8794c91080"
-  integrity sha512-BZ0DKSwtnJEwiWowFkLubZYmKNd7EnWc0a7dobvfAexQ52hDL07I1InLLjQkEvoR5L656lZtspHNW1+kDI8fCA==
+"@kubevious/data-models@^1.0.13":
+  version "1.0.13"
+  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.13.tgz#59bb60e4219bad3c6150f7aadc0beaea15ece439"
+  integrity sha512-GYGO1qUDJQ9iPpKu7RUde6QA0l/dmbtz857z2m6RTA9+HiOdVYhmqe3EMGHv5v0sMdfTjcYFQI/hifHdM84MZA==
   dependencies:
     "@kubevious/easy-data-store" "^1.0.11"
+    "@kubevious/helper-backend" "^1.0.38"
+    "@kubevious/ui-middleware" "^1.0.43"
     moment "^2.29.1"
     the-lodash "^2.0.9"
     the-logger "^2.0.14"
@@ -88,7 +90,7 @@
     the-logger "^2.0.14"
     the-promise "^2.0.13"
 
-"@kubevious/entity-meta@^1.0.45", "@kubevious/entity-meta@^1.0.54", "@kubevious/entity-meta@^1.0.55":
+"@kubevious/entity-meta@^1.0.42", "@kubevious/entity-meta@^1.0.45", "@kubevious/entity-meta@^1.0.54", "@kubevious/entity-meta@^1.0.55":
   version "1.0.56"
   resolved "https://registry.yarnpkg.com/@kubevious/entity-meta/-/entity-meta-1.0.56.tgz#e2460fee0d7ae931b1da911725e9f0aa556a9e48"
   integrity sha512-KW9dhxn6bEGK9z4/426i8Un+/uPc1HLUoZA61okj26s+BKnB9uOte2PPGdl0tu/I0WIx2zZ9zMj21NywdfH09g==
@@ -187,6 +189,14 @@
     "@kubevious/entity-meta" "^1.0.45"
     the-lodash "^2.0.9"
     the-logger "^2.0.14"
+    the-promise "^2.0.13"
+
+"@kubevious/ui-middleware@^1.0.43":
+  version "1.0.43"
+  resolved "https://registry.yarnpkg.com/@kubevious/ui-middleware/-/ui-middleware-1.0.43.tgz#c2d21109217fe3cc58b7f14216b73c9178b4e2cc"
+  integrity sha512-i4UzzBznqEO8nyysb3LjuFoxxV/VrtT3uQ/iEUtErB8SE/z54xjXYoYx2ZHBb+uTgmQnJCj/bHYqkqiMQb7OEw==
+  dependencies:
+    "@kubevious/entity-meta" "^1.0.42"
     the-promise "^2.0.13"
 
 "@kubevious/websocket-server@^1.0.26":

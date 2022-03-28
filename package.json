@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/kubevious/kubevious",
   "dependencies": {
-    "@kubevious/data-models": "^1.0.11",
+    "@kubevious/data-models": "^1.0.13",
     "@kubevious/easy-data-store": "^1.0.11",
     "@kubevious/helper-backend": "^1.0.38",
     "@kubevious/helper-logic-processor": "^1.0.70",
@@ -67,6 +67,6 @@
     "@kubevious/helpers": "^1.0.62",
     "@kubevious/websocket-server": "^1.0.26",
     "@kubevious/worldvious-client": "^1.0.6",
-    "@kubevious/data-models": "^1.0.11"
+    "@kubevious/data-models": "^1.0.13"
   }
 }

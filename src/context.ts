@@ -16,8 +16,11 @@ import { WorldviousClient } from '@kubevious/worldvious-client';
 import { WebServer } from './server';
 import { WebSocket } from './server/websocket';
 
-import { SnapshotReader as HistorySnapshotReader } from '@kubevious/helpers/dist/history/snapshot-reader';
 import { SeriesResampler } from '@kubevious/helpers/dist/history/series-resampler';
+
+import { ConfigAccessor } from '@kubevious/data-models';
+import { SnapshotReader } from '@kubevious/data-models/dist/accessors/snapshot-reader';
+import { BufferUtils } from '@kubevious/data-models';
 
 import VERSION from './version'
 
@@ -34,6 +37,8 @@ export class Context
 
     private _dataStore: Database;
 
+    private _configAccessor : ConfigAccessor;
+
     private _debugObjectLogger: DebugObjectLogger;
 
     private _markerAccessor: MarkerAccessor;
@@ -44,6 +49,7 @@ export class Context
     private _seriesResamplerHelper: SeriesResampler;
 
     private _notificationsApp: NotificationsApp;
+
 
     constructor(backend : Backend)
     {
@@ -56,6 +62,8 @@ export class Context
 
         this._dataStore = new Database(this._logger, this);
         this._debugObjectLogger = new DebugObjectLogger(this);
+
+        this._configAccessor = new ConfigAccessor(this._dataStore.dataStore, this._dataStore.config);
 
         this._markerAccessor = new MarkerAccessor(this);
         this._markerCache = new MarkerCache(this);
@@ -70,6 +78,7 @@ export class Context
             ;
 
         this._notificationsApp = new NotificationsApp(this);
+
 
         this._server = new WebServer(this);
         this._websocket = new WebSocket(this, this._server);
@@ -113,6 +122,10 @@ export class Context
         return this._debugObjectLogger;
     }
 
+    get configAccessor() {
+        return this._configAccessor;
+    }
+
     get markerAccessor() {
         return this._markerAccessor;
     }
@@ -148,6 +161,20 @@ export class Context
     get notificationsApp() {
         return this._notificationsApp;
     }
+
+    get executionLimiter() {
+        return this._server.executionLimiter;
+    }
+
+    public makeSnapshotReader(snapshotId: string)
+    {
+        return new SnapshotReader(this._logger,
+            this._dataStore.snapshots,
+            this._dataStore.dataStore,
+            BufferUtils.fromStr(snapshotId)
+            )
+    }
+
 
     private _setupMetricsTracker()
     {
