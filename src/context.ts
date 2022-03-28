@@ -5,7 +5,6 @@ import { Promise } from 'the-promise';
 import { Backend } from '@kubevious/helper-backend'
 
 import { Database } from './db';
-import { DebugObjectLogger } from './utils/debug-object-logger';
 import { MarkerAccessor } from './rule/marker-accessor';
 import { MarkerCache } from './rule/marker-cache';
 import { RuleAccessor } from './rule/rule-accessor';
@@ -39,8 +38,6 @@ export class Context
 
     private _configAccessor : ConfigAccessor;
 
-    private _debugObjectLogger: DebugObjectLogger;
-
     private _markerAccessor: MarkerAccessor;
     private _markerCache: MarkerCache;
     private _ruleAccessor: RuleAccessor;
@@ -61,7 +58,6 @@ export class Context
         this._worldvious = new WorldviousClient(this.logger, 'backend', VERSION);
 
         this._dataStore = new Database(this._logger, this);
-        this._debugObjectLogger = new DebugObjectLogger(this);
 
         this._configAccessor = new ConfigAccessor(this._dataStore.dataStore, this._dataStore.config);
 
@@ -118,10 +114,6 @@ export class Context
         return this._dataStore;
     }
 
-    get debugObjectLogger() {
-        return this._debugObjectLogger;
-    }
-
     get configAccessor() {
         return this._configAccessor;
     }
@@ -174,7 +166,6 @@ export class Context
             BufferUtils.fromStr(snapshotId)
             )
     }
-
 
     private _setupMetricsTracker()
     {
