@@ -10,7 +10,7 @@ export default function (router: Router, context: Context) {
     /**** Marker Configuration ***/
 
     // List Makers
-    router.get('/markers/', function (req, res) {
+    router.get('/markers/', (req, res) => {
         let result = context.markerCache.queryMarkerList();
         result = result.map(x => ({
             name: x.name,
@@ -21,16 +21,16 @@ export default function (router: Router, context: Context) {
     })
 
     // Get Marker
-    router.get('/marker/:name', function (req, res) {
-        const result = context.markerCache.queryMarker(req.params.name);
+    router.get<{}, any, MarkerQuery>('/marker', (req, res) => {
+        const result = context.markerCache.queryMarker(req.query.marker);
         return result;
     })
 
     // Create Marker
-    router.post('/marker/:name', function (req, res) {
+    router.post<{}, any, MarkerQuery>('/marker', (req, res) => {
         let newMarker : any;
         return context.markerAccessor
-            .createMarker(req.body, { name: req.params.name })
+            .createMarker(req.body, { name: req.query.marker })
             .then(result => {
                 newMarker = result;
             })
@@ -41,9 +41,9 @@ export default function (router: Router, context: Context) {
     })
 
     // Delete Marker
-    router.delete('/marker/:name', function (req, res) {
+    router.delete<{}, any, MarkerQuery>('/marker', (req, res) => {
         return context.markerAccessor
-            .deleteMarker(req.params.name)
+            .deleteMarker(req.query.marker)
             .finally(() => context.markerCache.triggerUpdate())
             .then(() => {
                 return {};
@@ -51,13 +51,13 @@ export default function (router: Router, context: Context) {
     })
 
     // Export Makers
-    router.get('/markers/export', function (req, res) {
+    router.get('/markers/export', (req, res) => {
         return context.markerAccessor
             .exportMarkers();
     })
 
     // Import Makers
-    router.post('/markers/import', function (req, res) {
+    router.post('/markers/import', (req, res) => {
         return context.markerAccessor
             .importMarkers(req.body.data, req.body.deleteExtra)
             .finally(() => context.markerCache.triggerUpdate())
@@ -80,15 +80,21 @@ export default function (router: Router, context: Context) {
     /**** Marker Operational ***/
 
     // List Marker Statuses
-    router.get('/markers-statuses', function (req, res) {
+    router.get('/markers-statuses', (req, res) => {
         const result = context.markerCache.getMarkersStatuses()
         return result;
     })
     
     // Get Marker Result
-    router.get('/marker-result/:name', function (req, res) {
-        const result = context.markerCache.getMarkerResult(req.params.name)
+    router.get<{}, any, MarkerQuery>('/marker-result', (req, res) => {
+        const result = context.markerCache.getMarkerResult(req.query.marker)
         return result;
     })
 
+}
+
+
+interface MarkerQuery
+{
+    marker: string
 }
