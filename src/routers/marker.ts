@@ -5,7 +5,7 @@ import Joi from 'joi';
 
 export default function (router: Router, context: Context) {
 
-    router.url('/api/v1');
+    router.url('/api/v1/rule-engine');
 
     /**** Marker Configuration ***/
 

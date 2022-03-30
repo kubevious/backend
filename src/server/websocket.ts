@@ -28,20 +28,23 @@ export class WebSocket
 
     run()
     {
-        let httpServer = this._webServer.httpServer;
-        this._socket = new WebSocketServer(this._logger.sublogger('WebSocket'), httpServer, '/socket');
+        const httpServer = this._webServer.httpServer;
+        this._socket = new WebSocketServer(
+            this._logger.sublogger('WebSocket'),
+            httpServer,
+            '/socket');
         this._socket.run();
     }
     
 
     accept(state: RegistryBundleState)
     {
-        let nodeItems : WebSocketItem[] = []
-        let childrenItems : WebSocketItem[] = []
-        let propertiesItems : WebSocketItem[] = []
-        let alertsItems : WebSocketItem[] = []
+        const nodeItems : WebSocketItem[] = []
+        const childrenItems : WebSocketItem[] = []
+        const propertiesItems : WebSocketItem[] = []
+        const alertsItems : WebSocketItem[] = []
 
-        for(let node of state.nodeItems)
+        for(const node of state.nodeItems)
         {
             nodeItems.push(this._makeWsItem(node.dn, node.config));
 
@@ -105,7 +108,7 @@ export class WebSocket
         // }
         // config_hash: HashUtils.calculateObjectHashStr(key)
 
-        let item : WebSocketItem = {
+        const item : WebSocketItem = {
             target: { dn: dn },
             value: _.cloneDeep(config),
         }

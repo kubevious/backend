@@ -5,7 +5,7 @@ import Joi from 'joi';
 
 export default function (router: Router, context: Context) {
 
-    router.url('/api/v1');
+    router.url('/api/v1/rule-engine');
 
     /**** Rule Configuration ***/
 
@@ -16,16 +16,16 @@ export default function (router: Router, context: Context) {
     })
 
     // Get Rule
-    router.get('/rule/:name', (req, res) => {
-        const result = context.ruleCache.queryRule(req.params.name);
+    router.get<{}, any, RuleQuery>('/rule', (req, res) => {
+        const result = context.ruleCache.queryRule(req.query.rule);
         return result;
     })
 
     // Create Rule
-    router.post('/rule/:name', (req, res) => {
+    router.post<{}, any, RuleQuery>('/rule', (req, res) => {
         let newRule : any;
         return context.ruleAccessor
-            .createRule(req.body, { name: req.params.name })
+            .createRule(req.body, { name: req.query.rule})
             .then(result => {
                 newRule = result;
             })
@@ -36,9 +36,9 @@ export default function (router: Router, context: Context) {
     })
 
     // Delete Rule
-    router.delete('/rule/:name', (req, res) => {
+    router.delete<{}, any, RuleQuery>('/rule', (req, res) => {
         return context.ruleAccessor
-            .deleteRule(req.params.name)
+            .deleteRule(req.query.rule)
             .finally(() => context.ruleCache.triggerListUpdate())
             .then(() => {
                 return {};
@@ -80,9 +80,15 @@ export default function (router: Router, context: Context) {
         return result;
     })
 
-    router.get('/rule-result/:name', (req, res) => {
-        const result = context.ruleCache.getRuleResult(req.params.name);
+    router.get<{}, any, RuleQuery>('/rule-result', (req, res) => {
+        const result = context.ruleCache.getRuleResult(req.query.rule);
         return result;
     })
 
 }
+
+interface RuleQuery
+{
+    rule: string
+}
+
