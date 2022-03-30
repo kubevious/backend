@@ -22,6 +22,7 @@ import { SnapshotReader } from '@kubevious/data-models/dist/accessors/snapshot-r
 import { BufferUtils } from '@kubevious/data-models';
 
 import VERSION from './version'
+import { DiagramDataFetcher } from './apps/diagram-data-fetcher';
 
 export class Context
 {
@@ -46,6 +47,7 @@ export class Context
     private _seriesResamplerHelper: SeriesResampler;
 
     private _notificationsApp: NotificationsApp;
+    private _diagramDataFetcher : DiagramDataFetcher;
 
 
     constructor(backend : Backend)
@@ -74,6 +76,7 @@ export class Context
 
         this._notificationsApp = new NotificationsApp(this);
 
+        this._diagramDataFetcher = new DiagramDataFetcher(this);
 
         this._server = new WebServer(this);
         this._websocket = new WebSocket(this, this._server);
@@ -160,6 +163,10 @@ export class Context
             this._dataStore.dataStore,
             BufferUtils.fromStr(snapshotId)
             )
+    }
+
+    get diagramDataFetcher() {
+        return this._diagramDataFetcher;
     }
 
     private _setupMetricsTracker()

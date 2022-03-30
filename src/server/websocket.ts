@@ -6,10 +6,14 @@ import { WebServer } from './';
 
 import { WebSocketBaseServer } from '@kubevious/websocket-server'
 
-import { FetchHandler, HasKind, SocketContext, SocketLocals, TargetExtrasBuilder, WebSocketHandler, WebSocketKind, WSHandlerParams } from './types';
+import { HasKind, SocketContext, SocketLocals, WebSocketHandler, WebSocketKind } from './types';
+import { FetchHandler, WSFetcherParams} from './types';
+import { TargetExtrasBuilder, WSTargetExtrasBuilderParams} from './types';
+
 import { SubscriptionMeta } from '@kubevious/websocket-server/dist/base-server';
 
-import { HANDLERS } from './websocket-handlers';
+import { RULE_ENGINE_HANDLERS } from './websocket-handlers/rule-engine';
+import { DIAGRAM_HANDLERS } from './websocket-handlers/diagram';
 
 type MyWebSocketServer = WebSocketBaseServer<SocketContext, SocketLocals>;
 
@@ -28,17 +32,8 @@ export class WebSocket
         this._logger = context.logger.sublogger("WebSocketServer");
         this._webServer = webServer;
 
-        for(const handler of HANDLERS)
-        {
-            if (_.isString(handler.kind)) {
-                this._setupHandler(handler.kind, handler);
-            } else {
-                for(const kind of handler.kind)
-                {
-                    this._setupHandler(kind, handler);
-                }
-            }
-        }
+        this._loadHandlers(RULE_ENGINE_HANDLERS);
+        this._loadHandlers(DIAGRAM_HANDLERS);
     }
 
     get logger() {
@@ -52,9 +47,8 @@ export class WebSocket
             this._webServer.httpServer,
             '/socket');
 
-
         this._socket.setupSubscriptionMetaFetcher((target, socket) => {
-            this._logger.info('[setupSubscriptionMetaFetcher] target: ', target);
+            // this._logger.info('[setupSubscriptionMetaFetcher] target: ', target);
 
             const subMeta : SubscriptionMeta = {};
 
@@ -63,14 +57,14 @@ export class WebSocket
                 subMeta.contextFields = _.clone(kindHandler.contextFields)
 
                 if (kindHandler.targetExtrasBuilder) {
-
-                    const params : WSHandlerParams = {
+                    const params : WSTargetExtrasBuilderParams = {
                         target: target,
                         context: this._context
                     }
-
                     subMeta.targetExtras = kindHandler.targetExtrasBuilder(params);
                 }
+            } else {
+                this._logger.error('[setupSubscriptionMetaFetcher] NO HANDLER FOR TARGET: ', target);
             }
 
             return subMeta;
@@ -78,7 +72,7 @@ export class WebSocket
 
 
         this._socket.handleSocket((globalTarget, socket, globalId, localTarget, subMeta) => {
-            this._logger.info('[handleSocket] globalTarget: ', globalTarget);
+            // this._logger.info('[handleSocket] globalTarget: ', globalTarget);
 
             const myTarget = <HasKind>globalTarget;
             if (!myTarget) {
@@ -125,12 +119,27 @@ export class WebSocket
             return null;
         }
 
-        const params : WSHandlerParams = {
+        const params : WSFetcherParams = {
             target: target,
             context: this._context
         }
 
         return Promise.try(() => fetcher(params));
+    }
+
+    private _loadHandlers(handlers: WebSocketHandler[])
+    {
+        for(const handler of handlers)
+        {
+            if (_.isString(handler.kind)) {
+                this._setupHandler(handler.kind, handler);
+            } else {
+                for(const kind of handler.kind)
+                {
+                    this._setupHandler(kind, handler);
+                }
+            }
+        }
     }
 
     private _setupHandler(kind: WebSocketKind, handler: WebSocketHandler)

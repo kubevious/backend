@@ -30,14 +30,22 @@ export interface HasKind
 export type SocketContext = {};
 export type SocketLocals =  {};
 
-export interface WSHandlerParams
+export interface WSTargetExtrasBuilderParams
+{
+    target: HasKind,
+    context: Context
+}
+
+export type TargetExtrasBuilder = (params: WSTargetExtrasBuilderParams) => Record<string, any> | null;
+
+
+export interface WSFetcherParams
 {
     target: HasKind,
     context: Context,
 }
 
-export type TargetExtrasBuilder = (params: WSHandlerParams) => Record<string, any> | null;
-export type FetchHandler = (params: WSHandlerParams) => Resolvable<any>;
+export type FetchHandler = (params: WSFetcherParams) => Resolvable<any>;
 
 export interface WebSocketHandler
 {

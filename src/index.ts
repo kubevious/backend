@@ -4,7 +4,7 @@ import { Context } from './context'
 
 const backend = new Backend("backend", {
     logLevels: {
-        // 'DriverMysql': LogLevel.warn
+        'DriverMysql': LogLevel.warn
     }
 });
 
