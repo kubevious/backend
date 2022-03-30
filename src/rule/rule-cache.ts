@@ -79,7 +79,7 @@ export class RuleCache
         this._userRules = this._buildRuleList();
         this._listRuleStatuses = this._buildRuleStatusList();
 
-        this._context.websocket.update({ kind: 'rules-statuses' }, this.queryRuleStatusList());
+        // this._context.websocket.update({ kind: 'rules-statuses' }, this.queryRuleStatusList());
     }
 
     queryRuleList()
@@ -231,7 +231,7 @@ export class RuleCache
             value: x
         }));
 
-        return this._context.websocket.updateScope({ kind: 'rule-result' }, data);
+        // return this._context.websocket.updateScope({ kind: 'rule-result' }, data);
     }
 
     getRuleResult(name: string)

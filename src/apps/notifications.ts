@@ -124,12 +124,13 @@ export class NotificationsApp
             });
         this.logger.info("Visible Notifications: %s ", this._notifications.length);
 
-        this.context.websocket.update({ kind: 'notifications' }, {
+        this.context.websocket.notifyAll({ kind: 'notifications' }, {
             notifications: this._notifications
         });
-        this.context.websocket.update({ kind: 'notifications-info' }, {
+        this.context.websocket.notifyAll({ kind: 'notifications-info' }, {
             count: this._notifications.length
         });
+
     }
 
     private _makeKey(kind: string, id: string)

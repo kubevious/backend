@@ -4,6 +4,7 @@ import { ILogger } from 'the-logger' ;
 
 import { Context } from '../context';
 import { ExecutionContext } from '@kubevious/helper-rule-engine';
+import { WebSocketKind } from '../server/types';
 
 export type Marker = Record<string, any>;
 export interface MarkerResult 
@@ -122,7 +123,7 @@ export class MarkerCache
     private _updateMarkersStatuses()
     {
         this._markersStatuses = this._markerList.map(x => this._makeMarkerStatus(x));
-        this._context.websocket.update({ kind: 'markers-statuses' }, this._markersStatuses);
+        this._context.websocket.invalidateAll({ kind: WebSocketKind.markers_statuses });
     }
 
     private _makeMarkerStatus(marker: Marker) : MarkerStatus
@@ -143,7 +144,7 @@ export class MarkerCache
             target: { name: x.name },
             value: x
         }));
-        this._context.websocket.updateScope({ kind: 'marker-result' }, items);
+        // this._context.websocket.updateScope({ kind: 'marker-result' }, items);
     }
 
     getMarkersStatuses()

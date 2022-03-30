@@ -199,15 +199,15 @@
     "@kubevious/entity-meta" "^1.0.42"
     the-promise "^2.0.13"
 
-"@kubevious/websocket-server@^1.0.26":
-  version "1.0.26"
-  resolved "https://registry.yarnpkg.com/@kubevious/websocket-server/-/websocket-server-1.0.26.tgz#b358a58e2980cbe1977191944c511008be999d91"
-  integrity sha512-BLZ/4Pmjoy/+9ts5348ssdQABCvT1SRgp0hFevHmI2cjV0vS69vs8eZfXn3t9mcHsyn/OtB0zHxnV1U+P7VPzw==
+"@kubevious/websocket-server@^1.0.27":
+  version "1.0.27"
+  resolved "https://registry.yarnpkg.com/@kubevious/websocket-server/-/websocket-server-1.0.27.tgz#0267653900f1f1b584a2024b12a236327012f083"
+  integrity sha512-N72JFqLA8JzJLeTM3T4+bXB+prJcKACsswQKRR7NKk9QvMY4QP8IeNt4rkBKX3TyXN4N+f89HsNj6K6VAXJEDQ==
   dependencies:
     express "^4.17.1"
     socket.io "^4.1.2"
     the-lodash "^2.0.9"
-    the-logger "^2.0.9"
+    the-logger "^2.0.14"
     the-promise "^2.0.13"
 
 "@kubevious/worldvious-client@^1.0.6":
