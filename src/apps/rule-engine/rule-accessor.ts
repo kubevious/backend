@@ -2,7 +2,7 @@ import _ from 'the-lodash';
 import { Promise } from 'the-promise';
 import { ILogger } from 'the-logger' ;
 
-import { Context } from '../context';
+import { Context } from '../../context';
 
 
 import { HashUtils } from '@kubevious/data-models';
@@ -10,8 +10,11 @@ import { RuleObject } from './types';
 
 import { RulesRow, RuleStatusRow } from '@kubevious/data-models/dist/models/rule_engine';
 
-import { Database } from '../db';
+import { Database } from '../../db';
 import { RuleStatus, RuleResult } from '@kubevious/ui-middleware/dist/services/rule'
+
+import { RuleConfig, RulesExportData } from '@kubevious/ui-middleware/dist/services/rule'
+
 
 export class RuleAccessor
 {
@@ -64,14 +67,14 @@ export class RuleAccessor
             .queryOne({ name: name });
     }
 
-    createRule(config: any, target: any)
+    createRule(config: RuleConfig, targetName: string)
     {
         return Promise.resolve()
             .then((() => {
-                if (target) {
-                    if (config.name != target.name) {
+                if (targetName) {
+                    if (config.name != targetName) {
                         return this._dataStore.table(this._dataStore.ruleEngine.Rules)
-                            .delete(target);
+                            .delete({ name: targetName });
                     }
                 }
             }))

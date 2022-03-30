@@ -2,11 +2,11 @@ import _ from 'the-lodash';
 import { Promise } from 'the-promise';
 import { ILogger } from 'the-logger' ;
 
-import { Context } from '../context';
+import { Context } from '../../context';
 
-import { Database } from '../db';
+import { Database } from '../../db';
 
-import { MarkerStatus, MarkerResult } from '@kubevious/ui-middleware/dist/services/marker'
+import { MarkerConfig, MarkerStatus, MarkerResult } from '@kubevious/ui-middleware/dist/services/marker'
 
 export class MarkerAccessor
 {
@@ -46,14 +46,14 @@ export class MarkerAccessor
             .queryOne({ name: name });
     }
 
-    createMarker(config: any, target: any)
+    createMarker(config: MarkerConfig, targetMarkerName: string)
     {
         return Promise.resolve()
             .then((() => {
-                if (target) {
-                    if (config.name != target.name) {
+                if (targetMarkerName) {
+                    if (config.name != targetMarkerName) {
                         return this._dataStore.table(this._dataStore.ruleEngine.Markers)
-                            .delete(target);
+                            .delete({ name: targetMarkerName });
                     }
                 }
             }))
@@ -76,7 +76,7 @@ export class MarkerAccessor
             });
     }
 
-    importMarkers(markers : { items: any[]}, deleteExtra: boolean)
+    importMarkers(markers : { items: MarkerConfig[] }, deleteExtra: boolean)
     {
         return this._dataStore.table(this._dataStore.ruleEngine.Markers)
             .synchronizer({}, !deleteExtra)

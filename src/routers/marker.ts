@@ -3,6 +3,8 @@ import { Context } from '../context';
 import { Router } from '@kubevious/helper-backend'
 import Joi from 'joi';
 
+import { MarkersImportData } from '@kubevious/ui-middleware/dist/services/marker'
+
 export default function (router: Router, context: Context) {
 
     router.url('/api/v1/rule-engine');
@@ -11,59 +13,52 @@ export default function (router: Router, context: Context) {
 
     // List Makers
     router.get('/markers/', (req, res) => {
-        let result = context.markerCache.queryMarkerList();
-        result = result.map(x => ({
-            name: x.name,
-            shape: x.shape,
-            color: x.color
-        }));
-        return result;
+
+        return context.markerAccessor.queryAll()
+            .then(rows => {
+                return rows.map(x => {
+                    return {
+                        name: x.name,
+                        shape: x.shape,
+                        color: x.color
+                    };
+                })
+            });
+
     })
 
     // Get Marker
     router.get<{}, any, MarkerQuery>('/marker', (req, res) => {
-        const result = context.markerCache.queryMarker(req.query.marker);
-        return result;
+
+        return context.markerAccessor.getMarker(req.query.marker);
     })
 
     // Create Marker
     router.post<{}, any, MarkerQuery>('/marker', (req, res) => {
-        let newMarker : any;
-        return context.markerAccessor
-            .createMarker(req.body, { name: req.query.marker })
-            .then(result => {
-                newMarker = result;
-            })
-            .finally(() => context.markerCache.triggerUpdate())
-            .then(() => {
-                return newMarker;
-            })
+
+        return context.markerEditor.createMarker(req.body, req.query.marker);
+
     })
 
     // Delete Marker
     router.delete<{}, any, MarkerQuery>('/marker', (req, res) => {
-        return context.markerAccessor
-            .deleteMarker(req.query.marker)
-            .finally(() => context.markerCache.triggerUpdate())
-            .then(() => {
-                return {};
-            });
+
+        return context.markerEditor.deleteMarker(req.query.marker);
+
     })
 
     // Export Makers
-    router.get('/markers/export', (req, res) => {
+    router.get('/export-markers', (req, res) => {
         return context.markerAccessor
             .exportMarkers();
     })
 
     // Import Makers
-    router.post('/markers/import', (req, res) => {
-        return context.markerAccessor
-            .importMarkers(req.body.data, req.body.deleteExtra)
-            .finally(() => context.markerCache.triggerUpdate())
-            .then(() => {
-                return {};
-            });
+    router.post<{}, MarkersImportData>('/import-markers', (req, res) => {
+
+        return context.markerEditor
+            .importMarkers(req.body.data, req.body.deleteExtra);
+
     })
     .bodySchema(
         Joi.object({
@@ -81,14 +76,12 @@ export default function (router: Router, context: Context) {
 
     // List Marker Statuses
     router.get('/markers-statuses', (req, res) => {
-        const result = context.markerCache.getMarkersStatuses()
-        return result;
+        return context.markerAccessor.getMarkersStatuses();
     })
     
     // Get Marker Result
     router.get<{}, any, MarkerQuery>('/marker-result', (req, res) => {
-        const result = context.markerCache.getMarkerResult(req.query.marker)
-        return result;
+        return context.markerAccessor.getMarkerResult(req.query.marker);
     })
 
 }

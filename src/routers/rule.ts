@@ -3,6 +3,8 @@ import { Context } from '../context';
 import { Router } from '@kubevious/helper-backend'
 import Joi from 'joi';
 
+import { RuleConfig, RulesImportData } from '@kubevious/ui-middleware/dist/services/rule'
+
 export default function (router: Router, context: Context) {
 
     router.url('/api/v1/rule-engine');
@@ -11,54 +13,40 @@ export default function (router: Router, context: Context) {
 
     // List Rules
     router.get('/rules/', (req, res) => {
-        const result = context.ruleCache.queryRuleList();
-        return result;
+        return context.ruleAccessor.queryAll();
     })
 
     // Get Rule
     router.get<{}, any, RuleQuery>('/rule', (req, res) => {
-        const result = context.ruleCache.queryRule(req.query.rule);
-        return result;
+        return context.ruleAccessor.getRule(req.query.rule);
     })
 
     // Create Rule
-    router.post<{}, any, RuleQuery>('/rule', (req, res) => {
-        let newRule : any;
-        return context.ruleAccessor
-            .createRule(req.body, { name: req.query.rule})
-            .then(result => {
-                newRule = result;
-            })
-            .finally(() => context.ruleCache.triggerListUpdate())
-            .then(() => {
-                return newRule;
-            })
+    router.post<{}, RuleConfig, RuleQuery>('/rule', (req, res) => {
+        
+        return context.ruleEditor.createRule(req.body, req.query.rule);
+
     })
 
     // Delete Rule
     router.delete<{}, any, RuleQuery>('/rule', (req, res) => {
-        return context.ruleAccessor
-            .deleteRule(req.query.rule)
-            .finally(() => context.ruleCache.triggerListUpdate())
-            .then(() => {
-                return {};
-            });
+
+        return context.ruleEditor.deleteRule(req.query.rule);
+
     })
 
     // Export Rules
-    router.get('/rules/export', (req, res) => {
+    router.get('/export-rules', (req, res) => {
         return context.ruleAccessor
             .exportRules();
     })
 
     // Import Rules
-    router.post('/rules/import', (req, res) => {
-        return context.ruleAccessor
-            .importRules(req.body.data, req.body.deleteExtra)
-            .finally(() => context.ruleCache.triggerListUpdate())
-            .then(() => {
-                return {};
-            });
+    router.post<{}, RulesImportData>('/import-rules', (req, res) => {
+
+        return context.markerEditor
+            .importMarkers(req.body.data, req.body.deleteExtra);
+
     })
     .bodySchema(
         Joi.object({
@@ -76,13 +64,11 @@ export default function (router: Router, context: Context) {
 
     // List Rules Statuses
     router.get('/rules-statuses/', (req, res) => {
-        const result = context.ruleCache.queryRuleStatusList();
-        return result;
+        return context.ruleAccessor.getRulesStatuses();
     })
 
     router.get<{}, any, RuleQuery>('/rule-result', (req, res) => {
-        const result = context.ruleCache.getRuleResult(req.query.rule);
-        return result;
+        return context.ruleAccessor.getRuleResult(req.query.rule);
     })
 
 }

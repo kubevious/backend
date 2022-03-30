@@ -5,10 +5,10 @@ import { Promise } from 'the-promise';
 import { Backend } from '@kubevious/helper-backend'
 
 import { Database } from './db';
-import { MarkerAccessor } from './rule/marker-accessor';
-import { MarkerCache } from './rule/marker-cache';
-import { RuleAccessor } from './rule/rule-accessor';
-import { RuleCache } from './rule/rule-cache';
+import { MarkerAccessor } from './apps/rule-engine/marker-accessor';
+import { MarkerEditor } from './apps/rule-engine/marker-editor';
+import { RuleAccessor } from './apps/rule-engine/rule-accessor';
+import { RuleEditor } from './apps/rule-engine/rule-editor';
 import { NotificationsApp } from './apps/notifications';
 import { WorldviousClient } from '@kubevious/worldvious-client';
 
@@ -39,9 +39,9 @@ export class Context
     private _configAccessor : ConfigAccessor;
 
     private _markerAccessor: MarkerAccessor;
-    private _markerCache: MarkerCache;
+    private _markerEditor: MarkerEditor;
     private _ruleAccessor: RuleAccessor;
-    private _ruleCache: RuleCache;
+    private _ruleEditor: RuleEditor;
 
     private _seriesResamplerHelper: SeriesResampler;
 
@@ -62,10 +62,9 @@ export class Context
         this._configAccessor = new ConfigAccessor(this._dataStore.dataStore, this._dataStore.config);
 
         this._markerAccessor = new MarkerAccessor(this);
-        this._markerCache = new MarkerCache(this);
+        this._markerEditor = new MarkerEditor(this);
         this._ruleAccessor = new RuleAccessor(this);
-        this._ruleCache = new RuleCache(this);
-        // this._ruleEngine = new RuleEngine(this, this.database.dataStore);
+        this._ruleEditor = new RuleEditor(this);
 
         this._seriesResamplerHelper = new SeriesResampler(200)
             .column("changes", _.max)
@@ -122,21 +121,17 @@ export class Context
         return this._markerAccessor;
     }
 
-    get markerCache() {
-        return this._markerCache;
+    get markerEditor() {
+        return this._markerEditor;
     }
 
     get ruleAccessor() {
         return this._ruleAccessor;
     }
 
-    get ruleCache() {
-        return this._ruleCache;
+    get ruleEditor() {
+        return this._ruleEditor;
     }
-
-    // get ruleEngine() {
-    //     return this._ruleEngine;
-    // }
 
     get websocket() {
         return this._websocket;
