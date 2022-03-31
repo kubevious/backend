@@ -15,14 +15,16 @@ import { WorldviousClient } from '@kubevious/worldvious-client';
 import { WebServer } from './server';
 import { WebSocket } from './server/websocket';
 
-import { SeriesResampler } from '@kubevious/helpers/dist/history/series-resampler';
+import { SeriesResampler } from '@kubevious/data-models';
 
 import { ConfigAccessor } from '@kubevious/data-models';
 import { SnapshotReader } from '@kubevious/data-models/dist/accessors/snapshot-reader';
 import { BufferUtils } from '@kubevious/data-models';
+import { TimelineRow } from '@kubevious/data-models/dist/models/snapshots';
 
 import VERSION from './version'
 import { DiagramDataFetcher } from './apps/diagram-data-fetcher';
+
 
 export class Context
 {
@@ -44,7 +46,7 @@ export class Context
     private _ruleAccessor: RuleAccessor;
     private _ruleEditor: RuleEditor;
 
-    private _seriesResamplerHelper: SeriesResampler;
+    private _seriesResamplerHelper: SeriesResampler<TimelineRow>;
 
     private _notificationsApp: NotificationsApp;
     private _diagramDataFetcher : DiagramDataFetcher;
@@ -68,8 +70,8 @@ export class Context
         this._ruleAccessor = new RuleAccessor(this);
         this._ruleEditor = new RuleEditor(this);
 
-        this._seriesResamplerHelper = new SeriesResampler(200)
-            .column("changes", _.max)
+        this._seriesResamplerHelper = new SeriesResampler<TimelineRow>(200)
+            .column("changes", x => _.max(x) ?? 0)
             .column("error", _.mean)
             .column("warn", _.mean)
             ;

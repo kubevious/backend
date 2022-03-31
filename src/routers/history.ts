@@ -9,6 +9,7 @@ import { BufferUtils, NodeHistoryReader } from '@kubevious/data-models';
 import { Helpers } from '../server';
 
 import { PartitionUtils } from '@kubevious/data-models';
+import { TimelineRow } from '@kubevious/data-models/dist/models/snapshots';
 
 export default function (router: Router, context: Context, logger: ILogger, { dataStore } : Helpers) {
 
@@ -43,7 +44,7 @@ export default function (router: Router, context: Context, logger: ILogger, { da
                 // }
                 // return results;
 
-                return context.seriesResamplerHelper.process(results);
+                return context.seriesResamplerHelper.process(results as TimelineRow[]);
             });
     })
     ;
@@ -88,7 +89,7 @@ export default function (router: Router, context: Context, logger: ILogger, { da
                 }
             )
             .then(results => {
-                return context.seriesResamplerHelper.process(results);
+                return context.seriesResamplerHelper.process(results as TimelineRow[]);
             });
     })
     .querySchema(Joi.object({

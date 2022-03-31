@@ -64,10 +64,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@kubevious/data-models@^1.0.13":
-  version "1.0.13"
-  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.13.tgz#59bb60e4219bad3c6150f7aadc0beaea15ece439"
-  integrity sha512-GYGO1qUDJQ9iPpKu7RUde6QA0l/dmbtz857z2m6RTA9+HiOdVYhmqe3EMGHv5v0sMdfTjcYFQI/hifHdM84MZA==
+"@kubevious/data-models@^1.0.15":
+  version "1.0.15"
+  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.15.tgz#7e30d44b47fbeba27cf5912f40ac943b4013e355"
+  integrity sha512-Or0yzL7vnKY2xd3kThJZgLiuc3Mg00JjsQziUy1fxSZYpAHf1+KDFEMGDfdRCRMZulGjOY6ePlWU4W9Hsj+iRQ==
   dependencies:
     "@kubevious/easy-data-store" "^1.0.11"
     "@kubevious/helper-backend" "^1.0.38"
@@ -160,14 +160,14 @@
     the-logger "^2.0.14"
     the-promise "^2.0.13"
 
-"@kubevious/helpers@^1.0.62":
-  version "1.0.62"
-  resolved "https://registry.yarnpkg.com/@kubevious/helpers/-/helpers-1.0.62.tgz#68a9079411b7ec8a1cb6a15d6d3c458f54b51ff9"
-  integrity sha512-8UleQ3aDzjH008x5FVXv5dXa6gHVA3+D8KuChgcntBwWzme8JmIbvrlbIRnUgf6ZsQSHSo26bzHl7YFicMsPyQ==
+"@kubevious/helpers@^1.0.62", "@kubevious/helpers@^1.0.63":
+  version "1.0.63"
+  resolved "https://registry.yarnpkg.com/@kubevious/helpers/-/helpers-1.0.63.tgz#69070e0651e9770d331d15016ca8d13555b3ea9b"
+  integrity sha512-/aJl7iYCfMu1wpTI3flYvR/xF+Yvz9ulUiXZ2MN+1VgYV9OczMtQCkrmnekDAnQ4SOhOY08/kCovgn1QBct5TA==
   dependencies:
     moment "^2.29.1"
     the-lodash "^2.0.9"
-    the-logger "^2.0.9"
+    the-logger "^2.0.14"
     the-promise "^2.0.13"
 
 "@kubevious/kubik@^1.0.14":
