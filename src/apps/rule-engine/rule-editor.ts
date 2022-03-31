@@ -3,7 +3,7 @@ import { Promise } from 'the-promise';
 import { ILogger } from 'the-logger' ;
 
 import { Context } from '../../context';
-import { WebSocketKind } from '../../server/types';
+import { WebSocketKind } from '@kubevious/ui-middleware';
 
 import { RuleAccessor } from './rule-accessor';
 

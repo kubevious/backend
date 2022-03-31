@@ -3,6 +3,7 @@ import { ILogger } from 'the-logger';
 import _ from 'the-lodash';
 
 import { Context } from '../context';
+import { ClusterReportingStatus } from '@kubevious/ui-middleware/dist/services/cluster-reporting-status';
 
 export class ClusterStatusAccessor
 {
@@ -75,15 +76,4 @@ export class ClusterStatusAccessor
         return this._context.configAccessor.getCollectorStateConfig();
     }
 
-}
-
-export interface ClusterReportingStatus {
-    has_ready_snapshots: boolean;
-    has_reported_snapshots: boolean;
-    snapshots_in_queue: number;
-    current_snapshot_id?: string;
-    current_snapshot_date?: string;
-    agent_version?: string;
-    latest_snapshot_id?: string;
-    latest_snapshot_date?: string;
 }

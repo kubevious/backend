@@ -3,7 +3,7 @@ import { Promise } from 'the-promise';
 import { ILogger } from 'the-logger';
 import { DataFetcher, HasKind } from '../utils/data-fetcher';
 import { Context } from '../context';
-import { WebSocketKind } from '../server/types';
+import { WebSocketKind } from '@kubevious/ui-middleware';
 
 export class DiagramDataFetcher
 {

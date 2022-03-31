@@ -1,4 +1,4 @@
-import { WebSocketKind } from '../types'
+import { WebSocketKind } from '@kubevious/ui-middleware';
 import { WebSocketHandler } from '../types'
 
 export const REPORTING_HANDLERS : WebSocketHandler[] = [

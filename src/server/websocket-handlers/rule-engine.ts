@@ -1,5 +1,4 @@
-// import { WebSocketNameFetcher, ClusterWebSocketNameFetcher } from '@kubevious/saas-data-models'
-import { WebSocketKind } from '../types'
+import { WebSocketKind } from '@kubevious/ui-middleware';
 import { WebSocketHandler } from '../types'
 
 export const RULE_ENGINE_HANDLERS : WebSocketHandler[] = [

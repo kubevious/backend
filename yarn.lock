@@ -90,7 +90,7 @@
     the-logger "^2.0.14"
     the-promise "^2.0.13"
 
-"@kubevious/entity-meta@^1.0.42", "@kubevious/entity-meta@^1.0.45", "@kubevious/entity-meta@^1.0.54", "@kubevious/entity-meta@^1.0.55":
+"@kubevious/entity-meta@^1.0.42", "@kubevious/entity-meta@^1.0.45", "@kubevious/entity-meta@^1.0.54", "@kubevious/entity-meta@^1.0.55", "@kubevious/entity-meta@^1.0.56":
   version "1.0.56"
   resolved "https://registry.yarnpkg.com/@kubevious/entity-meta/-/entity-meta-1.0.56.tgz#e2460fee0d7ae931b1da911725e9f0aa556a9e48"
   integrity sha512-KW9dhxn6bEGK9z4/426i8Un+/uPc1HLUoZA61okj26s+BKnB9uOte2PPGdl0tu/I0WIx2zZ9zMj21NywdfH09g==
@@ -197,6 +197,14 @@
   integrity sha512-i4UzzBznqEO8nyysb3LjuFoxxV/VrtT3uQ/iEUtErB8SE/z54xjXYoYx2ZHBb+uTgmQnJCj/bHYqkqiMQb7OEw==
   dependencies:
     "@kubevious/entity-meta" "^1.0.42"
+    the-promise "^2.0.13"
+
+"@kubevious/ui-middleware@^1.0.44":
+  version "1.0.44"
+  resolved "https://registry.yarnpkg.com/@kubevious/ui-middleware/-/ui-middleware-1.0.44.tgz#d10f1caa1288f2f7d91278987eca3fd320330b71"
+  integrity sha512-njOf48/cBn+tRDy5ky4ru7s9ByaQNit/kXA3oru0otb7sPYfwhLjIS1KlQY5VAxwWPzY+OVCb2o9NyqFnd7OMQ==
+  dependencies:
+    "@kubevious/entity-meta" "^1.0.56"
     the-promise "^2.0.13"
 
 "@kubevious/websocket-server@^1.0.28":

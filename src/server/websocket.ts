@@ -6,11 +6,12 @@ import { WebServer } from './';
 
 import { WebSocketBaseServer } from '@kubevious/websocket-server'
 
-import { HasKind, SocketContext, SocketLocals, WebSocketHandler, WebSocketKind } from './types';
+import { HasKind, SocketContext, SocketLocals, WebSocketHandler } from './types';
 import { FetchHandler, WSFetcherParams} from './types';
 import { TargetExtrasBuilder, WSTargetExtrasBuilderParams} from './types';
 
 import { SubscriptionMeta } from '@kubevious/websocket-server/dist/base-server';
+import { WebSocketKind } from '@kubevious/ui-middleware';
 
 import { RULE_ENGINE_HANDLERS } from './websocket-handlers/rule-engine';
 import { DIAGRAM_HANDLERS } from './websocket-handlers/diagram';
