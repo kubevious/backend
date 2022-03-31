@@ -2,6 +2,7 @@ import _ from 'the-lodash';
 import { Context } from '../context';
 import { Router } from '@kubevious/helper-backend'
 import Joi from 'joi';
+import { MarkerConfig, MarkersExportData } from '@kubevious/ui-middleware/dist/services/marker'
 
 import { MarkersImportData } from '@kubevious/ui-middleware/dist/services/marker'
 
@@ -34,7 +35,7 @@ export default function (router: Router, context: Context) {
     })
 
     // Create Marker
-    router.post<{}, any, MarkerQuery>('/marker', (req, res) => {
+    router.post<{}, MarkerConfig, MarkerQuery>('/marker', (req, res) => {
 
         return context.markerEditor.createMarker(req.body, req.query.marker);
 

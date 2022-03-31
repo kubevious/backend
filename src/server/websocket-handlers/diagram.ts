@@ -5,7 +5,6 @@ export const DIAGRAM_HANDLERS : WebSocketHandler[] = [
 
     {
         kind: WebSocketKind.latest_snapshot_id,
-        needsRemoteSubscription: true,
         fetcher: ({ context }) => {
 
             return context.configAccessor.getLatestSnapshotId();

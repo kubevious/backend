@@ -50,7 +50,6 @@ export type FetchHandler = (params: WSFetcherParams) => Resolvable<any>;
 export interface WebSocketHandler
 {
     kind: WebSocketKind | WebSocketKind[],
-    needsRemoteSubscription?: boolean,
     contextFields?: string[],
     targetExtrasBuilder?: TargetExtrasBuilder,
     fetcher: FetchHandler,

@@ -14,6 +14,7 @@ import { SubscriptionMeta } from '@kubevious/websocket-server/dist/base-server';
 
 import { RULE_ENGINE_HANDLERS } from './websocket-handlers/rule-engine';
 import { DIAGRAM_HANDLERS } from './websocket-handlers/diagram';
+import { REPORTING_HANDLERS } from './websocket-handlers/reporting';
 
 type MyWebSocketServer = WebSocketBaseServer<SocketContext, SocketLocals>;
 
@@ -34,6 +35,7 @@ export class WebSocket
 
         this._loadHandlers(RULE_ENGINE_HANDLERS);
         this._loadHandlers(DIAGRAM_HANDLERS);
+        this._loadHandlers(REPORTING_HANDLERS);
     }
 
     get logger() {
@@ -105,6 +107,18 @@ export class WebSocket
             .then(result => {
                 this._socket!.notifyAll(globalTarget, result);
             });
+    }
+
+    invalidateAllOfAKind(kind: WebSocketKind)
+    {
+        this.logger.info("[invalidateAllOfAKind] kind: %s", kind);
+        
+        const allTargets = this._socket!.extractAllTargets() as HasKind[];
+        const targets = allTargets.filter(x => x.kind === kind);
+
+        return Promise.serial(targets, target => {
+            return this.invalidateAll(target)
+        });
     }
 
     private _fetchData(target: HasKind)

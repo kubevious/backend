@@ -22,9 +22,10 @@ import { SnapshotReader } from '@kubevious/data-models/dist/accessors/snapshot-r
 import { BufferUtils } from '@kubevious/data-models';
 import { TimelineRow } from '@kubevious/data-models/dist/models/snapshots';
 
-import VERSION from './version'
 import { DiagramDataFetcher } from './apps/diagram-data-fetcher';
+import { ClusterStatusAccessor } from './apps/cluster-status-accessor';
 
+import VERSION from './version'
 
 export class Context
 {
@@ -50,7 +51,7 @@ export class Context
 
     private _notificationsApp: NotificationsApp;
     private _diagramDataFetcher : DiagramDataFetcher;
-
+    private _clusterStatusAccessor : ClusterStatusAccessor;
 
     constructor(backend : Backend)
     {
@@ -79,6 +80,8 @@ export class Context
         this._notificationsApp = new NotificationsApp(this);
 
         this._diagramDataFetcher = new DiagramDataFetcher(this);
+
+        this._clusterStatusAccessor = new ClusterStatusAccessor(this.logger, this);
 
         this._server = new WebServer(this);
         this._websocket = new WebSocket(this, this._server);
@@ -140,6 +143,10 @@ export class Context
 
     get websocket() {
         return this._websocket;
+    }
+
+    get clusterStatusAccessor() {
+        return this._clusterStatusAccessor;
     }
 
     get worldvious() : WorldviousClient {

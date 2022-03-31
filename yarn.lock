@@ -64,10 +64,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@kubevious/data-models@^1.0.15":
-  version "1.0.15"
-  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.15.tgz#7e30d44b47fbeba27cf5912f40ac943b4013e355"
-  integrity sha512-Or0yzL7vnKY2xd3kThJZgLiuc3Mg00JjsQziUy1fxSZYpAHf1+KDFEMGDfdRCRMZulGjOY6ePlWU4W9Hsj+iRQ==
+"@kubevious/data-models@^1.0.16":
+  version "1.0.16"
+  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.16.tgz#69f6b3a529f4c72cf829b234a2044764f920f238"
+  integrity sha512-IFhh8NZFlZdqvS4hiB/sQ1ii3fX+ers19SsjQYjy53Tln8MjWeEwPkTH6QGE7OVsAmMBQmRk34MK1ekp0tqFdw==
   dependencies:
     "@kubevious/easy-data-store" "^1.0.11"
     "@kubevious/helper-backend" "^1.0.38"
@@ -199,10 +199,10 @@
     "@kubevious/entity-meta" "^1.0.42"
     the-promise "^2.0.13"
 
-"@kubevious/websocket-server@^1.0.27":
-  version "1.0.27"
-  resolved "https://registry.yarnpkg.com/@kubevious/websocket-server/-/websocket-server-1.0.27.tgz#0267653900f1f1b584a2024b12a236327012f083"
-  integrity sha512-N72JFqLA8JzJLeTM3T4+bXB+prJcKACsswQKRR7NKk9QvMY4QP8IeNt4rkBKX3TyXN4N+f89HsNj6K6VAXJEDQ==
+"@kubevious/websocket-server@^1.0.28":
+  version "1.0.28"
+  resolved "https://registry.yarnpkg.com/@kubevious/websocket-server/-/websocket-server-1.0.28.tgz#231675dfb45394f25cb1072efe79c817ebba9c88"
+  integrity sha512-la8vjL9ZmnXsx87aejb5cGkTBRarWQsHNCI2AimDV9Gpc5BDPKph4YMqYBYFvqlsXEYtJNiaW6xe1F1JReZNAg==
   dependencies:
     express "^4.17.1"
     socket.io "^4.1.2"
