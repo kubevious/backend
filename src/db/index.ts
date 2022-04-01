@@ -9,10 +9,11 @@ import { DataStore, DataStoreTableAccessor, MySqlDriver, MySqlStatement } from '
 
 import { Context } from '../context' ;
 
-import { ConfigAccessors, prepareConfig } from '@kubevious/data-models/dist/models/config'
-import { NotificationAccessors, prepareNotification } from '@kubevious/data-models/dist/models/notification'
-import { SnapshotsAccessors, prepareSnapshots } from '@kubevious/data-models/dist/models/snapshots'
-import { RuleEngineAccessors, prepareRuleEngine } from '@kubevious/data-models/dist/models/rule_engine'
+import { ConfigAccessors, prepareConfig } from '@kubevious/data-models'
+import { NotificationAccessors, prepareNotification } from '@kubevious/data-models'
+import { SnapshotsAccessors, prepareSnapshots } from '@kubevious/data-models'
+import { RuleEngineAccessors, prepareRuleEngine } from '@kubevious/data-models'
+import { ValidationAccessors, prepareValidation } from '@kubevious/data-models'
 
 
 export class Database
@@ -26,6 +27,7 @@ export class Database
     private _notification : NotificationAccessors;
     private _snapshots : SnapshotsAccessors;
     private _ruleEngine : RuleEngineAccessors;
+    private _validation : ValidationAccessors;
 
 
     constructor(logger : ILogger, context : Context)
@@ -39,6 +41,7 @@ export class Database
         this._notification = prepareNotification(this._dataStore);
         this._snapshots = prepareSnapshots(this._dataStore);
         this._ruleEngine = prepareRuleEngine(this._dataStore);
+        this._validation = prepareValidation(this._dataStore);
     }
 
     get logger() {
@@ -63,6 +66,10 @@ export class Database
 
     get ruleEngine() {
         return this._ruleEngine;
+    }
+
+    get validation() {
+        return this._validation;
     }
 
     init()

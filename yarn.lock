@@ -64,10 +64,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@kubevious/data-models@^1.0.16":
-  version "1.0.16"
-  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.16.tgz#69f6b3a529f4c72cf829b234a2044764f920f238"
-  integrity sha512-IFhh8NZFlZdqvS4hiB/sQ1ii3fX+ers19SsjQYjy53Tln8MjWeEwPkTH6QGE7OVsAmMBQmRk34MK1ekp0tqFdw==
+"@kubevious/data-models@^1.0.17":
+  version "1.0.17"
+  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.17.tgz#668d62bbe1c1f08e35776df13b13de1c823892f9"
+  integrity sha512-lQRDdDDBHiWCRz1pm6FhCiLqWzrQfl3sZpesMNEEIoN4yuQXr8WzW9LbOlRTSDcrPKQSBAjsU1Ygzo/7a3HFEQ==
   dependencies:
     "@kubevious/easy-data-store" "^1.0.11"
     "@kubevious/helper-backend" "^1.0.38"
@@ -90,7 +90,7 @@
     the-logger "^2.0.14"
     the-promise "^2.0.13"
 
-"@kubevious/entity-meta@^1.0.42", "@kubevious/entity-meta@^1.0.45", "@kubevious/entity-meta@^1.0.54", "@kubevious/entity-meta@^1.0.55", "@kubevious/entity-meta@^1.0.56":
+"@kubevious/entity-meta@^1.0.45", "@kubevious/entity-meta@^1.0.55", "@kubevious/entity-meta@^1.0.56":
   version "1.0.56"
   resolved "https://registry.yarnpkg.com/@kubevious/entity-meta/-/entity-meta-1.0.56.tgz#e2460fee0d7ae931b1da911725e9f0aa556a9e48"
   integrity sha512-KW9dhxn6bEGK9z4/426i8Un+/uPc1HLUoZA61okj26s+BKnB9uOte2PPGdl0tu/I0WIx2zZ9zMj21NywdfH09g==
@@ -122,13 +122,13 @@
     the-logger "^2.0.9"
     the-promise "^2.0.13"
 
-"@kubevious/helper-logic-processor@^1.0.70":
-  version "1.0.70"
-  resolved "https://registry.yarnpkg.com/@kubevious/helper-logic-processor/-/helper-logic-processor-1.0.70.tgz#e6b1a3f863f44e3c26ae927e0aba288742d01a63"
-  integrity sha512-ljfW1NP0bTfFMkpsQYbBZYc5R/hhZ6yehf+LEF+qvtwrX/Mc7K0GceUTIChCq6/52jm/9Fk1/29OXyS/5DQLQA==
+"@kubevious/helper-logic-processor@^1.0.71":
+  version "1.0.71"
+  resolved "https://registry.yarnpkg.com/@kubevious/helper-logic-processor/-/helper-logic-processor-1.0.71.tgz#49bf3ea73ec1b1b5144d9945f57bb0b348de294a"
+  integrity sha512-4YeqTI1PPnW4O+Bat9r5+ANLDyTEwMZqUmFR8H3xXeOx1LNwIkgMajz4mzz/hSf5eUrFSl6ZzdSUbeCtCdAXzQ==
   dependencies:
-    "@kubevious/entity-meta" "^1.0.54"
-    "@kubevious/helpers" "^1.0.62"
+    "@kubevious/entity-meta" "^1.0.56"
+    "@kubevious/helper-backend" "^1.0.38"
     "@kubevious/state-registry" "^1.0.13"
     glob "^7.1.7"
     glob-promise "^4.2.0"
@@ -160,7 +160,7 @@
     the-logger "^2.0.14"
     the-promise "^2.0.13"
 
-"@kubevious/helpers@^1.0.62", "@kubevious/helpers@^1.0.63":
+"@kubevious/helpers@^1.0.62":
   version "1.0.63"
   resolved "https://registry.yarnpkg.com/@kubevious/helpers/-/helpers-1.0.63.tgz#69070e0651e9770d331d15016ca8d13555b3ea9b"
   integrity sha512-/aJl7iYCfMu1wpTI3flYvR/xF+Yvz9ulUiXZ2MN+1VgYV9OczMtQCkrmnekDAnQ4SOhOY08/kCovgn1QBct5TA==
@@ -191,18 +191,10 @@
     the-logger "^2.0.14"
     the-promise "^2.0.13"
 
-"@kubevious/ui-middleware@^1.0.43":
-  version "1.0.43"
-  resolved "https://registry.yarnpkg.com/@kubevious/ui-middleware/-/ui-middleware-1.0.43.tgz#c2d21109217fe3cc58b7f14216b73c9178b4e2cc"
-  integrity sha512-i4UzzBznqEO8nyysb3LjuFoxxV/VrtT3uQ/iEUtErB8SE/z54xjXYoYx2ZHBb+uTgmQnJCj/bHYqkqiMQb7OEw==
-  dependencies:
-    "@kubevious/entity-meta" "^1.0.42"
-    the-promise "^2.0.13"
-
-"@kubevious/ui-middleware@^1.0.44":
-  version "1.0.44"
-  resolved "https://registry.yarnpkg.com/@kubevious/ui-middleware/-/ui-middleware-1.0.44.tgz#d10f1caa1288f2f7d91278987eca3fd320330b71"
-  integrity sha512-njOf48/cBn+tRDy5ky4ru7s9ByaQNit/kXA3oru0otb7sPYfwhLjIS1KlQY5VAxwWPzY+OVCb2o9NyqFnd7OMQ==
+"@kubevious/ui-middleware@^1.0.43", "@kubevious/ui-middleware@^1.0.46":
+  version "1.0.46"
+  resolved "https://registry.yarnpkg.com/@kubevious/ui-middleware/-/ui-middleware-1.0.46.tgz#10d8ca7739bbf32d44bf0158ea48a38b9a8124df"
+  integrity sha512-+vqrUrNL7QaJkQQkadI9IrBWNCFzt3kkrBcO6lIO/VT0TwpfVlwoVrnjHL8AifmKIgb4sb3fzA4JO4NVEunAkA==
   dependencies:
     "@kubevious/entity-meta" "^1.0.56"
     the-promise "^2.0.13"
