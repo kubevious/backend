@@ -21,23 +21,22 @@
   },
   "homepage": "https://github.com/kubevious/kubevious",
   "dependencies": {
-    "@kubevious/data-models": "^1.0.17",
+    "@kubevious/data-models": "^1.0.19",
     "@kubevious/easy-data-store": "^1.0.11",
     "@kubevious/helper-backend": "^1.0.38",
     "@kubevious/helper-logic-processor": "^1.0.71",
+    "@kubevious/helper-redis": "^1.0.17",
     "@kubevious/helper-rule-engine": "^1.0.22",
     "@kubevious/ui-middleware": "^1.0.46",
     "@kubevious/websocket-server": "^1.0.28",
     "@kubevious/worldvious-client": "^1.0.6",
     "cron": "^1.8.2",
-    "flexsearch": "^0.6.32",
     "joi": "^17.3.0",
     "js-yaml": "^3.13.1",
     "moment": "^2.29.1",
     "the-lodash": "^2.0.9",
     "the-logger": "^2.0.14",
     "the-promise": "^2.0.13",
-    "uuid": "^7.0.2",
     "uuid-parse": "^1.1.0"
   },
   "devDependencies": {
@@ -45,7 +44,6 @@
     "@types/mocha": "^8.0.3",
     "@types/node": "^14.14.5",
     "@types/should": "^13.0.0",
-    "@types/uuid": "^8.3.0",
     "@types/uuid-parse": "^1.0.0",
     "@typescript-eslint/eslint-plugin": "^3.10.0",
     "@typescript-eslint/parser": "^3.10.0",
@@ -66,7 +64,8 @@
     "@kubevious/helper-rule-engine": "^1.0.22",
     "@kubevious/websocket-server": "^1.0.28",
     "@kubevious/worldvious-client": "^1.0.6",
-    "@kubevious/data-models": "^1.0.17",
-    "@kubevious/ui-middleware": "^1.0.46"
+    "@kubevious/data-models": "^1.0.19",
+    "@kubevious/ui-middleware": "^1.0.46",
+    "@kubevious/helper-redis": "^1.0.17"
   }
 }

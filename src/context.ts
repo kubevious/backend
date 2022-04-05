@@ -5,6 +5,8 @@ import { Promise } from 'the-promise';
 import { Backend } from '@kubevious/helper-backend'
 
 import { Database } from './db';
+import { RedisClient } from '@kubevious/helper-redis'
+
 import { MarkerAccessor } from './apps/rule-engine/marker-accessor';
 import { MarkerEditor } from './apps/rule-engine/marker-editor';
 import { RuleAccessor } from './apps/rule-engine/rule-accessor';
@@ -25,6 +27,9 @@ import { TimelineRow } from '@kubevious/data-models/dist/models/snapshots';
 import { DiagramDataFetcher } from './apps/diagram-data-fetcher';
 import { ClusterStatusAccessor } from './apps/cluster-status-accessor';
 
+import { SearchEngine } from './apps/search-engine';
+
+
 import VERSION from './version'
 
 export class Context
@@ -39,6 +44,7 @@ export class Context
     private _websocket: WebSocket;
 
     private _dataStore: Database;
+    private _redis : RedisClient;
 
     private _configAccessor : ConfigAccessor;
 
@@ -53,6 +59,8 @@ export class Context
     private _diagramDataFetcher : DiagramDataFetcher;
     private _clusterStatusAccessor : ClusterStatusAccessor;
 
+    private _searchEngine : SearchEngine;
+
     constructor(backend : Backend)
     {
         this._backend = backend;
@@ -63,6 +71,7 @@ export class Context
         this._worldvious = new WorldviousClient(this.logger, 'backend', VERSION);
 
         this._dataStore = new Database(this._logger, this);
+        this._redis = new RedisClient(this.logger.sublogger('Redis'));
 
         this._configAccessor = new ConfigAccessor(this._dataStore.dataStore, this._dataStore.config);
 
@@ -83,8 +92,11 @@ export class Context
 
         this._clusterStatusAccessor = new ClusterStatusAccessor(this.logger, this);
 
+        this._searchEngine = new SearchEngine(this);
+
         this._server = new WebServer(this);
         this._websocket = new WebSocket(this, this._server);
+
 
         backend.registerErrorHandler((reason) => {
             return this.worldvious.acceptError(reason);
@@ -95,6 +107,8 @@ export class Context
         backend.stage("setup-metrics-tracker", () => this._setupMetricsTracker());
 
         backend.stage("setup-db", () => this._dataStore.init());
+
+        backend.stage("setup-redis", () => this._redis.run());
 
         backend.stage("setup-server", () => this._server.run());
         backend.stage("setup-websocket", () => this._websocket.run());
@@ -119,6 +133,10 @@ export class Context
 
     get dataStore() {
         return this._dataStore;
+    }
+
+    get redis() {
+        return this._redis;
     }
 
     get configAccessor() {
@@ -176,6 +194,10 @@ export class Context
 
     get diagramDataFetcher() {
         return this._diagramDataFetcher;
+    }
+
+    get searchEngine() {
+        return this._searchEngine;
     }
 
     private _setupMetricsTracker()
