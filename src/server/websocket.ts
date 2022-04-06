@@ -16,6 +16,7 @@ import { WebSocketKind } from '@kubevious/ui-middleware';
 import { RULE_ENGINE_HANDLERS } from './websocket-handlers/rule-engine';
 import { DIAGRAM_HANDLERS } from './websocket-handlers/diagram';
 import { REPORTING_HANDLERS } from './websocket-handlers/reporting';
+import { WORLDVIOUS_HANDLERS } from './websocket-handlers/worldvious';
 
 type MyWebSocketServer = WebSocketBaseServer<SocketContext, SocketLocals>;
 
@@ -37,6 +38,7 @@ export class WebSocket
         this._loadHandlers(RULE_ENGINE_HANDLERS);
         this._loadHandlers(DIAGRAM_HANDLERS);
         this._loadHandlers(REPORTING_HANDLERS);
+        this._loadHandlers(WORLDVIOUS_HANDLERS);
     }
 
     get logger() {

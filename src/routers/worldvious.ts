@@ -2,12 +2,22 @@ import _ from 'the-lodash';
 import { Context } from '../context';
 import { Router } from '@kubevious/helper-backend'
 
+import {
+    WorldviousNotificationKind,
+    WorldviousFeedbackSubmitData,
+   } from '@kubevious/ui-middleware/dist/services/worldvious';
+
+
 export default function (router: Router, context: Context) {
 
     router.url('/api/v1/support');
     
+    router.get('/notifications-info', function (req, res) {
+        return context.notificationsApp.notificationsInfo;
+    });
+
     router.get('/notifications', function (req, res) {
-        return context.notificationsApp.notificationItems;
+        return context.notificationsApp.notifications;
     });
 
     router.post('/notification/snooze', function (req, res) {
@@ -19,11 +29,15 @@ export default function (router: Router, context: Context) {
         .then(() => ({}));
     });
 
-    router.post('/feedback', function (req, res) {
-        return context.worldvious.reportFeedback(req.body.id, req.body.answers)
+    router.post<{}, WorldviousFeedbackSubmitData, any>('/feedback', (req, res) => {
+
+        const data = req.body as WorldviousFeedbackSubmitData;
+
+        return Promise.resolve()
+            .then(() => context.worldvious.reportFeedback(data))
             .then(() => {
                 return context.notificationsApp.snooze(
-                    req.body.kind,
+                    WorldviousNotificationKind.feedbackRequest,
                     req.body.id
                 )
             })

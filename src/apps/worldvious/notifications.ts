@@ -6,11 +6,17 @@ import { parse as uuidParse, unparse as uuidUnparse } from 'uuid-parse'
 
 import moment from 'moment';
 
-import { Context } from '../context';
-import { WorldviousClient, NotificationItem, FeedbackRequest } from '@kubevious/worldvious-client';
+import { Context } from '../../context';
+import { WorldviousClient } from '@kubevious/worldvious-client';
+import { WebSocketKind } from '@kubevious/ui-middleware';
+
+import { WorldviousVersionInfoResult,
+    WorldviousNotificationItem
+   } from '@kubevious/ui-middleware/dist/services/worldvious';
+
 import { NotificationSnoozeRow } from '@kubevious/data-models/dist/models/notification';
 
-import { Database } from '../db/index';
+import { Database } from '../../db';
 
 
 export class NotificationsApp
@@ -22,8 +28,10 @@ export class NotificationsApp
     private _worldvious : WorldviousClient;
 
     private _isDictLoaded = false;
-    private _allNotifications : NotificationItem[] = [];
-    private _notifications : NotificationItem[] = [];
+    private _allNotifications : WorldviousNotificationItem[] = [];
+    private _notifications : WorldviousVersionInfoResult = {
+        notifications: []
+    };
     private _snooseDict : Record<string, { isRead? : boolean, snoozeTill? : moment.Moment } > = {};
 
     constructor(context : Context)
@@ -42,14 +50,20 @@ export class NotificationsApp
         return this._logger;
     }
 
-    get notificationItems() {
+    get notifications() {
         return this._notifications;
+    }
+
+    get notificationsInfo() {
+        return {
+            count: this._notifications.notifications.length
+        };
     }
 
     init()
     {
-        this._worldvious.onNotificationsChanged(notifications => {
-            this._allNotifications = notifications;
+        this._worldvious.onNotificationsChanged(result => {
+            this._allNotifications = result?.notifications ?? [];
             this._decideNotifications();
         });
     }
@@ -94,7 +108,7 @@ export class NotificationsApp
                         return { snoozeTill : moment(x.snooze) }
                     });
 
-                this._decideNotifications()
+                this._decideNotifications();
             })
             ;
     }
@@ -107,35 +121,37 @@ export class NotificationsApp
         this.logger.info("Current Notifications: %s ", this._allNotifications.length);
 
         const now = moment();
-        this._notifications = 
-            this._allNotifications.filter(x => {
-                const notif = <FeedbackRequest>x;
-                const key = this._makeKey(notif.kind, notif.id);
-                const snoozeInfo = this._snooseDict[key];
-                if (snoozeInfo) {
-                    if (snoozeInfo.isRead) {
-                        return false;
+        this._notifications = {
+            notifications:
+                this._allNotifications.filter(x => {
+                    const key = this._makeKey(x.kind, (x as any).id);
+                    const snoozeInfo = this._snooseDict[key];
+                    if (snoozeInfo) {
+                        if (snoozeInfo.isRead) {
+                            return false;
+                        }
+                        if (now.isBefore(snoozeInfo.snoozeTill)) {
+                            return false;
+                        }
                     }
-                    if (now.isBefore(snoozeInfo.snoozeTill)) {
-                        return false;
-                    }
-                }
-                return true;
-            });
-        this.logger.info("Visible Notifications: %s ", this._notifications.length);
+                    return true;
+                })
+        }
 
-        this.context.websocket.notifyAll({ kind: 'notifications' }, {
-            notifications: this._notifications
-        });
-        this.context.websocket.notifyAll({ kind: 'notifications-info' }, {
-            count: this._notifications.length
-        });
+        this.logger.info("Visible Notifications: %s ", this._notifications.notifications.length);
+
+        // this.logger.info("Visible Notifications: ", this._notifications);
+
+        this.context.websocket.invalidateAll({ kind: WebSocketKind.worldvious_updates });
 
     }
 
-    private _makeKey(kind: string, id: string)
+    private _makeKey(kind: string, id?: string)
     {
-        return `${kind}-${id}`;
+        if (id) {
+            return `${kind}-${id}`;
+        }
+        return `${kind}`;
     }
 
 }

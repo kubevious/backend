@@ -63,7 +63,7 @@ export class BackendMetrics
             value: this._context.redis.isConnected
         });
 
-        return Promise.serial(this._microservices, x => {
+        return Promise.parallel(this._microservices, x => {
             return this._fetchFromBackend(x, metrics);
         })
         .then(() => metrics);

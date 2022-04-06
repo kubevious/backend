@@ -11,7 +11,7 @@ import { MarkerAccessor } from './apps/rule-engine/marker-accessor';
 import { MarkerEditor } from './apps/rule-engine/marker-editor';
 import { RuleAccessor } from './apps/rule-engine/rule-accessor';
 import { RuleEditor } from './apps/rule-engine/rule-editor';
-import { NotificationsApp } from './apps/notifications';
+import { NotificationsApp } from './apps/worldvious/notifications';
 import { WorldviousClient } from '@kubevious/worldvious-client';
 
 import { WebServer } from './server';
