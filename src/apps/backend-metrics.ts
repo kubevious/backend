@@ -28,7 +28,7 @@ export class BackendMetrics
         if (!process.env.PARSER_BASE_URL) {
             throw new Error("PARSER_BASE_URL not set");
         }
-        // this._addMicroservice("Parser", process.env.PARSER_BASE_URL);
+        this._addMicroservice("Parser", process.env.PARSER_BASE_URL);
     }
 
     get logger() {
