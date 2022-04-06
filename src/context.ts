@@ -28,6 +28,7 @@ import { DiagramDataFetcher } from './apps/diagram-data-fetcher';
 import { ClusterStatusAccessor } from './apps/cluster-status-accessor';
 
 import { SearchEngine } from './apps/search-engine';
+import { BackendMetrics } from './apps/backend-metrics';
 
 
 import VERSION from './version'
@@ -60,6 +61,7 @@ export class Context
     private _clusterStatusAccessor : ClusterStatusAccessor;
 
     private _searchEngine : SearchEngine;
+    private _backendMetrics : BackendMetrics;
 
     constructor(backend : Backend)
     {
@@ -79,6 +81,8 @@ export class Context
         this._markerEditor = new MarkerEditor(this);
         this._ruleAccessor = new RuleAccessor(this);
         this._ruleEditor = new RuleEditor(this);
+
+        this._backendMetrics = new BackendMetrics(this);
 
         this._seriesResamplerHelper = new SeriesResampler<TimelineRow>(200)
             .column("changes", x => _.max(x) ?? 0)
@@ -181,6 +185,10 @@ export class Context
 
     get executionLimiter() {
         return this._server.executionLimiter;
+    }
+
+    get backendMetrics() {
+        return this._backendMetrics;
     }
 
     public makeSnapshotReader(snapshotId: string)

@@ -44,6 +44,10 @@ export class Database
         this._validation = prepareValidation(this._dataStore);
     }
 
+    get isConnected() {
+        return this._dataStore.isConnected;
+    }
+
     get logger() {
         return this._logger;
     }

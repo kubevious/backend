@@ -8,6 +8,9 @@ export CONTAINER_NAME=kubevious-backend
 export NETWORK_NAME=kubevious
 export IMAGE_NAME=kubevious-backend
 
+export COLLECTOR_BASE_URL=http://localhost:4003
+export PARSER_BASE_URL=http://localhost:4004
+
 source ../dependencies.git/mysql/runtime-configuration.sh
 source ../dependencies.git/redisearch/runtime-configuration.sh
 source ../dependencies.git/worldvious/configuration.sh
