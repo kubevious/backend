@@ -204,10 +204,10 @@
     the-logger "^2.0.14"
     the-promise "^2.0.13"
 
-"@kubevious/ui-middleware@^1.0.43", "@kubevious/ui-middleware@^1.0.52", "@kubevious/ui-middleware@^1.0.53":
-  version "1.0.53"
-  resolved "https://registry.yarnpkg.com/@kubevious/ui-middleware/-/ui-middleware-1.0.53.tgz#abef68b8310fdd10ea1bc6f61ad886437eb65a69"
-  integrity sha512-I/8yTGPN661aFCsSRZmO06oR8agQDgfIqL7wzOIT++yaHexgcUPpODU/wDMwGVbu4LJKgj1H2d4pbkh/NpWpfA==
+"@kubevious/ui-middleware@^1.0.43", "@kubevious/ui-middleware@^1.0.52", "@kubevious/ui-middleware@^1.0.58":
+  version "1.0.58"
+  resolved "https://registry.yarnpkg.com/@kubevious/ui-middleware/-/ui-middleware-1.0.58.tgz#26c57b1912c9ea2765be78e951306cd043f19f73"
+  integrity sha512-zLi2cwE7msB/OrafCq4Ftw2M3whXSy5wVyTKenN51U3FO0YkbanVwWC6Ulue9Sc+pTnR8LjGZF6E+CYaOmGjeg==
   dependencies:
     "@kubevious/entity-meta" "^1.0.56"
     the-promise "^2.0.13"

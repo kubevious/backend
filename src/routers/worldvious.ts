@@ -5,6 +5,7 @@ import { Router } from '@kubevious/helper-backend'
 import {
     WorldviousNotificationKind,
     WorldviousFeedbackSubmitData,
+    WorldviousFeedbackSnoozeData,
    } from '@kubevious/ui-middleware/dist/services/worldvious';
 
 
@@ -20,7 +21,7 @@ export default function (router: Router, context: Context) {
         return context.notificationsApp.notifications;
     });
 
-    router.post('/notification/snooze', function (req, res) {
+    router.post<{}, WorldviousFeedbackSnoozeData>('/notification/snooze', function (req, res) {
         return context.notificationsApp.snooze(
             req.body.kind,
             req.body.id,
@@ -29,7 +30,7 @@ export default function (router: Router, context: Context) {
         .then(() => ({}));
     });
 
-    router.post<{}, WorldviousFeedbackSubmitData, any>('/feedback', (req, res) => {
+    router.post<{}, WorldviousFeedbackSubmitData>('/feedback', (req, res) => {
 
         const data = req.body as WorldviousFeedbackSubmitData;
 

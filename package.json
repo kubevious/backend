@@ -28,7 +28,7 @@
     "@kubevious/helper-redis": "^1.0.19",
     "@kubevious/helper-rule-engine": "^1.0.22",
     "@kubevious/http-client": "^1.0.19",
-    "@kubevious/ui-middleware": "^1.0.53",
+    "@kubevious/ui-middleware": "^1.0.58",
     "@kubevious/websocket-server": "^1.0.28",
     "@kubevious/worldvious-client": "^1.0.9",
     "cron": "^1.8.2",
@@ -65,7 +65,7 @@
     "@kubevious/websocket-server": "^1.0.28",
     "@kubevious/worldvious-client": "^1.0.9",
     "@kubevious/data-models": "^1.0.19",
-    "@kubevious/ui-middleware": "^1.0.53",
+    "@kubevious/ui-middleware": "^1.0.58",
     "@kubevious/helper-redis": "^1.0.19",
     "@kubevious/http-client": "^1.0.19"
   }

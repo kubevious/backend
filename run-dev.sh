@@ -17,6 +17,6 @@ export NODE_ENV=development
 # export DEBUG=express:*
 #  --max_old_space_size=2048
 
-source ../dependencies.git/worldvious/short-delays.sh
+# source ../dependencies.git/worldvious/short-delays.sh
 
 node .

@@ -53,7 +53,7 @@ export class RuleEditor
             })
     }
 
-    importMarkers(data: RulesExportData, deleteExtra: boolean)
+    importRules(data: RulesExportData, deleteExtra: boolean)
     {
         return this._ruleAccessor
             .importRules(data, deleteExtra)

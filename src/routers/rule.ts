@@ -44,8 +44,8 @@ export default function (router: Router, context: Context) {
     // Import Rules
     router.post<{}, RulesImportData>('/import-rules', (req, res) => {
 
-        return context.markerEditor
-            .importMarkers(req.body.data, req.body.deleteExtra);
+        return context.ruleEditor
+            .importRules(req.body.data, req.body.deleteExtra);
 
     })
     .bodySchema(
