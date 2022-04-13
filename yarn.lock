@@ -55,10 +55,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@kubevious/data-models@^1.0.19":
-  version "1.0.19"
-  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.19.tgz#e8e672151d9f6ac3e176fd4723f8012df85f2f52"
-  integrity sha512-1vDSFKPrUmbsxWTDDoQqWCQudTy8A2kUdOIvaBqJpMpnJfxWbRbOH1EwRNJj60IhtgFYGsh7UwgPECM5FXzXcA==
+"@kubevious/data-models@^1.0.20":
+  version "1.0.20"
+  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.20.tgz#22b0d622b5ec47687ca92b90e38c50bba72f5771"
+  integrity sha512-sxDNdiIUt0Sh9+wGL8Ml6EywO8CsgVIPzFuD1ciOXb3P+WfOARmvnzjEU+tJhn42fS/PRT3s2oRG4Q7wPBCOHA==
   dependencies:
     "@kubevious/easy-data-store" "^1.0.11"
     "@kubevious/helper-backend" "^1.0.38"
@@ -204,12 +204,13 @@
     the-logger "^2.0.14"
     the-promise "^2.0.13"
 
-"@kubevious/ui-middleware@^1.0.43", "@kubevious/ui-middleware@^1.0.52", "@kubevious/ui-middleware@^1.0.58":
-  version "1.0.58"
-  resolved "https://registry.yarnpkg.com/@kubevious/ui-middleware/-/ui-middleware-1.0.58.tgz#26c57b1912c9ea2765be78e951306cd043f19f73"
-  integrity sha512-zLi2cwE7msB/OrafCq4Ftw2M3whXSy5wVyTKenN51U3FO0YkbanVwWC6Ulue9Sc+pTnR8LjGZF6E+CYaOmGjeg==
+"@kubevious/ui-middleware@^1.0.43", "@kubevious/ui-middleware@^1.0.52", "@kubevious/ui-middleware@^1.0.62":
+  version "1.0.62"
+  resolved "https://registry.yarnpkg.com/@kubevious/ui-middleware/-/ui-middleware-1.0.62.tgz#2fccbbc01f53451e0665d74040264d205c97d5ea"
+  integrity sha512-e7kfROVKpHFlemouN86dLIwXP2lSbIFhx4l5OyoJE4q909cqpSYOp+MjA3eCrEf9ke14WmQ9DwaGHUoJ8/NQ1w==
   dependencies:
     "@kubevious/entity-meta" "^1.0.56"
+    "@kubevious/http-client" "^1.0.19"
     the-promise "^2.0.13"
 
 "@kubevious/websocket-server@^1.0.28":

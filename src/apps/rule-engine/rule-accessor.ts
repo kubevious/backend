@@ -4,11 +4,10 @@ import { ILogger } from 'the-logger' ;
 
 import { Context } from '../../context';
 
-
-import { HashUtils } from '@kubevious/data-models';
 import { RuleObject } from './types';
 
-import { RulesRow, RuleStatusRow } from '@kubevious/data-models/dist/models/rule_engine';
+import { RuleStatusRow } from '@kubevious/data-models/dist/models/rule_engine';
+import { makeDbRulesRow } from '@kubevious/data-models/dist/accessors/rules-engine';
 
 import { Database } from '../../db';
 import { RuleStatus, RuleResult } from '@kubevious/ui-middleware/dist/services/rule'
@@ -34,7 +33,10 @@ export class RuleAccessor
     queryAll()
     {
         return this._dataStore.table(this._dataStore.ruleEngine.Rules)
-            .queryMany();
+            .queryMany({}, 
+                {
+                    fields: { fields: [ 'name', 'enabled' ]}
+                });
     }
 
     queryEnabledRules() : Promise<RuleObject[]>
@@ -64,7 +66,10 @@ export class RuleAccessor
     getRule(name: string)
     {
         return this._dataStore.table(this._dataStore.ruleEngine.Rules)
-            .queryOne({ name: name });
+            .queryOne({ name: name },
+                {
+                    fields: { fields: [ 'name', 'target', 'script', 'enabled' ]}
+                });
     }
 
     createRule(config: RuleConfig, targetName: string)
@@ -79,9 +84,9 @@ export class RuleAccessor
                 }
             }))
             .then(() => {
-                const ruleObj = this.makeDbRule(config);
+                const ruleRow = makeDbRulesRow(config);
                 return this._dataStore.table(this._dataStore.ruleEngine.Rules)
-                    .create(ruleObj);
+                    .create(ruleRow);
             });
     }
 
@@ -93,40 +98,31 @@ export class RuleAccessor
 
     exportRules()
     {
-        return this.queryAll()
+        return this._dataStore.table(this._dataStore.ruleEngine.Rules)
+        .queryMany({}, 
+            {
+                fields: { fields: [ 'name', 'enabled', 'target', 'script' ]}
+            })
             .then(result => {
-                return {
+                const data : RulesExportData = {
                     kind: 'rules',
                     items: result.map(x => ({
-                        name: x.name,
-                        script: x.script,
-                        target: x.target,
-                        enabled: x.enabled,
+                        name: x.name!,
+                        script: x.script!,
+                        target: x.target!,
+                        enabled: x.enabled!,
                     })),
                 };
+                return data;
             });
     }
 
-    importRules(rules: { items: any[] }, deleteExtra: boolean)
+    importRules(rules: RulesExportData, deleteExtra: boolean)
     {
-        const items = rules.items.map(x => this.makeDbRule(x));
+        const items = rules.items.map(x => makeDbRulesRow(x));
         return this._dataStore.table(this._dataStore.ruleEngine.Rules)
             .synchronizer({}, !deleteExtra)
             .execute(items);
-    }
-
-    makeDbRule(rule: any)
-    {
-        const ruleObj : Partial<RulesRow> = {
-            name: rule.name,
-            enabled: rule.enabled,
-            target: rule.target,
-            script: rule.script,
-            date: new Date()
-        }
-        const hash = HashUtils.calculateObjectHash(ruleObj);
-        ruleObj.hash = hash;
-        return ruleObj;
     }
 
     getRulesStatuses()
