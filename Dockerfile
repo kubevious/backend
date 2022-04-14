@@ -3,9 +3,11 @@
 FROM kubevious/node-builder:14
 RUN node --version
 RUN npm --version
+RUN yarn --version
 WORKDIR /app
 COPY ./package*.json ./
-RUN npm ci
+COPY ./yarn.lock ./
+RUN yarn install --frozen-lockfile
 COPY ./src ./src
 COPY ./tsconfig.json ./
 RUN npm run build

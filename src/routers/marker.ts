@@ -2,68 +2,64 @@ import _ from 'the-lodash';
 import { Context } from '../context';
 import { Router } from '@kubevious/helper-backend'
 import Joi from 'joi';
+import { MarkerConfig, MarkersExportData } from '@kubevious/ui-middleware/dist/services/marker'
+
+import { MarkersImportData } from '@kubevious/ui-middleware/dist/services/marker'
 
 export default function (router: Router, context: Context) {
 
-    router.url('/api/v1');
+    router.url('/api/v1/rule-engine');
 
     /**** Marker Configuration ***/
 
     // List Makers
-    router.get('/markers/', function (req, res) {
-        var result = context.markerCache.queryMarkerList();
-        result = result.map(x => ({
-            name: x.name,
-            shape: x.shape,
-            color: x.color
-        }));
-        return result;
+    router.get('/markers/', (req, res) => {
+
+        return context.markerAccessor.queryAll()
+            .then(rows => {
+                return rows.map(x => {
+                    return {
+                        name: x.name,
+                        shape: x.shape,
+                        color: x.color
+                    };
+                })
+            });
+
     })
 
     // Get Marker
-    router.get('/marker/:name', function (req, res) {
-        var result = context.markerCache.queryMarker(req.params.name);
-        return result;
+    router.get<{}, any, MarkerQuery>('/marker', (req, res) => {
+
+        return context.markerAccessor.getMarker(req.query.marker);
     })
 
     // Create Marker
-    router.post('/marker/:name', function (req, res) {
-        var newMarker : any;
-        return context.markerAccessor
-            .createMarker(req.body, { name: req.params.name })
-            .then(result => {
-                newMarker = result;
-            })
-            .finally(() => context.markerCache.triggerUpdate())
-            .then(() => {
-                return newMarker;
-            })
+    router.post<{}, MarkerConfig, MarkerQuery>('/marker', (req, res) => {
+
+        return context.markerEditor.createMarker(req.body, req.query.marker);
+
     })
 
     // Delete Marker
-    router.delete('/marker/:name', function (req, res) {
-        return context.markerAccessor
-            .deleteMarker(req.params.name)
-            .finally(() => context.markerCache.triggerUpdate())
-            .then(() => {
-                return {};
-            });
+    router.delete<{}, any, MarkerQuery>('/marker', (req, res) => {
+
+        return context.markerEditor.deleteMarker(req.query.marker);
+
     })
 
     // Export Makers
-    router.get('/markers/export', function (req, res) {
+    router.get('/export-markers', (req, res) => {
         return context.markerAccessor
             .exportMarkers();
     })
 
     // Import Makers
-    router.post('/markers/import', function (req, res) {
-        return context.markerAccessor
-            .importMarkers(req.body.data, req.body.deleteExtra)
-            .finally(() => context.markerCache.triggerUpdate())
-            .then(() => {
-                return {};
-            });
+    router.post<{}, MarkersImportData>('/import-markers', (req, res) => {
+
+        return context.markerEditor
+            .importMarkers(req.body.data, req.body.deleteExtra);
+
     })
     .bodySchema(
         Joi.object({
@@ -80,15 +76,19 @@ export default function (router: Router, context: Context) {
     /**** Marker Operational ***/
 
     // List Marker Statuses
-    router.get('/markers-statuses', function (req, res) {
-        var result = context.markerCache.getMarkersStatuses()
-        return result;
+    router.get('/markers-statuses', (req, res) => {
+        return context.markerAccessor.getMarkersStatuses();
     })
     
     // Get Marker Result
-    router.get('/marker-result/:name', function (req, res) {
-        var result = context.markerCache.getMarkerResult(req.params.name)
-        return result;
+    router.get<{}, any, MarkerQuery>('/marker-result', (req, res) => {
+        return context.markerAccessor.getMarkerResult(req.query.marker);
     })
 
+}
+
+
+interface MarkerQuery
+{
+    marker: string
 }

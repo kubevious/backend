@@ -1,166 +1,228 @@
 import _ from 'the-lodash';
+import { ILogger } from 'the-logger';
 import { Context } from '../context';
 import { Router } from '@kubevious/helper-backend'
 import Joi from 'joi';
 
-import * as DateUtils from '@kubevious/helpers/dist/date-utils';
-import { Snapshot } from '@kubevious/helpers/dist/history';
+import { BufferUtils, NodeHistoryReader } from '@kubevious/data-models';
 
-import { parentDn as makeParentDn } from '@kubevious/helpers/dist/dn-utils';
+import { Helpers } from '../server';
 
-export default function (router: Router, context: Context) {
+import { PartitionUtils } from '@kubevious/data-models';
+import { TimelineRow } from '@kubevious/data-models/dist/models/snapshots';
+
+export default function (router: Router, context: Context, logger: ILogger, { dataStore } : Helpers) {
 
     router.url('/api/v1/history');
     
-    router.get('/timeline', function(req, res) {
-        var dateFrom = null;
-        if (req.query.from) {
-            dateFrom = DateUtils.makeDate(req.query.from);
-        }
-        var dateTo = null;
-        if (req.query.to) {
-            dateTo = DateUtils.makeDate(req.query.to);
-        }
+    router.get<{}, any, any>('/timeline_preview', (req, res) => {
 
-        return context.historySnapshotReader.queryTimeline(dateFrom, dateTo)
-            .then(data => {
-                var result = data.map(x => {
-                    return {
-                        date: x.date,
-                        changes: x.changes,
-                        error: x.error,
-                        warn: x.warn
+        const startPartId = getStartPartitionId();
+
+        return dataStore.table(dataStore.snapshots.Timeline)
+            .queryMany(
+                {},
+                {
+                    fields: { 
+                        fields: ['date', 'changes', 'error', 'warn'] 
+                    },
+                    filters: {
+                        fields: [
+                            {
+                                name: 'part',
+                                operator: '>=',
+                                value: startPartId
+                            }
+                        ]
                     }
-                });
-
-                return context.seriesResamplerHelper.process(result);
-            });
-    });
-
-
-    router.get('/snapshot', function(req, res) {
-        var date = DateUtils.makeDate(req.query.date); 
-
-        return context.historySnapshotReader.querySnapshotForDate(date, 'node')
-            .then(snapshot => {
-                if (!snapshot) {
-                    return {};
                 }
-                return generateTree(snapshot);
-            })
+            )
+            .then(results => {
+                // for(let x of results)
+                // {
+                //     (<any>x).snapshot_id = BufferUtils.toStr(x.snapshot_id!);
+                // }
+                // return results;
+
+                return context.seriesResamplerHelper.process(results as TimelineRow[]);
+            });
     })
-    .querySchema(
-        Joi.object({
-            date: Joi.string().required()
-        })
-    )
     ;
 
-    router.get('/props', function(req, res) {
-        const scopeDn : string = <string>req.query.dn;
 
-        var date = DateUtils.makeDate(req.query.date); 
-        return context.historySnapshotReader.queryDnSnapshotForDate(scopeDn, date, ['props'])
-            .then(snapshot => {
-                var result = [];
-                if (snapshot) 
+    router.get<{}, any, TimelineQuery >('/timeline', (req, res) => {
+
+        const startPartId = getStartPartitionId();
+
+        const partitionFrom = Math.max(PartitionUtils.getPartitionIdFromDate(req.query.from), startPartId);
+        const partitionTo = PartitionUtils.getPartitionIdFromDate(req.query.to);
+
+        return dataStore.table(dataStore.snapshots.Timeline)
+            .queryMany(
+                {},
                 {
-                    for(var item of snapshot.getItems())
-                    {
-                        if (item.config_kind == 'props')
-                        {
-                            result.push(item.config);
-                        }
+                    fields: { fields: ['date', 'changes', 'error', 'warn'] }, 
+                    filters: {
+                        fields: [
+                            {
+                                name: 'date',
+                                operator: '>=',
+                                value: req.query.from
+                            },
+                            {
+                                name: 'date',
+                                operator: '<=',
+                                value: req.query.to
+                            },
+                            {
+                                name: 'part',
+                                operator: '>=',
+                                value: partitionFrom
+                            },
+                            {
+                                name: 'part',
+                                operator: '<=',
+                                value: partitionTo
+                            }
+                        ]
                     }
                 }
-                return result;
-            })
-    })
-    .querySchema(
-        Joi.object({
-            dn: Joi.string().required(),
-            date: Joi.string().required()
-        })
-    );
-
-    router.get('/alerts', function(req, res) {
-        const scopeDn : string = <string>req.query.dn;
-        var date = DateUtils.makeDate(req.query.date); 
-        return context.historySnapshotReader.queryScopedSnapshotForDate(scopeDn, date, ['alerts'])
-            .then(snapshot => {
-                var result : Record<string, any> = {};
-                if (snapshot) 
-                {
-                    for(var item of snapshot.getItems())
-                    {
-                        if (item.config_kind == 'alerts')
-                        {
-                            result[item.dn] = item.config;
-                        }
-                    }
-                }
-                return result;
+            )
+            .then(results => {
+                return context.seriesResamplerHelper.process(results as TimelineRow[]);
             });
     })
-    .querySchema(
-        Joi.object({
-            dn: Joi.string().required(),
-            date: Joi.string().required()
-        })
-    )
+    .querySchema(Joi.object({
+        from: Joi.string().required(),
+        to: Joi.string().required(),
+    }))
+    ;
 
-    router.post('/cleanup', function (req, res) {
-        return context.historyCleanupProcessor.processCleanup()
+
+    router.get<{}, any, SnapshotAtDateQuery>('/snapshot_at_date', (req, res) => {
+        const part = PartitionUtils.getPartitionIdFromDate(req.query.date);
+        return getSnapshot(part, req.query.date)
+            .then(row => {
+                if (row) {
+                    return row;
+                }
+
+                return getSnapshot(part - 1, req.query.date);
+            })
+            .then(row => {
+                if (row) {
+                    return {
+                        snapshot_id: BufferUtils.toStr(row.snapshot_id!),
+                        date: row.date!
+                    }
+                }
+
+                return null;
+            });
     })
+    .querySchema(Joi.object({
+        date: Joi.string().isoDate().required(),
+    }))
+    ;
+
+    
+    router.get<{ }, any, NodeHistoryQuery >('/node', (req, res) => {
+
+        return context.tracker.scope("history-node-query", () => {
+            const reader = makeNodeHistoryReader(req.query);
+            return reader.queryNode();
+        });
+
+    })    
+    .querySchema(Joi.object({
+        dn: Joi.string().required(),
+        token: Joi.string().optional(),
+    }));
+
+    
+    router.get<{}, any, NodeHistoryQuery >('/hierarchy', (req, res) => {
+
+        return context.tracker.scope("history-hierarchy-query", () => {
+            const reader = makeNodeHistoryReader(req.query);
+            return reader.queryHierarchy();
+        });
+
+    })    
+    .querySchema(Joi.object({
+        dn: Joi.string().required(),
+        token: Joi.string().optional(),
+    }));
 
 
-    function generateTree(snapshot: Snapshot)
+    function getSnapshot(part: number, date: string)
     {
-        var lookup : Record<string, any> = {};
-
-        let makeNode = (dn: string, config: any) => {
-            var node = _.clone(config);
-            node.children = [];
-            lookup[dn] = node;
-        };
-
-        for (var item of snapshot.getItems().filter(x => x.config_kind == 'node'))
-        {
-            makeNode(item.dn, item.config);
-        }
-
-        let getNode = (dn: string) => {
-            var node = lookup[dn];
-            if (!node) {
-                node = {
-                    children: []
-                };
-                lookup[dn] = node;
-                markParent(dn);
-            }
-            return node;
-        };
-
-        let markParent = (dn: string) => {
-            var node = lookup[dn];
-
-            var parentDn = makeParentDn(dn);
-            if (parentDn.length > 0) {
-                var parentNode = getNode(parentDn);
-                parentNode.children.push(node);
-            }
-        };
-
-        for (var item of snapshot.getItems().filter(x => x.config_kind == 'node'))
-        {
-            markParent(item.dn);
-        }
-
-        var rootNode = lookup['root'];
-        if (!rootNode) {
-            rootNode = null;
-        }
-
-        return rootNode;
+        return dataStore.table(dataStore.snapshots.Snapshots)
+            .queryMany({ part: part }, {
+                filters: {
+                    fields: [
+                        {
+                            name: 'date',
+                            operator: '<=',
+                            value: date
+                        }
+                    ]
+                }
+            })
+            .then(rows => {
+                if (rows.length == 0) {
+                    return null;
+                }
+                return _.chain(rows)
+                    .orderBy(x => x.date, 'desc')
+                    .head()
+                    .value();
+            })
+            ;
     }
+
+
+    function getStartPartitionId()
+    {
+        return PartitionUtils.getRelativePartitionId(15);
+    }
+
+    function makeNodeHistoryReader(query: NodeHistoryQuery)
+    {
+        const reader = new NodeHistoryReader(
+            logger, 
+            context.dataStore.dataStore,
+            context.dataStore.snapshots,
+            context.executionLimiter,
+            query.dn,
+            query.token);
+        return reader;
+    }
+
+}
+
+
+
+export interface TimelineQuery
+{
+    from: string,
+    to: string
+}
+
+export interface SnapshotAtDateQuery
+{
+    date: string
+}
+
+export interface TimelinePoint
+{
+    date: string,
+    changes: number,
+    error: number,
+    warn: number
+}
+
+interface NodeHistoryQuery
+{
+    dn: string,
+    token?: string,
 }

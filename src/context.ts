@@ -2,33 +2,34 @@ import _ from 'the-lodash';
 import { ILogger } from 'the-logger';
 import { Promise } from 'the-promise';
 
-import { Backend, TimerFunction } from '@kubevious/helper-backend'
+import { Backend } from '@kubevious/helper-backend'
 
-import { ProcessingTracker } from '@kubevious/helpers/dist/processing-tracker';
-
-import { FacadeRegistry } from './facade/registry';
-import { SearchEngine } from './search/engine';
-import { AutocompleteBuilder } from './search/autocomplete-builder';
 import { Database } from './db';
-import { HistoryProcessor } from './history/processor';
-import { HistoryCleanupProcessor } from './history/history-cleanup-processor';
-import { Registry } from './registry/registry';
-import { Collector } from './collector/collector';
-import { DebugObjectLogger } from './utils/debug-object-logger';
-import { MarkerAccessor } from './rule/marker-accessor';
-import { MarkerCache } from './rule/marker-cache';
-import { RuleAccessor } from './rule/rule-accessor';
-import { RuleCache } from './rule/rule-cache';
-import { RuleEngine } from './rule/rule-engine';
-import { SnapshotProcessor } from './snapshot-processor';
-import { NotificationsApp } from './apps/notifications';
+import { RedisClient } from '@kubevious/helper-redis'
+
+import { MarkerAccessor } from './apps/rule-engine/marker-accessor';
+import { MarkerEditor } from './apps/rule-engine/marker-editor';
+import { RuleAccessor } from './apps/rule-engine/rule-accessor';
+import { RuleEditor } from './apps/rule-engine/rule-editor';
+import { NotificationsApp } from './apps/worldvious/notifications';
 import { WorldviousClient } from '@kubevious/worldvious-client';
 
 import { WebServer } from './server';
 import { WebSocket } from './server/websocket';
 
-import { SnapshotReader as HistorySnapshotReader } from '@kubevious/helpers/dist/history/snapshot-reader';
-import { SeriesResampler } from '@kubevious/helpers/dist/history/series-resampler';
+import { SeriesResampler } from '@kubevious/data-models';
+
+import { ConfigAccessor } from '@kubevious/data-models';
+import { SnapshotReader } from '@kubevious/data-models/dist/accessors/snapshot-reader';
+import { BufferUtils } from '@kubevious/data-models';
+import { TimelineRow } from '@kubevious/data-models/dist/models/snapshots';
+
+import { DiagramDataFetcher } from './apps/diagram-data-fetcher';
+import { ClusterStatusAccessor } from './apps/cluster-status-accessor';
+
+import { SearchEngine } from './apps/search-engine';
+import { BackendMetrics } from './apps/backend-metrics';
+
 
 import VERSION from './version'
 
@@ -38,38 +39,29 @@ export class Context
     private _logger: any; //  ILogger;
     /* Both of the 'DumpWriter' class (inside the-logger and worldvious-client/node_modules/the-logger)
     should have public _writer and _indent prorerties to be able to uncomment */
-    private _tracker: ProcessingTracker;
     private _worldvious : WorldviousClient;
 
     private _server: WebServer;
     private _websocket: WebSocket;
 
-    private _database: Database;
-    private _searchEngine: SearchEngine;
-    private _historyProcessor: HistoryProcessor;
-    private _collector: Collector;
-    private _registry: Registry;
-    private _autocompleteBuilder: AutocompleteBuilder;
+    private _dataStore: Database;
+    private _redis : RedisClient;
 
-    private _facadeRegistry: FacadeRegistry;
-
-    private _debugObjectLogger: DebugObjectLogger;
+    private _configAccessor : ConfigAccessor;
 
     private _markerAccessor: MarkerAccessor;
-    private _markerCache: MarkerCache;
+    private _markerEditor: MarkerEditor;
     private _ruleAccessor: RuleAccessor;
-    private _ruleCache: RuleCache;
-    private _ruleEngine: RuleEngine;
+    private _ruleEditor: RuleEditor;
 
-    private _historySnapshotReader: HistorySnapshotReader;
-
-    private _snapshotProcessor: SnapshotProcessor;
-
-    private _historyCleanupProcessor: HistoryCleanupProcessor;
-
-    private _seriesResamplerHelper: SeriesResampler;
+    private _seriesResamplerHelper: SeriesResampler<TimelineRow>;
 
     private _notificationsApp: NotificationsApp;
+    private _diagramDataFetcher : DiagramDataFetcher;
+    private _clusterStatusAccessor : ClusterStatusAccessor;
+
+    private _searchEngine : SearchEngine;
+    private _backendMetrics : BackendMetrics;
 
     constructor(backend : Backend)
     {
@@ -78,46 +70,53 @@ export class Context
 
         this._logger.info("Version: %s", VERSION);
 
-        this._tracker = new ProcessingTracker(this.logger.sublogger("Tracker"));
         this._worldvious = new WorldviousClient(this.logger, 'backend', VERSION);
 
-        this._database = new Database(this._logger, this);
-        this._searchEngine = new SearchEngine(this);
-        this._historyProcessor = new HistoryProcessor(this);
-        this._collector = new Collector(this);
-        this._registry = new Registry(this);
-        this._autocompleteBuilder = new AutocompleteBuilder(this);
+        this._dataStore = new Database(this._logger, this);
+        this._redis = new RedisClient(this.logger.sublogger('Redis'));
 
-        this._facadeRegistry = new FacadeRegistry(this);
+        this._configAccessor = new ConfigAccessor(this._dataStore.dataStore, this._dataStore.config);
 
-        this._debugObjectLogger = new DebugObjectLogger(this);
+        this._markerAccessor = new MarkerAccessor(this);
+        this._markerEditor = new MarkerEditor(this);
+        this._ruleAccessor = new RuleAccessor(this);
+        this._ruleEditor = new RuleEditor(this);
 
-        this._markerAccessor = new MarkerAccessor(this, this.database.dataStore);
-        this._markerCache = new MarkerCache(this);
-        this._ruleAccessor = new RuleAccessor(this, this.database.dataStore);
-        this._ruleCache = new RuleCache(this);
-        this._ruleEngine = new RuleEngine(this, this.database.dataStore);
+        this._backendMetrics = new BackendMetrics(this);
 
-        this._historySnapshotReader = new HistorySnapshotReader(this.logger, this._database.driver);
-
-        this._snapshotProcessor = new SnapshotProcessor(this);
-
-        this._historyCleanupProcessor = new HistoryCleanupProcessor(this);
-
-        this._seriesResamplerHelper = new SeriesResampler(200)
-            .column("changes", _.max)
+        this._seriesResamplerHelper = new SeriesResampler<TimelineRow>(200)
+            .column("changes", x => _.max(x) ?? 0)
             .column("error", _.mean)
             .column("warn", _.mean)
             ;
 
         this._notificationsApp = new NotificationsApp(this);
 
+        this._diagramDataFetcher = new DiagramDataFetcher(this);
+
+        this._clusterStatusAccessor = new ClusterStatusAccessor(this.logger, this);
+
+        this._searchEngine = new SearchEngine(this);
+
         this._server = new WebServer(this);
         this._websocket = new WebSocket(this, this._server);
+
 
         backend.registerErrorHandler((reason) => {
             return this.worldvious.acceptError(reason);
         });
+
+        backend.stage("setup-worldvious", () => this._worldvious.init());
+
+        backend.stage("setup-metrics-tracker", () => this._setupMetricsTracker());
+
+        backend.stage("setup-db", () => this._dataStore.init());
+
+        backend.stage("setup-redis", () => this._redis.run());
+
+        backend.stage("setup-server", () => this._server.run());
+        backend.stage("setup-websocket", () => this._websocket.run());
+        backend.stage("notifications-app", () => this._notificationsApp.init());
     }
 
     get backend() {
@@ -129,75 +128,47 @@ export class Context
     }
 
     get tracker() {
-        return this._tracker;
-    }
-
-    get mysqlDriver() {
-        return this.database.driver;
+        return this.backend.tracker;
     }
 
     get database() {
-        return this._database;
+        return this._dataStore;
     }
 
-    get facadeRegistry() {
-        return this._facadeRegistry;
+    get dataStore() {
+        return this._dataStore;
     }
 
-    get searchEngine() {
-        return this._searchEngine;
+    get redis() {
+        return this._redis;
     }
 
-    get historyProcessor() {
-        return this._historyProcessor;
-    }
-
-    get collector() {
-        return this._collector;
-    }
-
-    get registry() {
-        return this._registry;
-    }
-
-    get debugObjectLogger() {
-        return this._debugObjectLogger;
+    get configAccessor() {
+        return this._configAccessor;
     }
 
     get markerAccessor() {
         return this._markerAccessor;
     }
 
-    get markerCache() {
-        return this._markerCache;
+    get markerEditor() {
+        return this._markerEditor;
     }
 
     get ruleAccessor() {
         return this._ruleAccessor;
     }
 
-    get ruleCache() {
-        return this._ruleCache;
-    }
-
-    get ruleEngine() {
-        return this._ruleEngine;
-    }
-
-    get historySnapshotReader() {
-        return this._historySnapshotReader;
+    get ruleEditor() {
+        return this._ruleEditor;
     }
 
     get websocket() {
         return this._websocket;
     }
 
-    get snapshotProcessor() {
-        return this._snapshotProcessor;
-    }
-
-    get historyCleanupProcessor() {
-        return this._historyCleanupProcessor;
+    get clusterStatusAccessor() {
+        return this._clusterStatusAccessor;
     }
 
     get worldvious() : WorldviousClient {
@@ -212,35 +183,33 @@ export class Context
         return this._notificationsApp;
     }
 
-    get autocompleteBuilder() {
-        return this._autocompleteBuilder;
+    get executionLimiter() {
+        return this._server.executionLimiter;
     }
 
-    run()
-    {
-        this._setupTracker();
-
-        return Promise.resolve()
-            .then(() => this._worldvious.init())
-            .then(() => this._database.init())
-            .then(() => this._server.run())
-            .then(() => this._websocket.run())
-            .then(() => this._historyCleanupProcessor.init())
-            .then(() => this._notificationsApp.init())
-            ;
+    get backendMetrics() {
+        return this._backendMetrics;
     }
 
-    private _setupTracker()
+    public makeSnapshotReader(snapshotId: string)
     {
-        if (process.env.NODE_ENV == 'development')
-        {
-            this.tracker.enablePeriodicDebugOutput(10);
-        }
-        else
-        {
-            this.tracker.enablePeriodicDebugOutput(30);
-        }
+        return new SnapshotReader(this._logger,
+            this._dataStore.snapshots,
+            this._dataStore.dataStore,
+            BufferUtils.fromStr(snapshotId)
+            )
+    }
 
+    get diagramDataFetcher() {
+        return this._diagramDataFetcher;
+    }
+
+    get searchEngine() {
+        return this._searchEngine;
+    }
+
+    private _setupMetricsTracker()
+    {
         this.tracker.registerListener(extractedData => {
             this._worldvious.acceptMetrics(extractedData);
         })

@@ -2,9 +2,11 @@ import Path from 'path';
 import { ILogger } from 'the-logger';
 import { Server } from '@kubevious/helper-backend';
 import { Context } from '../context';
+import { Database } from '../db';
 
 export interface Helpers 
 {
+    dataStore: Database;
 }
 
 export class WebServer
@@ -17,9 +19,10 @@ export class WebServer
     {
         this.logger = context.logger.sublogger('WebServer');
         this.helpers = {
+            dataStore: context.dataStore
         };
+
         this.server = new Server(this.logger, context, this.helpers, {
-            port: 4001,
             routersDir: Path.join(__dirname, '..', 'routers')
         });
         this.server.initializer((app) => {
@@ -29,6 +32,10 @@ export class WebServer
 
     get httpServer() {
         return this.server.httpServer;
+    }
+
+    get executionLimiter() {
+        return this.server.executionLimiter
     }
 
     run() : Promise<Server<Context, Helpers>>

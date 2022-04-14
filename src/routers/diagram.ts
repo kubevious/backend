@@ -1,100 +1,82 @@
 import _ from 'the-lodash';
+import { ILogger } from 'the-logger';
 import { Context } from '../context';
 import { Router } from '@kubevious/helper-backend';
 import Joi from 'joi';
-import { SearchQuery } from '../types';
+import { Helpers } from '../server';
 
-export default function (router: Router, context: Context) {
+export default function (router: Router, context: Context, logger: ILogger, { dataStore } : Helpers) {
 
     router.url('/api/v1/diagram');
 
-    router
-        .get('/node', function (req, res) {
-            const dn : string = <string>req.query.dn;
-            var state = context.registry.getCurrentState();
-            const node = state.getNodeItem(dn);
-            if (node) {
-                return node.config;
-            }
-            return null;
-        })
-        .querySchema(
-            Joi.object({
-                dn: Joi.string().required()
-            })
-        );
 
-    router
-        .get('/children', function (req, res) {
-            const dn: string = <string>req.query.dn;
-            var state = context.registry.getCurrentState();
-            return state.getChildren(dn);
-        })
-        .querySchema(
-            Joi.object({
-                dn: Joi.string().required(),
-            })
-        );
+    router.get<{}, any, DnQuery>('/node', (req, res) => {
+        const dn = req.query.dn;
 
-    router
-        .get('/props', function (req, res) {
-            const dn : string = <string>req.query.dn;
-            var state = context.registry.getCurrentState();
-            var nodeItem = state.getNodeItem(dn);
-            if (!nodeItem) {
-                return [];
-            }
-            return _.values(nodeItem?.propertiesMap);
-        })
-        .querySchema(
-            Joi.object({
-                dn: Joi.string().required(),
-            })
-        );
+        const snapshotReader = context.makeSnapshotReader(req.query.snapshot);
+        return snapshotReader.queryNode(dn);
+    })
+    .querySchema(Joi.object({
+        snapshot: Joi.string().required(),
+        dn: Joi.string().required(),
+    }))
+    ;
 
-    router
-        .get('/alerts', function (req, res) {
-            const dn : string = <string>req.query.dn;
-            var state = context.registry.getCurrentState();
-            var nodeItem = state.getNodeItem(dn);
-            if (!nodeItem) {
-                return [];
-            }
-            return nodeItem?.hierarchyAlerts;
-        })
-        .querySchema(
-            Joi.object({
-                dn: Joi.string().required(),
-            })
-        );
+    router.get<{}, any, DnQuery>('/children', (req, res) => {
+        const dn = req.query.dn;
+
+        const snapshotReader = context.makeSnapshotReader(req.query.snapshot);
+        return snapshotReader.queryChildren(dn);
+    })
+    .querySchema(Joi.object({
+        snapshot: Joi.string().required(),
+        dn: Joi.string().required()
+    }))
+    ;
+
+    router.get<{}, any, DnQuery>('/props', (req, res) => {
+        const dn = req.query.dn;
+
+        const snapshotReader = context.makeSnapshotReader(req.query.snapshot);
+        return snapshotReader.queryProperties(dn);
+    })
+    .querySchema(Joi.object({
+        snapshot: Joi.string().required(),
+        dn: Joi.string().required()
+    }))
+    ;
+
+    router.get<{}, any, DnQuery>('/alerts', (req, res) => {
+        const dn = req.query.dn;
+
+        const snapshotReader = context.makeSnapshotReader(req.query.snapshot);
+        return snapshotReader.queryAlerts(dn);
+    })
+    .querySchema(Joi.object({
+        snapshot: Joi.string().required(),
+        dn: Joi.string().required()
+    }))
+    ;
 
 
-    /*************************/
+    router.get<{}, any, DnQuery>('/self_alerts', (req, res) => {
+        const dn = req.query.dn;
 
-    router
-        .post('/search', function (req, res) {
-            const criteria: SearchQuery = <SearchQuery>req.body;
-            return context.searchEngine.search(criteria);
-        })
-        .bodySchema(
-            Joi.object({
-                criteria: Joi.string(),
-                kinds: Joi.object(),
-                errors: Joi.object({
-                    value: Joi.object({
-                        kind: Joi.string(),
-                        count: Joi.number(),
-                    })
-                }),
-                warnings: Joi.object({
-                    value: Joi.object({
-                        kind: Joi.string(),
-                        count: Joi.number(),
-                    })
-                }),
-                markers: Joi.object(),
-                labels: Joi.object(),
-                annotations: Joi.object(),
-            }),
-        );
+        const snapshotReader = context.makeSnapshotReader(req.query.snapshot);
+        return snapshotReader.querySelfAlerts(dn);
+    })
+    .querySchema(Joi.object({
+        snapshot: Joi.string().required(),
+        dn: Joi.string().required()
+    }))
+    ;
+    
+
+}
+
+
+interface DnQuery
+{
+    snapshot: string,
+    dn: string
 }
