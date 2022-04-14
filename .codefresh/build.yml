@@ -118,12 +118,12 @@ steps:
     working_directory: "${{MAIN_REPO_PATH}}"
     disable_push: true
 
-  push_aws:
+  push_dockerhub:
     title: "Pushing image to DockerHub"
     type: push
     stage: release
     image_name: "kubevious/${{PRODUCT_NAME}}"
-    registry: "kubevious"
+    registry: "dockerhub"
     candidate: "${{build}}"
     tags:
       - "${{DOCKER_TAG}}"
