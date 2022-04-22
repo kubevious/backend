@@ -55,14 +55,14 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@kubevious/data-models@^1.0.20":
-  version "1.0.20"
-  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.20.tgz#22b0d622b5ec47687ca92b90e38c50bba72f5771"
-  integrity sha512-sxDNdiIUt0Sh9+wGL8Ml6EywO8CsgVIPzFuD1ciOXb3P+WfOARmvnzjEU+tJhn42fS/PRT3s2oRG4Q7wPBCOHA==
+"@kubevious/data-models@^1.0.21":
+  version "1.0.21"
+  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.21.tgz#fc5bebd18cffeb8ee146633978b2931a0ac1c771"
+  integrity sha512-O4OvFEpKY6yqY1I0Rg7AuSh4mJMTmWCcAzgeSgRqeTH6ocbf2DBdc7r2wFn06eLLvVMe12BBHT0ewszLqSkcpQ==
   dependencies:
     "@kubevious/easy-data-store" "^1.0.11"
     "@kubevious/helper-backend" "^1.0.38"
-    "@kubevious/ui-middleware" "^1.0.43"
+    "@kubevious/ui-middleware" "^1.0.62"
     moment "^2.29.1"
     the-lodash "^2.0.9"
     the-logger "^2.0.14"
@@ -111,21 +111,6 @@
     lru-cache "^6.0.0"
     the-lodash "^2.0.9"
     the-logger "^2.0.9"
-    the-promise "^2.0.13"
-
-"@kubevious/helper-logic-processor@^1.0.71":
-  version "1.0.71"
-  resolved "https://registry.yarnpkg.com/@kubevious/helper-logic-processor/-/helper-logic-processor-1.0.71.tgz#49bf3ea73ec1b1b5144d9945f57bb0b348de294a"
-  integrity sha512-4YeqTI1PPnW4O+Bat9r5+ANLDyTEwMZqUmFR8H3xXeOx1LNwIkgMajz4mzz/hSf5eUrFSl6ZzdSUbeCtCdAXzQ==
-  dependencies:
-    "@kubevious/entity-meta" "^1.0.56"
-    "@kubevious/helper-backend" "^1.0.38"
-    "@kubevious/state-registry" "^1.0.13"
-    glob "^7.1.7"
-    glob-promise "^4.2.0"
-    kubernetes-types "^1.21.0-beta.1"
-    the-lodash "^2.0.9"
-    the-logger "^2.0.14"
     the-promise "^2.0.13"
 
 "@kubevious/helper-mysql@^1.0.11":
@@ -204,7 +189,7 @@
     the-logger "^2.0.14"
     the-promise "^2.0.13"
 
-"@kubevious/ui-middleware@^1.0.43", "@kubevious/ui-middleware@^1.0.52", "@kubevious/ui-middleware@^1.0.62":
+"@kubevious/ui-middleware@^1.0.52", "@kubevious/ui-middleware@^1.0.62":
   version "1.0.62"
   resolved "https://registry.yarnpkg.com/@kubevious/ui-middleware/-/ui-middleware-1.0.62.tgz#2fccbbc01f53451e0665d74040264d205c97d5ea"
   integrity sha512-e7kfROVKpHFlemouN86dLIwXP2lSbIFhx4l5OyoJE4q909cqpSYOp+MjA3eCrEf9ke14WmQ9DwaGHUoJ8/NQ1w==
@@ -319,14 +304,6 @@
   resolved "https://registry.yarnpkg.com/@types/cors/-/cors-2.8.12.tgz#6b2c510a7ad7039e98e7b8d3d6598f4359e5c080"
   integrity sha512-vt+kDhq/M2ayberEtJcIN/hxXy1Pk+59g2FV/ZQceeaTyCtCucjL2Q7FXlFjtWn4n15KCr1NE2lNNFhp0lEThw==
 
-"@types/glob@^7.1.3":
-  version "7.2.0"
-  resolved "https://registry.yarnpkg.com/@types/glob/-/glob-7.2.0.tgz#bc1b5bf3aa92f25bd5dd39f35c57361bdce5b2eb"
-  integrity sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==
-  dependencies:
-    "@types/minimatch" "*"
-    "@types/node" "*"
-
 "@types/json-schema@^7.0.9":
   version "7.0.11"
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.11.tgz#d421b6c527a3037f7c84433fd2c4229e016863d3"
@@ -336,11 +313,6 @@
   version "4.14.160"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.160.tgz#2f1bba6500bc3cb9a732c6d66a083378fb0b0b29"
   integrity sha512-aP03BShJoO+WVndoVj/WNcB/YBPt+CIU1mvaao2GRAHy2yg4pT/XS4XnVHEQBjPJGycWf/9seKEO9vopTJGkvA==
-
-"@types/minimatch@*":
-  version "3.0.5"
-  resolved "https://registry.yarnpkg.com/@types/minimatch/-/minimatch-3.0.5.tgz#1001cc5e6a3704b83c236027e77f2f58ea010f40"
-  integrity sha512-Klz949h02Gz2uZCMGwDUSDS1YBlTdDDgbWHi+81l29tQALUtvz4rAYi5uoVhE5Lagoq6DeqAUlbrHvW/mXDgdQ==
 
 "@types/mocha@^8.0.3":
   version "8.2.3"
@@ -1289,13 +1261,6 @@ glob-parent@^6.0.1:
   dependencies:
     is-glob "^4.0.3"
 
-glob-promise@^4.2.0:
-  version "4.2.2"
-  resolved "https://registry.yarnpkg.com/glob-promise/-/glob-promise-4.2.2.tgz#15f44bcba0e14219cd93af36da6bb905ff007877"
-  integrity sha512-xcUzJ8NWN5bktoTIX7eOclO1Npxd/dyVqUJxlLIDasT4C7KZyqlPIwkdJ0Ypiy3p2ZKahTjK4M9uC3sNSfNMzw==
-  dependencies:
-    "@types/glob" "^7.1.3"
-
 glob@7.1.6:
   version "7.1.6"
   resolved "https://registry.yarnpkg.com/glob/-/glob-7.1.6.tgz#141f33b81a7c2492e125594307480c46679278a6"
@@ -1308,7 +1273,7 @@ glob@7.1.6:
     once "^1.3.0"
     path-is-absolute "^1.0.0"
 
-glob@^7.1.3, glob@^7.1.7:
+glob@^7.1.3:
   version "7.2.0"
   resolved "https://registry.yarnpkg.com/glob/-/glob-7.2.0.tgz#d15535af7732e02e948f4c41628bd910293f6023"
   integrity sha512-lmLf6gtyrPq8tTjSmrO94wBeQbFR3HbLHbuyD69wuyQkImp2hWqMGB47OX65FBkPffO641IP9jWa1z4ivqG26Q==
@@ -1547,11 +1512,6 @@ jsonfile@^6.0.1:
     universalify "^2.0.0"
   optionalDependencies:
     graceful-fs "^4.1.6"
-
-kubernetes-types@^1.21.0-beta.1:
-  version "1.21.0-beta.1"
-  resolved "https://registry.yarnpkg.com/kubernetes-types/-/kubernetes-types-1.21.0-beta.1.tgz#13e054075b434494bd463d8b154554bd9e3fb890"
-  integrity sha512-dwT/D2Gs9feqCl1EP8fQ7utyML8XQCYd38bPuU8ZA3MqF74Bfz/sWcUnFtR/IQRuUIKYruQkhVKXw5GlP+CLsw==
 
 leven@2.1.0:
   version "2.1.0"
