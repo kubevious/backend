@@ -18,7 +18,6 @@ steps:
       condition: 
         all: 
           mainBranch: '"${{CF_BRANCH}}" == "master"'
-          noCiCdAuthor: '"${{CF_COMMIT_AUTHOR}}" != "kubevious"'
           noCiCdMessage: 'includes("${{CF_COMMIT_MESSAGE}}", "Version Release") == false' 
     commands:
       - cf_export IS_RELEASE=true
