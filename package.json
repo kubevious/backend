@@ -21,12 +21,13 @@
   },
   "homepage": "https://github.com/kubevious/kubevious",
   "dependencies": {
-    "@kubevious/data-models": "^1.0.21",
+    "@kubevious/data-models": "^1.0.23",
     "@kubevious/easy-data-store": "^1.0.11",
+    "@kubevious/entity-meta": "^1.0.67",
     "@kubevious/helper-backend": "^1.0.38",
     "@kubevious/helper-redis": "^1.0.19",
     "@kubevious/http-client": "^1.0.19",
-    "@kubevious/ui-middleware": "^1.0.62",
+    "@kubevious/ui-middleware": "^1.0.63",
     "@kubevious/websocket-server": "^1.0.28",
     "@kubevious/worldvious-client": "^1.0.9",
     "cron": "^1.8.2",
@@ -60,9 +61,10 @@
     "@kubevious/helper-backend": "^1.0.38",
     "@kubevious/websocket-server": "^1.0.28",
     "@kubevious/worldvious-client": "^1.0.9",
-    "@kubevious/data-models": "^1.0.21",
-    "@kubevious/ui-middleware": "^1.0.62",
+    "@kubevious/data-models": "^1.0.23",
+    "@kubevious/ui-middleware": "^1.0.63",
     "@kubevious/helper-redis": "^1.0.19",
-    "@kubevious/http-client": "^1.0.19"
+    "@kubevious/http-client": "^1.0.19",
+    "@kubevious/entity-meta": "^1.0.67"
   }
 }
