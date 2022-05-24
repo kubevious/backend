@@ -81,10 +81,10 @@
     the-logger "^2.0.14"
     the-promise "^2.0.13"
 
-"@kubevious/entity-meta@^1.0.67":
-  version "1.0.67"
-  resolved "https://registry.yarnpkg.com/@kubevious/entity-meta/-/entity-meta-1.0.67.tgz#8d1ea56adf00420f65856014f0ae26880d786be9"
-  integrity sha512-2e+1YQNSrEBhxH72niz7X1KDDqS81qgKKdB9xAobiQhlUnXe6WpvBwoY4X1cIpf0NrCSHAYyd7IUcqt4Oehk3Q==
+"@kubevious/entity-meta@^1.0.67", "@kubevious/entity-meta@^1.0.69":
+  version "1.0.69"
+  resolved "https://registry.yarnpkg.com/@kubevious/entity-meta/-/entity-meta-1.0.69.tgz#c24fdf75453b2e1f4efd596575b5b673f7a9fb6a"
+  integrity sha512-B8XmMmcwnwOwbgkgWwJGdDK3oeBfDIl+yeP5gqvvXRtMLMOrKUc14+fU/KFNdgysO5j7oXXQlgnOUGcCKq1EEQ==
   dependencies:
     the-lodash "^2.0.9"
 
