@@ -29,9 +29,13 @@ import { ClusterStatusAccessor } from './apps/cluster-status-accessor';
 
 import { SearchEngine } from './apps/search-engine';
 import { BackendMetrics } from './apps/backend-metrics';
+import { KubernetesClient } from 'k8s-super-client';
+import { K8sHandler } from './k8s/K8sHandler';
 
 
 import VERSION from './version'
+
+export type ClusterConnectorCb = () => Promise<KubernetesClient>;
 
 export class Context
 {
@@ -63,10 +67,16 @@ export class Context
     private _searchEngine : SearchEngine;
     private _backendMetrics : BackendMetrics;
 
-    constructor(backend : Backend)
+    private _clusterConnector? : ClusterConnectorCb;
+    private _k8sClient? : KubernetesClient;
+    private _k8sHandler : K8sHandler;
+
+    constructor(backend : Backend, clusterConnector? : ClusterConnectorCb)
     {
         this._backend = backend;
         this._logger = backend.logger.sublogger('Context');
+
+        this._clusterConnector = clusterConnector;
 
         this._logger.info("Version: %s", VERSION);
 
@@ -100,7 +110,7 @@ export class Context
 
         this._server = new WebServer(this);
         this._websocket = new WebSocket(this, this._server);
-
+        this._k8sHandler = new K8sHandler(this);
 
         backend.registerErrorHandler((reason) => {
             return this.worldvious.acceptError(reason);
@@ -114,8 +124,21 @@ export class Context
 
         backend.stage("setup-redis", () => this._redis.run());
 
+        backend.stage("connect-to-k8s", () => {
+            if (!this._clusterConnector) {
+                return;
+            }
+            return this._clusterConnector()
+                .then(client => {
+                    this._k8sClient = client;
+                });
+        });
+
+        backend.stage("setup-k8s-handler", () => this._k8sHandler.init());
+
         backend.stage("setup-server", () => this._server.run());
         backend.stage("setup-websocket", () => this._websocket.run());
+
         backend.stage("notifications-app", () => this._notificationsApp.init());
     }
 
@@ -189,6 +212,10 @@ export class Context
 
     get backendMetrics() {
         return this._backendMetrics;
+    }
+
+    get k8sClient() {
+        return this._k8sClient;
     }
 
     public makeSnapshotReader(snapshotId: string)

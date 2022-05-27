@@ -32,7 +32,8 @@
     "@kubevious/worldvious-client": "^1.0.9",
     "cron": "^1.8.2",
     "joi": "^17.3.0",
-    "js-yaml": "^3.13.1",
+    "js-yaml": "^4.1.0",
+    "k8s-super-client": "^2.0.25",
     "moment": "^2.29.1",
     "the-lodash": "^2.0.9",
     "the-logger": "^2.0.14",
@@ -40,6 +41,7 @@
     "uuid-parse": "^1.1.0"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.5",
     "@types/mocha": "^8.0.3",
     "@types/node": "^17.0.23",
     "@types/should": "^13.0.0",
