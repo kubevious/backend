@@ -72,7 +72,7 @@ export class K8sHandler
                 })
             );    
             
-        this._logger.info("[_handleChangePackage] changes: ", changes);
+        // this._logger.info("[_handleChangePackage] changes: ", changes);
             
         const deletions : ChangePackageDeletion[] = 
             _.map((data.data as any).deletions ?? [], x => ({
@@ -95,28 +95,27 @@ export class K8sHandler
             deletions: deletions
         }
 
-        // return Promise.resolve()
-        //     .then(() => {
-        //         const body = {
-        //             apiVersion: 'kubevious.io/v1',
-        //             kind: 'ValidationState',
-        //             metadata: {
-        //                 namespace: data.metadata.namespace!,
-        //                 name: data.metadata.name,
-        //             },
-        //             status: {
-        //                 state: 'Running'
-        //             }
-        //         }
-        //         return this._updateValidationState(body);
-        //     })
-        //     .then(() => {
-        //         return this._changePackageClient?.delete(data.metadata.namespace!, data.metadata.name);
-        //     });
+        Promise.resolve(null)
+            .then(() => this._context.guardLogic.acceptChangePackage(change))
+            .then(() => this._updateValidationState(change.namespace, change.name, 'Scheduling'))
+            .then(() => this._changePackageClient?.delete(data.metadata.namespace!, data.metadata.name))
+            ;
+        
     }
 
-    private _updateValidationState(body: any)
+    private _updateValidationState(namespace: string, name: string, state: string)
     {
+        const body = {
+            apiVersion: 'kubevious.io/v1',
+            kind: 'ValidationState',
+            metadata: {
+                namespace: namespace,
+                name: name,
+            },
+            status: {
+                state: state
+            }
+        }
         return this._validationStateClient!.query(body.metadata.namespace!, body.metadata.name!)
             .then(existingBody => {
                 if (existingBody) {
@@ -127,6 +126,7 @@ export class K8sHandler
                 }
             });
     }
+
 }
 
 
