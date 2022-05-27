@@ -1,6 +1,11 @@
+import _ from 'the-lodash';
+import { ChangePackageChart, ChangePackageDeletion, ChangePackageRow, ChangePackageSummary } from "@kubevious/data-models/dist/models/guard";
 import { DeltaAction, KubernetesObject, ResourceAccessor } from "k8s-super-client";
 import { ILogger } from "the-logger";
 import { Context } from "../context";
+
+import zlib from "fast-zlib";
+import * as yaml from 'js-yaml';
 
 export class K8sHandler
 {
@@ -53,24 +58,61 @@ export class K8sHandler
 
         this._logger.info("[_handleChangePackage] %s :: %s", data.metadata.namespace, data.metadata.name);
 
-        return Promise.resolve()
-            .then(() => {
-                const body = {
-                    apiVersion: 'kubevious.io/v1',
-                    kind: 'ValidationState',
-                    metadata: {
-                        namespace: data.metadata.namespace!,
-                        name: data.metadata.name,
-                    },
-                    status: {
-                        state: 'Running'
-                    }
-                }
-                return this._updateValidationState(body);
-            })
-            .then(() => {
-                return this._changePackageClient?.delete(data.metadata.namespace!, data.metadata.name);
-            });
+        const charts : ChangePackageChart[] = 
+            _.map((data.data as any).changes ?? [], x => ({
+                namespace: x.namespace,
+                name: x.name,
+            }));
+
+        const changes : KubernetesObject[] = 
+            _.flatten(
+                _.map((data.data as any).changes ?? [], (x: any) => {
+                    const yamlData = unzip(x.data);
+                    return yamlData as KubernetesObject[];
+                })
+            );    
+            
+        this._logger.info("[_handleChangePackage] changes: ", changes);
+            
+        const deletions : ChangePackageDeletion[] = 
+            _.map((data.data as any).deletions ?? [], x => ({
+                apiVersion: x.apiVersion,
+                kind: x.kind,
+                namespace: x.namespace,
+                name: x.name,
+            }));
+
+        const change: ChangePackageRow = {
+            namespace: data.metadata.namespace!,
+            name: data.metadata.name,
+            date: new Date(),
+            summary: { 
+                createdCount: changes.length,
+                deletedCount: deletions.length,
+            },
+            charts: charts,
+            changes: changes,
+            deletions: deletions
+        }
+
+        // return Promise.resolve()
+        //     .then(() => {
+        //         const body = {
+        //             apiVersion: 'kubevious.io/v1',
+        //             kind: 'ValidationState',
+        //             metadata: {
+        //                 namespace: data.metadata.namespace!,
+        //                 name: data.metadata.name,
+        //             },
+        //             status: {
+        //                 state: 'Running'
+        //             }
+        //         }
+        //         return this._updateValidationState(body);
+        //     })
+        //     .then(() => {
+        //         return this._changePackageClient?.delete(data.metadata.namespace!, data.metadata.name);
+        //     });
     }
 
     private _updateValidationState(body: any)
@@ -85,4 +127,15 @@ export class K8sHandler
                 }
             });
     }
+}
+
+
+function unzip(str: string)
+{
+    const buf = Buffer.from(str, 'base64');
+    const gunzip = new zlib.Gunzip();
+    
+    const strData = gunzip.process(buf).toString();
+    const yamlData = yaml.loadAll(strData);
+    return yamlData as any[];
 }

@@ -29,6 +29,7 @@ import { ClusterStatusAccessor } from './apps/cluster-status-accessor';
 
 import { SearchEngine } from './apps/search-engine';
 import { BackendMetrics } from './apps/backend-metrics';
+import { GuardLogic } from './apps/guard/guard';
 import { KubernetesClient } from 'k8s-super-client';
 import { K8sHandler } from './k8s/K8sHandler';
 
@@ -40,7 +41,7 @@ export type ClusterConnectorCb = () => Promise<KubernetesClient>;
 export class Context
 {
     private _backend : Backend;
-    private _logger: any; //  ILogger;
+    private _logger: ILogger;
     /* Both of the 'DumpWriter' class (inside the-logger and worldvious-client/node_modules/the-logger)
     should have public _writer and _indent prorerties to be able to uncomment */
     private _worldvious : WorldviousClient;
@@ -71,6 +72,8 @@ export class Context
     private _k8sClient? : KubernetesClient;
     private _k8sHandler : K8sHandler;
 
+    private _guardLogic : GuardLogic;
+
     constructor(backend : Backend, clusterConnector? : ClusterConnectorCb)
     {
         this._backend = backend;
@@ -91,6 +94,8 @@ export class Context
         this._markerEditor = new MarkerEditor(this);
         this._ruleAccessor = new RuleAccessor(this);
         this._ruleEditor = new RuleEditor(this);
+
+        this._guardLogic = new GuardLogic(this);
 
         this._backendMetrics = new BackendMetrics(this);
 
@@ -216,6 +221,10 @@ export class Context
 
     get k8sClient() {
         return this._k8sClient;
+    }
+
+    get guardLogic() {
+        return this._guardLogic;
     }
 
     public makeSnapshotReader(snapshotId: string)

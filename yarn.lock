@@ -55,14 +55,14 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@kubevious/data-models@^1.0.23":
-  version "1.0.23"
-  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.23.tgz#f3edeea08e9eea91db873d8722bf43df625835da"
-  integrity sha512-zj5wiAHeOlwXMFCsVSMwY6noKHFV99OemGPslzHGEbsRNtBQjbjTpN+pjP+2JgBe4aKuPD/Heoc7McVB1hPsNg==
+"@kubevious/data-models@^1.0.25":
+  version "1.0.25"
+  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.25.tgz#48d053f29de33e167a98ffd660f19c78769b59b7"
+  integrity sha512-b0W8I1ofgkIueeWD2OrsBjQsRVIHUiIx2gl8U4NjSPlDrRjQ8qwmW7o5L901YK5vb8ih6EVks9VoueUWdzvvBw==
   dependencies:
     "@kubevious/easy-data-store" "^1.0.11"
     "@kubevious/helper-backend" "^1.0.38"
-    "@kubevious/ui-middleware" "^1.0.62"
+    "@kubevious/ui-middleware" "^1.0.63"
     moment "^2.29.1"
     the-lodash "^2.0.9"
     the-logger "^2.0.14"
@@ -146,7 +146,7 @@
     the-promise "^2.0.12"
     uuid "^8.3.2"
 
-"@kubevious/ui-middleware@^1.0.52", "@kubevious/ui-middleware@^1.0.62", "@kubevious/ui-middleware@^1.0.63":
+"@kubevious/ui-middleware@^1.0.52", "@kubevious/ui-middleware@^1.0.63":
   version "1.0.63"
   resolved "https://registry.yarnpkg.com/@kubevious/ui-middleware/-/ui-middleware-1.0.63.tgz#4a1891b8cf17832842ec980810e8b29281de50d1"
   integrity sha512-wNp5G/55DC50+7D6vSIDP9epeh+xi9l46FHQlhj/S4ds8JyOtr1O5wwfzB6oe27d+mLync9M5tsAdq/fIQBP+g==
@@ -1106,6 +1106,11 @@ fast-safe-stringify@^2.0.7:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/fast-safe-stringify/-/fast-safe-stringify-2.1.1.tgz#c406a83b6e70d9e35ce3b30a81141df30aeba884"
   integrity sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA==
+
+fast-zlib@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/fast-zlib/-/fast-zlib-2.0.1.tgz#be624f592fc80ad8019ee2025d16a367a4e9b024"
+  integrity sha512-DCoYgNagM2Bt1VIpXpdGnRx4LzqJeYG0oh6Nf/7cWo6elTXkFGMw9CrRCYYUIapYNrozYMoyDRflx9mgT3Awyw==
 
 fastify-warning@^0.2.0:
   version "0.2.0"
