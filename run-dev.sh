@@ -19,4 +19,4 @@ export NODE_ENV=development
 
 # source ../dependencies.git/worldvious/short-delays.sh
 
-node .
+node dist/mock/index-mock
