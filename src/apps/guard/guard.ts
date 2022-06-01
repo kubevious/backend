@@ -26,9 +26,26 @@ export class GuardLogic
     {
         // this._logger.info("[acceptChangePackage] change: ", change);
 
-        return this._dataStore.table(this._dataStore.guard.ChangePackage)
-            .create(change)
-            ;
+        return this._dataStore.dataStore.executeInTransaction([
+            this._dataStore.guard.ChangePackage
+        ], () => {
+            return Promise.resolve()
+                .then(() => {
+                    return this._dataStore.table(this._dataStore.guard.ChangePackage)
+                        .create(change)
+                        ;
+                })
+                .then(() => {
+                    return this._dataStore.table(this._dataStore.guard.ValidationQueue)
+                        .create({ 
+                            namespace: change.namespace,
+                            name: change.name,
+                            date: change.date
+                        })
+                        ;
+                })
+        })
+
     }
 
 }
