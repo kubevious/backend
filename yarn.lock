@@ -55,14 +55,14 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@kubevious/data-models@^1.0.26":
-  version "1.0.26"
-  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.26.tgz#d9ffe4d9b339ad9a735f5434656661e7b8d66fca"
-  integrity sha512-40ShFgHRv0jk5+VvMlqrMaCWYaaI6bDZMhi0i7OjDtZD+kh0+7xHSkjd0TLteYIJl8XaZWx3rbMXXsh9G8EdNQ==
+"@kubevious/data-models@^1.0.27":
+  version "1.0.27"
+  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.27.tgz#7f8c6332220b238b41c8f3297b5a05854af7fc30"
+  integrity sha512-Hc0H55QcRqAyEL5VLwkFgfDiDAcxFXXaHKzs7I5lzWr+EQUUpbkvc/Y9Sw2VIf7WLxS4eogCVsH87J/mxt+B2Q==
   dependencies:
     "@kubevious/easy-data-store" "^1.0.11"
     "@kubevious/helper-backend" "^1.0.38"
-    "@kubevious/ui-middleware" "^1.0.63"
+    "@kubevious/ui-middleware" "^1.0.64"
     moment "^2.29.1"
     the-lodash "^2.0.9"
     the-logger "^2.0.14"
@@ -81,7 +81,7 @@
     the-logger "^2.0.14"
     the-promise "^2.0.13"
 
-"@kubevious/entity-meta@^1.0.67", "@kubevious/entity-meta@^1.0.69":
+"@kubevious/entity-meta@^1.0.69":
   version "1.0.69"
   resolved "https://registry.yarnpkg.com/@kubevious/entity-meta/-/entity-meta-1.0.69.tgz#c24fdf75453b2e1f4efd596575b5b673f7a9fb6a"
   integrity sha512-B8XmMmcwnwOwbgkgWwJGdDK3oeBfDIl+yeP5gqvvXRtMLMOrKUc14+fU/KFNdgysO5j7oXXQlgnOUGcCKq1EEQ==
@@ -146,12 +146,12 @@
     the-promise "^2.0.12"
     uuid "^8.3.2"
 
-"@kubevious/ui-middleware@^1.0.52", "@kubevious/ui-middleware@^1.0.63":
-  version "1.0.63"
-  resolved "https://registry.yarnpkg.com/@kubevious/ui-middleware/-/ui-middleware-1.0.63.tgz#4a1891b8cf17832842ec980810e8b29281de50d1"
-  integrity sha512-wNp5G/55DC50+7D6vSIDP9epeh+xi9l46FHQlhj/S4ds8JyOtr1O5wwfzB6oe27d+mLync9M5tsAdq/fIQBP+g==
+"@kubevious/ui-middleware@^1.0.52", "@kubevious/ui-middleware@^1.0.64":
+  version "1.0.64"
+  resolved "https://registry.yarnpkg.com/@kubevious/ui-middleware/-/ui-middleware-1.0.64.tgz#4229db8349bab746cd10a452a051d6594be9332b"
+  integrity sha512-YEWloInU91OI29gN6zB6BPxRNrb0kk0JDsM/4n25sf9Utp88vVIFXqcl3hccLMFv/kBgAgc4M2WXiLWHjBGMGQ==
   dependencies:
-    "@kubevious/entity-meta" "^1.0.67"
+    "@kubevious/entity-meta" "^1.0.69"
     "@kubevious/http-client" "^1.0.19"
     the-promise "^2.0.13"
 

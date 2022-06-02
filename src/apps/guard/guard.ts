@@ -1,4 +1,4 @@
-import { ChangePackageRow } from "@kubevious/data-models/dist/models/guard";
+import { ChangePackageRow, ValidationState } from "@kubevious/data-models/dist/models/guard";
 import { ILogger } from "the-logger";
 import { Promise } from "the-promise";
 import { Context } from "../../context";
@@ -27,7 +27,9 @@ export class GuardLogic
         // this._logger.info("[acceptChangePackage] change: ", change);
 
         return this._dataStore.dataStore.executeInTransaction([
-            this._dataStore.guard.ChangePackage
+            this._dataStore.guard.ChangePackage,
+            this._dataStore.guard.ValidationQueue,
+            this._dataStore.guard.ValidationHistory
         ], () => {
             return Promise.resolve()
                 .then(() => {
@@ -41,6 +43,26 @@ export class GuardLogic
                             namespace: change.namespace,
                             name: change.name,
                             date: change.date
+                        })
+                        ;
+                })
+                .then(() => {
+                    return this._dataStore.table(this._dataStore.guard.ValidationHistory)
+                        .create({ 
+                            namespace: change.namespace,
+                            name: change.name,
+                            date: change.date,
+                            state: ValidationState.pending
+                        })
+                        ;
+                })
+                .then(() => {
+                    return this._dataStore.table(this._dataStore.guard.ValidationHistory)
+                        .create({ 
+                            namespace: change.namespace,
+                            name: change.name,
+                            date: new Date(),
+                            state: ValidationState.scheduling
                         })
                         ;
                 })
