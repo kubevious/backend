@@ -73,6 +73,15 @@ export class GuardLogic
                     });
                 });
         })
+        .then(() => {
+            return this._context.microservices.guard.post(
+                '/api/internal/guard/process_job',
+                {},
+                {
+                    change_id: change.change_id
+                }
+            )
+        })
 
     }
 

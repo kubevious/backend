@@ -32,7 +32,7 @@ import { BackendMetrics } from './apps/backend-metrics';
 import { GuardLogic } from './apps/guard/guard';
 import { KubernetesClient } from 'k8s-super-client';
 import { K8sHandler } from './k8s/K8sHandler';
-
+import { Microservices } from './microservices';
 
 import VERSION from './version'
 
@@ -73,6 +73,7 @@ export class Context
     private _k8sHandler : K8sHandler;
 
     private _guardLogic : GuardLogic;
+    private _microservices : Microservices;
 
     constructor(backend : Backend, clusterConnector? : ClusterConnectorCb)
     {
@@ -82,6 +83,8 @@ export class Context
         this._clusterConnector = clusterConnector;
 
         this._logger.info("Version: %s", VERSION);
+
+        this._microservices = new Microservices(this);
 
         this._worldvious = new WorldviousClient(this.logger, 'backend', VERSION);
 
@@ -157,6 +160,10 @@ export class Context
 
     get tracker() {
         return this.backend.tracker;
+    }
+
+    get microservices() {
+        return this._microservices;
     }
 
     get database() {

@@ -9,8 +9,6 @@ export default function (router: Router, context: Context) {
 
     router.post<{}, ValidationHistoryRow>('/update_state', (req, res) => {
 
-        context.logger.error("UPDATE STATE: ", req.body);
-        
         return context.guardLogic.updateIntermediateState({
                 change_id: req.body.change_id,
                 date: new Date(req.body.date),
@@ -22,8 +20,6 @@ export default function (router: Router, context: Context) {
 
     router.post<{}, ChangeIdBody>('/update_final_state', (req, res) => {
 
-        context.logger.error("UPDATE FINAL: ", req.body);
-
         return context.guardLogic.updateFinalState(req.body.change_id)
             .then(() => ({}));
 
@@ -32,5 +28,5 @@ export default function (router: Router, context: Context) {
 }
 
 export interface ChangeIdBody {
-    id: string;
+    change_id: string;
 }
