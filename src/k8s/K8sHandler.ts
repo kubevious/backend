@@ -104,6 +104,9 @@ export class K8sHandler
         Promise.resolve(null)
             .then(() => this._context.guardLogic.acceptChangePackage(change))
             .then(() => this._changePackageClient?.delete(data.metadata.namespace!, data.metadata.name))
+            .catch(reason => {
+                this._logger.error("[_handleChangePackage] Failed to process change package. Reason:", reason);
+            })
             ;
         
     }
@@ -120,8 +123,7 @@ export class K8sHandler
             status: statusObj
         }
 
-
-        this._logger.info("[updateValidationState] BEGIN obj: ", body);
+        // this._logger.info("[updateValidationState] BEGIN obj: ", body);
 
         return this._validationStateClient!.query(body.metadata.namespace!, body.metadata.name!)
             .then(existingBody => {
