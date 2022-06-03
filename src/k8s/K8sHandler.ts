@@ -1,11 +1,16 @@
 import _ from 'the-lodash';
-import { ChangePackageChart, ChangePackageDeletion, ChangePackageRow, ChangePackageSource, ChangePackageSummary } from "@kubevious/data-models/dist/models/guard";
+import { Promise } from 'the-promise';
+import { ChangePackageChart, ChangePackageDeletion, ChangePackageRow, ChangePackageSource, ValidationState } from "@kubevious/data-models/dist/models/guard";
 import { DeltaAction, KubernetesObject, ResourceAccessor } from "k8s-super-client";
 import { ILogger } from "the-logger";
 import { Context } from "../context";
 
 import zlib from "fast-zlib";
 import * as yaml from 'js-yaml';
+import { DateUtils } from '@kubevious/data-models/dist';
+
+const GUARD_STATUS_CLEANUP_TIMER_INTERVAL_MS = 10 * 60 * 1000;
+const GUARD_STATUS_CLEANUP_TIMEOUT_SEC = 60 * 60;
 
 export class K8sHandler
 {
@@ -48,6 +53,12 @@ export class K8sHandler
             () => {},
             () => {},
             );
+
+        this._context.backend.timerScheduler.interval(
+            "guard-k8s-state-cleanup",
+            GUARD_STATUS_CLEANUP_TIMER_INTERVAL_MS,
+            this._processStatusCleanup.bind(this));
+
     }
 
     private _handleChangePackage(action: DeltaAction, data: KubernetesObject)
@@ -136,8 +147,40 @@ export class K8sHandler
             })
     }
 
-}
+    private _processStatusCleanup()
+    {
+        return Promise.resolve()
+            .then(() => this._validationStateClient!.queryAll())
+            .then(statuses => {
 
+                const toBeDeleted = statuses.filter(x => {
+                    const state = (x.status as any)?.state as ValidationState;
+                    if (state === ValidationState.completed || state === ValidationState.failed)
+                    {
+                        const dateStr = (x.status as any)?.date;
+                        if (dateStr) {
+                            const diffSec = DateUtils.diffSeconds(new Date(), dateStr);
+                            if (diffSec > GUARD_STATUS_CLEANUP_TIMEOUT_SEC) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                })
+
+                this._logger.info("[_processStatusCleanup] toBeDeleted: %s", toBeDeleted.length);
+
+                return Promise.serial(toBeDeleted, x => this._deleteValidationState(x));
+
+            })
+    }
+
+    private _deleteValidationState(obj: KubernetesObject)
+    {
+        this._logger.info("[_deleteValidationState] %s :: %s", obj.metadata.namespace!, obj.metadata.name!);
+        return this._validationStateClient!.delete(obj.metadata.namespace!, obj.metadata.name!);
+    }
+}
 
 function unzip(str: string)
 {
