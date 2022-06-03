@@ -55,10 +55,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@kubevious/data-models@^1.0.27":
-  version "1.0.27"
-  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.27.tgz#7f8c6332220b238b41c8f3297b5a05854af7fc30"
-  integrity sha512-Hc0H55QcRqAyEL5VLwkFgfDiDAcxFXXaHKzs7I5lzWr+EQUUpbkvc/Y9Sw2VIf7WLxS4eogCVsH87J/mxt+B2Q==
+"@kubevious/data-models@^1.0.30":
+  version "1.0.30"
+  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.30.tgz#66b81bc4bf4197866e7594a30662b3d8e563c2b3"
+  integrity sha512-c/AJr+Nq1J/GYr9F1lqtj+gvB7TQiKQqVyJ+Yj1Bk0axIjhXDYucx3B7/+F0DsDSGtmgVGATrqM0jGXDiM2wvw==
   dependencies:
     "@kubevious/easy-data-store" "^1.0.11"
     "@kubevious/helper-backend" "^1.0.38"

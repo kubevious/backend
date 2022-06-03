@@ -227,6 +227,10 @@ export class Context
         return this._guardLogic;
     }
 
+    get k8sHandler() {
+        return this._k8sHandler;
+    }
+
     public makeSnapshotReader(snapshotId: string)
     {
         return new SnapshotReader(this._logger,

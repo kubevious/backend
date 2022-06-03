@@ -1,5 +1,5 @@
 import _ from 'the-lodash';
-import { ChangePackageChart, ChangePackageDeletion, ChangePackageRow, ChangePackageSummary } from "@kubevious/data-models/dist/models/guard";
+import { ChangePackageChart, ChangePackageDeletion, ChangePackageRow, ChangePackageSource, ChangePackageSummary } from "@kubevious/data-models/dist/models/guard";
 import { DeltaAction, KubernetesObject, ResourceAccessor } from "k8s-super-client";
 import { ILogger } from "the-logger";
 import { Context } from "../context";
@@ -82,10 +82,16 @@ export class K8sHandler
                 name: x.name,
             }));
 
-        const change: ChangePackageRow = {
-            namespace: data.metadata.namespace!,
+        const source : ChangePackageSource = {
+            kind: 'k8s',
             name: data.metadata.name,
+            namespace: data.metadata.namespace!,
+        };
+
+        const change: ChangePackageRow = {
+            change_id: `${source.kind}-${source.namespace}-${source.name}`,
             date: new Date(),
+            source: source,
             summary: { 
                 createdCount: changes.length,
                 deletedCount: deletions.length,
@@ -97,13 +103,12 @@ export class K8sHandler
 
         Promise.resolve(null)
             .then(() => this._context.guardLogic.acceptChangePackage(change))
-            .then(() => this._updateValidationState(change.namespace, change.name, 'Scheduling'))
             .then(() => this._changePackageClient?.delete(data.metadata.namespace!, data.metadata.name))
             ;
         
     }
 
-    private _updateValidationState(namespace: string, name: string, state: string)
+    public updateValidationState(namespace: string, name: string, statusObj: any)
     {
         const body = {
             apiVersion: 'kubevious.io/v1',
@@ -112,10 +117,12 @@ export class K8sHandler
                 namespace: namespace,
                 name: name,
             },
-            status: {
-                state: state
-            }
+            status: statusObj
         }
+
+
+        this._logger.info("[updateValidationState] BEGIN obj: ", body);
+
         return this._validationStateClient!.query(body.metadata.namespace!, body.metadata.name!)
             .then(existingBody => {
                 if (existingBody) {
@@ -124,7 +131,7 @@ export class K8sHandler
                 } else {
                     return this._validationStateClient!.create(body.metadata.namespace!, body);
                 }
-            });
+            })
     }
 
 }
