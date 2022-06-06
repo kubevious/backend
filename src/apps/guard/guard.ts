@@ -1,5 +1,5 @@
-import { ChangePackageMeta, ChangePackageRow, ValidationHistoryRow, ValidationState } from "@kubevious/data-models/dist/models/guard";
-import { ValidationIssues } from "@kubevious/ui-middleware/dist/entities/guard";
+import { ChangePackageRow, ValidationHistoryRow } from "@kubevious/data-models/dist/models/guard";
+import { ValidationIssues, ValidationState } from "@kubevious/ui-middleware/dist/entities/guard";
 import { ILogger } from "the-logger";
 import { Promise } from "the-promise";
 import { Context } from "../../context";

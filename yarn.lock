@@ -55,24 +55,24 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@kubevious/data-models@^1.0.30":
-  version "1.0.30"
-  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.30.tgz#66b81bc4bf4197866e7594a30662b3d8e563c2b3"
-  integrity sha512-c/AJr+Nq1J/GYr9F1lqtj+gvB7TQiKQqVyJ+Yj1Bk0axIjhXDYucx3B7/+F0DsDSGtmgVGATrqM0jGXDiM2wvw==
+"@kubevious/data-models@^1.0.34":
+  version "1.0.34"
+  resolved "https://registry.yarnpkg.com/@kubevious/data-models/-/data-models-1.0.34.tgz#cf66d203965daf9ee04d2c30e13a730504b3e563"
+  integrity sha512-EBKbA/FQKi7Rhs0UvuBgV0FLnSUShetXkJ4b73Gi/ohvstQ9LbZmUbTBhulM/cym4AsX1ey/o2RS9aufPLXH7A==
   dependencies:
-    "@kubevious/easy-data-store" "^1.0.11"
+    "@kubevious/easy-data-store" "^1.0.12"
     "@kubevious/helper-backend" "^1.0.38"
-    "@kubevious/ui-middleware" "^1.0.64"
+    "@kubevious/ui-middleware" "^1.0.69"
     moment "^2.29.1"
     the-lodash "^2.0.9"
     the-logger "^2.0.14"
     the-promise "^2.0.13"
     uuid "^8.3.2"
 
-"@kubevious/easy-data-store@^1.0.11":
-  version "1.0.11"
-  resolved "https://registry.yarnpkg.com/@kubevious/easy-data-store/-/easy-data-store-1.0.11.tgz#e85853ee850893a70532f7ae849a1b0b48e8b7d3"
-  integrity sha512-0GOosqTWl/bBGc54iwXFZYvBY+gysfIIRvmFm1Jl0Pn6/6dEBK9COohxF2+jUEiQlQMkx+I2U3UZZ9yAN1PzYQ==
+"@kubevious/easy-data-store@^1.0.12":
+  version "1.0.12"
+  resolved "https://registry.yarnpkg.com/@kubevious/easy-data-store/-/easy-data-store-1.0.12.tgz#eb63275416d128764f3db03c4076c666ea33d7c2"
+  integrity sha512-qhydcSfFb5NkW6T8ECPaSo9+OZg1CM9YWiAqKjAapAIOZU4m5uqjUz14tUrXUWoEmDIEadfTUc+9TIr/GVARCQ==
   dependencies:
     "@kubevious/helper-cache" "^1.0.4"
     "@kubevious/helper-mysql" "^1.0.11"
@@ -146,10 +146,10 @@
     the-promise "^2.0.12"
     uuid "^8.3.2"
 
-"@kubevious/ui-middleware@^1.0.52", "@kubevious/ui-middleware@^1.0.64":
-  version "1.0.64"
-  resolved "https://registry.yarnpkg.com/@kubevious/ui-middleware/-/ui-middleware-1.0.64.tgz#4229db8349bab746cd10a452a051d6594be9332b"
-  integrity sha512-YEWloInU91OI29gN6zB6BPxRNrb0kk0JDsM/4n25sf9Utp88vVIFXqcl3hccLMFv/kBgAgc4M2WXiLWHjBGMGQ==
+"@kubevious/ui-middleware@^1.0.52", "@kubevious/ui-middleware@^1.0.69":
+  version "1.0.69"
+  resolved "https://registry.yarnpkg.com/@kubevious/ui-middleware/-/ui-middleware-1.0.69.tgz#bd6cb2c0c8855972fad57b8659c0908fda3be5c6"
+  integrity sha512-Dm/MfTAU3ev5fzYAd/raTdhwugMo4MESTv0s//O5QHHOyEs2kgM0GQf1owxePzIdLbRqrIwwZRNxqVE1P3YgTA==
   dependencies:
     "@kubevious/entity-meta" "^1.0.69"
     "@kubevious/http-client" "^1.0.19"

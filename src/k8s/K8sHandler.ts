@@ -1,13 +1,14 @@
 import _ from 'the-lodash';
 import { Promise } from 'the-promise';
-import { ChangePackageChart, ChangePackageDeletion, ChangePackageRow, ChangePackageSource, ValidationState } from "@kubevious/data-models/dist/models/guard";
+import { ChangePackageRow, ChangePackageSource } from "@kubevious/data-models/dist/models/guard";
+import { ChangePackageChart, ChangePackageDeletion, ValidationState } from "@kubevious/ui-middleware/dist/entities/guard";
 import { DeltaAction, KubernetesObject, ResourceAccessor } from "k8s-super-client";
 import { ILogger } from "the-logger";
 import { Context } from "../context";
 
 import zlib from "fast-zlib";
 import * as yaml from 'js-yaml';
-import { DateUtils } from '@kubevious/data-models/dist';
+import { DateUtils } from '@kubevious/data-models';
 
 const GUARD_STATUS_CLEANUP_TIMER_INTERVAL_MS = 10 * 60 * 1000;
 const GUARD_STATUS_CLEANUP_TIMEOUT_SEC = 60 * 60;
