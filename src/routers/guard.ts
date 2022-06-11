@@ -9,7 +9,7 @@ import { ChangePackageListItem, ChangePackageListResult, ChangePackageItemDetail
 import { ValidationState } from '@kubevious/ui-middleware/dist/entities/guard';
 import Joi from 'joi';
 
-const LIMIT_COUNT = 2;
+const LIMIT_COUNT = 25;
 
 export default function (router: Router, context: Context,  logger: ILogger, { dataStore } : Helpers) {
 
