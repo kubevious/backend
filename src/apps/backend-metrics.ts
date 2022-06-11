@@ -20,15 +20,9 @@ export class BackendMetrics
         this._context = context;
         this._logger = context.logger.sublogger("BackendMetrics");
 
-        if (!process.env.COLLECTOR_BASE_URL) {
-            throw new Error("COLLECTOR_BASE_URL not set");
-        }
-        this._addMicroservice("Collector", process.env.COLLECTOR_BASE_URL);
-
-        if (!process.env.PARSER_BASE_URL) {
-            throw new Error("PARSER_BASE_URL not set");
-        }
-        this._addMicroservice("Parser", process.env.PARSER_BASE_URL);
+        this._addMicroservice("Collector", context.microservices.collector);
+        this._addMicroservice("Parser", context.microservices.parser);
+        this._addMicroservice("Guard", context.microservices.guard);
     }
 
     get logger() {
@@ -98,11 +92,11 @@ export class BackendMetrics
             })
     }
 
-    private _addMicroservice(name: string, baseUrl: string)
+    private _addMicroservice(name: string, client: HttpClient)
     {
         this._microservices.push({
             name: name,
-            client: new HttpClient(baseUrl)
+            client: client
         });
     }
 

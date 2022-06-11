@@ -10,6 +10,7 @@ export IMAGE_NAME=kubevious-backend
 
 export COLLECTOR_BASE_URL=http://localhost:4003
 export PARSER_BASE_URL=http://localhost:4004
+export GUARD_BASE_URL=http://localhost:4005
 
 source ../dependencies.git/runtime-configuration.sh
 source ../dependencies.git/worldvious/configuration.sh

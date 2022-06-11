@@ -43,7 +43,6 @@ export class NotificationsApp
         
         this._worldvious = this.context.worldvious;
        
-        this.context.database.onConnect(this._onDbConnected.bind(this));
     }
 
     get logger() {
@@ -62,6 +61,8 @@ export class NotificationsApp
 
     init()
     {
+        this.context.database.onConnect(this._onDbConnected.bind(this));
+
         this._worldvious.onNotificationsChanged(result => {
             this._allNotifications = result?.notifications ?? [];
             this._decideNotifications();

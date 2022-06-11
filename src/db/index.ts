@@ -14,6 +14,7 @@ import { NotificationAccessors, prepareNotification } from '@kubevious/data-mode
 import { SnapshotsAccessors, prepareSnapshots } from '@kubevious/data-models'
 import { RuleEngineAccessors, prepareRuleEngine } from '@kubevious/data-models'
 import { ValidationAccessors, prepareValidation } from '@kubevious/data-models'
+import { GuardAccessors, prepareGuard } from '@kubevious/data-models/dist/models/guard'
 
 
 export class Database
@@ -28,6 +29,7 @@ export class Database
     private _snapshots : SnapshotsAccessors;
     private _ruleEngine : RuleEngineAccessors;
     private _validation : ValidationAccessors;
+    private _guard : GuardAccessors;
 
 
     constructor(logger : ILogger, context : Context)
@@ -42,6 +44,7 @@ export class Database
         this._snapshots = prepareSnapshots(this._dataStore);
         this._ruleEngine = prepareRuleEngine(this._dataStore);
         this._validation = prepareValidation(this._dataStore);
+        this._guard = prepareGuard(this._dataStore);
     }
 
     get isConnected() {
@@ -74,6 +77,10 @@ export class Database
 
     get validation() {
         return this._validation;
+    }
+
+    get guard() {
+        return this._guard;
     }
 
     init()

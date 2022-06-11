@@ -19,4 +19,7 @@ export NODE_ENV=development
 
 # source ../dependencies.git/worldvious/short-delays.sh
 
-node dist/mock/index-mock
+# export KUBECONFIG=kube-config.yaml
+# export KUBE_CONTEXT_NAME=minikube
+
+node dist/mock/index-remote

@@ -29,14 +29,19 @@ import { ClusterStatusAccessor } from './apps/cluster-status-accessor';
 
 import { SearchEngine } from './apps/search-engine';
 import { BackendMetrics } from './apps/backend-metrics';
-
+import { GuardLogic } from './apps/guard/guard';
+import { KubernetesClient } from 'k8s-super-client';
+import { K8sHandler } from './k8s/K8sHandler';
+import { Microservices } from './microservices';
 
 import VERSION from './version'
+
+export type ClusterConnectorCb = () => Promise<KubernetesClient>;
 
 export class Context
 {
     private _backend : Backend;
-    private _logger: any; //  ILogger;
+    private _logger: ILogger;
     /* Both of the 'DumpWriter' class (inside the-logger and worldvious-client/node_modules/the-logger)
     should have public _writer and _indent prorerties to be able to uncomment */
     private _worldvious : WorldviousClient;
@@ -63,12 +68,23 @@ export class Context
     private _searchEngine : SearchEngine;
     private _backendMetrics : BackendMetrics;
 
-    constructor(backend : Backend)
+    private _clusterConnector? : ClusterConnectorCb;
+    private _k8sClient? : KubernetesClient;
+    private _k8sHandler : K8sHandler;
+
+    private _guardLogic : GuardLogic;
+    private _microservices : Microservices;
+
+    constructor(backend : Backend, clusterConnector? : ClusterConnectorCb)
     {
         this._backend = backend;
         this._logger = backend.logger.sublogger('Context');
 
+        this._clusterConnector = clusterConnector;
+
         this._logger.info("Version: %s", VERSION);
+
+        this._microservices = new Microservices(this);
 
         this._worldvious = new WorldviousClient(this.logger, 'backend', VERSION);
 
@@ -81,6 +97,8 @@ export class Context
         this._markerEditor = new MarkerEditor(this);
         this._ruleAccessor = new RuleAccessor(this);
         this._ruleEditor = new RuleEditor(this);
+
+        this._guardLogic = new GuardLogic(this);
 
         this._backendMetrics = new BackendMetrics(this);
 
@@ -100,7 +118,7 @@ export class Context
 
         this._server = new WebServer(this);
         this._websocket = new WebSocket(this, this._server);
-
+        this._k8sHandler = new K8sHandler(this);
 
         backend.registerErrorHandler((reason) => {
             return this.worldvious.acceptError(reason);
@@ -114,8 +132,21 @@ export class Context
 
         backend.stage("setup-redis", () => this._redis.run());
 
+        backend.stage("connect-to-k8s", () => {
+            if (!this._clusterConnector) {
+                return;
+            }
+            return this._clusterConnector()
+                .then(client => {
+                    this._k8sClient = client;
+                });
+        });
+
+        backend.stage("setup-k8s-handler", () => this._k8sHandler.init());
+
         backend.stage("setup-server", () => this._server.run());
         backend.stage("setup-websocket", () => this._websocket.run());
+
         backend.stage("notifications-app", () => this._notificationsApp.init());
     }
 
@@ -129,6 +160,10 @@ export class Context
 
     get tracker() {
         return this.backend.tracker;
+    }
+
+    get microservices() {
+        return this._microservices;
     }
 
     get database() {
@@ -189,6 +224,18 @@ export class Context
 
     get backendMetrics() {
         return this._backendMetrics;
+    }
+
+    get k8sClient() {
+        return this._k8sClient;
+    }
+
+    get guardLogic() {
+        return this._guardLogic;
+    }
+
+    get k8sHandler() {
+        return this._k8sHandler;
     }
 
     public makeSnapshotReader(snapshotId: string)
