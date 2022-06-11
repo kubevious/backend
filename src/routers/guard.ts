@@ -5,29 +5,30 @@ import { Context } from '../context';
 import { Router } from '@kubevious/helper-backend';
 import { Helpers } from '../server';
 import { QueryOptions } from '@kubevious/easy-data-store/dist/driver';
-import { ChangePackageListItem, ChangePackageListResult } from '@kubevious/ui-middleware/dist/services/guard';
+import { ChangePackageListItem, ChangePackageListResult, ChangePackageItemDetails } from '@kubevious/ui-middleware/dist/services/guard';
 import { ValidationState } from '@kubevious/ui-middleware/dist/entities/guard';
+import Joi from 'joi';
 
-const LIMIT_COUNT = 100;
+const LIMIT_COUNT = 2;
 
 export default function (router: Router, context: Context,  logger: ILogger, { dataStore } : Helpers) {
 
     router.url('/api/v1/guard');
 
-    router.get<any, any, { last_id? : string }>('/changes', (req, res) => {
+    router.get<any, any, { nextToken? : number }>('/changes', (req, res) => {
 
         const queryOptions : QueryOptions = {
-            fields: { fields: ['change_id', 'date', 'summary'] },
+            fields: { fields: ['id', 'change_id', 'date', 'summary'] },
             filters: { fields: [] },
             order: { fields: [{ name: 'date', asc: false }]},
             limitCount: LIMIT_COUNT,
         }
 
-        if (req.query.lastId) {
+        if (req.query.nextToken) {
             queryOptions.filters!.fields!.push({
-                name: 'string',
+                name: 'id',
                 operator: '<',
-                value: req.query.last_id
+                value: req.query.nextToken
             })
         }
 
@@ -53,7 +54,7 @@ export default function (router: Router, context: Context,  logger: ILogger, { d
                         {
                             const last_item = _.last(rows);
                             if (last_item) {
-                                result.nextId = last_item.change_id;
+                                result.nextToken = last_item.id;
                             }
                         }
 
@@ -89,7 +90,61 @@ export default function (router: Router, context: Context,  logger: ILogger, { d
             })
             .then(() => result);
     })
+    .querySchema(Joi.object({
+        nextToken: Joi.number().optional(),
+    }))
     ;
     
+
+    router.get<any, any, { id : string }>('/change/details', (req, res) => {
+
+        const changeId = req.query.id;
+
+        return dataStore.guard.ChangePackage.table()
+            .queryOne({ change_id: changeId })
+            .then(changePackage => {
+                if (!changePackage) {
+                    return null;
+                }
+
+                return dataStore.guard.ValidationState.table()
+                    .queryOne({ change_id: changeId })
+                    .then(stateRow => {
+                        if (!stateRow) {
+                            const result : ChangePackageItemDetails = {
+                                change_id: changeId,
+                                date: new Date(changePackage.date!).toISOString(),
+                                state: ValidationState.pending,
+                                changeSummary: changePackage.summary!,
+
+                                charts: changePackage.charts!,
+                                changes: changePackage.changes!,
+                                deletions: changePackage.deletions!,
+                            }
+                            return result;
+                        } else {
+                            const result : ChangePackageItemDetails = {
+                                change_id: changeId,
+                                date: new Date(changePackage.date!).toISOString(),
+                                state: ValidationState.pending,
+                                changeSummary: changePackage.summary!,
+                                
+                                charts: changePackage.charts!,
+                                changes: changePackage.changes!,
+                                deletions: changePackage.deletions!,
+
+                                validationSummary: stateRow.summary!,
+                                newIssues: stateRow.newIssues,
+                                clearedIssues: stateRow.clearedIssues
+                            }
+                            return result;
+                        }
+                    });
+            });
+
+    })
+    .querySchema(Joi.object({
+        id: Joi.string().required(),
+    }));
 }
 

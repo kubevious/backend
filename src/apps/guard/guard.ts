@@ -23,7 +23,7 @@ export class GuardLogic
         return this._logger;
     }
 
-    acceptChangePackage(change: ChangePackageRow)
+    acceptChangePackage(change: Partial<ChangePackageRow>)
     {
         // this._logger.info("[acceptChangePackage] change: ", change);
 
@@ -34,7 +34,7 @@ export class GuardLogic
         ], () => {
 
             const historyRow : ValidationHistoryRow = { 
-                change_id: change.change_id,
+                change_id: change.change_id!,
                 date: new Date(),
                 state: ValidationState.scheduling
             };

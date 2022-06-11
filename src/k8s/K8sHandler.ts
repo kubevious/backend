@@ -100,7 +100,7 @@ export class K8sHandler
             namespace: data.metadata.namespace!,
         };
 
-        const change: ChangePackageRow = {
+        const change: Partial<ChangePackageRow> = {
             change_id: `${source.kind}-${source.namespace}-${source.name}`,
             date: new Date(),
             source: source,
