@@ -126,7 +126,7 @@ export default function (router: Router, context: Context,  logger: ILogger, { d
                             const result : ChangePackageItemDetails = {
                                 change_id: changeId,
                                 date: new Date(changePackage.date!).toISOString(),
-                                state: ValidationState.pending,
+                                state: stateRow.state!,
                                 changeSummary: changePackage.summary!,
                                 
                                 charts: changePackage.charts!,
