@@ -133,6 +133,7 @@ export default function (router: Router, context: Context,  logger: ILogger, { d
                                 changes: changePackage.changes!,
                                 deletions: changePackage.deletions!,
 
+                                success: stateRow.success ? true : false,
                                 validationSummary: stateRow.summary!,
                                 newIssues: stateRow.newIssues,
                                 clearedIssues: stateRow.clearedIssues
