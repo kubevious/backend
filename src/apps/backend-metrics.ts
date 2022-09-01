@@ -46,13 +46,13 @@ export class BackendMetrics
         });
 
         metrics.push({
-            category: "Collector",
+            category: "Backend",
             name: "MySQL Connected",
             value: this._context.dataStore.isConnected
         });
 
         metrics.push({
-            category: "Collector",
+            category: "Backend",
             name: "Redis Connected",
             value: this._context.redis.isConnected
         });

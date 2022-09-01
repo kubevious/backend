@@ -12,6 +12,7 @@ import { DateUtils } from '@kubevious/data-models';
 
 const GUARD_STATUS_CLEANUP_TIMER_INTERVAL_MS = 10 * 60 * 1000;
 const GUARD_STATUS_CLEANUP_TIMEOUT_SEC = 60 * 60;
+const GUARD_RETRY_TIMEOUT_MS = 10 * 1000;
 
 export class K8sHandler
 {
@@ -20,6 +21,9 @@ export class K8sHandler
 
     private _changePackageClient : ResourceAccessor | null = null;
     private _validationStateClient : ResourceAccessor | null = null;
+
+    private _isRetryScheduled : boolean = false;
+    private _retryJobs : Record<string, KubernetesObject> = {};
 
     constructor(context : Context)
     {
@@ -118,10 +122,56 @@ export class K8sHandler
             .then(() => this._changePackageClient?.delete(data.metadata.namespace!, data.metadata.name))
             .catch(reason => {
                 this._logger.error("[_handleChangePackage] Failed to process change package. Reason:", reason);
+
+                this._scheduleProcessRetry(data);
             })
+            .then(() => null)
             ;
         
     }
+
+    private _scheduleProcessRetry(data: KubernetesObject)
+    {
+        this._logger.warn("[_scheduleProcessRetry] Scheduling guard processing retry...");
+
+        this._retryJobs[this._getGuardJobId(data)] = data; 
+
+        if (!this._isRetryScheduled) {
+            this._isRetryScheduled = true;
+
+            this._context.backend.timerScheduler.timer(
+                "guard-process-retry",
+                GUARD_RETRY_TIMEOUT_MS,
+                this._processRetryAll.bind(this));
+        }
+    }
+
+    private _processRetryAll()
+    {
+        this._logger.info("[_processRetryAll] Processing Start...");
+
+        this._isRetryScheduled = false;
+
+        return Promise.serial(_.keys(this._retryJobs), (jobId) => {
+            const data = this._retryJobs[jobId];
+            delete this._retryJobs[jobId];
+
+            return Promise.resolve()
+                .then(() => this._handleChangePackage(DeltaAction.Added, data));
+        })
+        .then(() => {
+            this._logger.info("[_processRetryAll] Processing Completed.");
+        })
+    }
+
+    private _getGuardJobId(data: KubernetesObject)
+    {
+        return _.stableStringify({
+            namespace: data.metadata.namespace ?? 'default',
+            name: data.metadata.name
+        });
+    }
+
 
     public updateValidationState(namespace: string, name: string, statusObj: any)
     {
@@ -135,6 +185,7 @@ export class K8sHandler
             status: statusObj
         }
 
+        this._logger.info("[updateValidationState] %s :: %s => state: %s, success: %s", namespace, name, statusObj?.state, statusObj?.success);
         // this._logger.info("[updateValidationState] BEGIN obj: ", body);
 
         return this._validationStateClient!.query(body.metadata.namespace!, body.metadata.name!)
