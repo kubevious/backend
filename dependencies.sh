@@ -14,6 +14,7 @@ REPO_DEPENDENCIES=(
     "@kubevious/helper-redis"
     "@kubevious/http-client"
     "@kubevious/entity-meta"
+    "k8s-super-client"
 )
 
 FORCE_RESOLVE_DEPENDENCIES=(
@@ -30,4 +31,5 @@ FORCE_RESOLVE_DEPENDENCIES=(
     "@kubevious/helper-redis"
     "@kubevious/http-client"
     "@kubevious/entity-meta"
+    "k8s-super-client"
 )

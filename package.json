@@ -23,22 +23,22 @@
   "dependencies": {
     "@kubevious/data-models": "^1.0.36",
     "@kubevious/easy-data-store": "^1.0.12",
-    "@kubevious/entity-meta": "^1.0.71",
+    "@kubevious/entity-meta": "^1.0.72",
     "@kubevious/helper-backend": "^1.0.38",
     "@kubevious/helper-redis": "^1.0.19",
     "@kubevious/http-client": "^1.0.19",
     "@kubevious/ui-middleware": "^1.0.75",
     "@kubevious/websocket-server": "^1.0.28",
-    "@kubevious/worldvious-client": "^1.0.9",
+    "@kubevious/worldvious-client": "^1.0.10",
     "cron": "^1.8.2",
     "fast-zlib": "^2.0.1",
     "joi": "^17.3.0",
     "js-yaml": "^4.1.0",
-    "k8s-super-client": "^2.0.25",
+    "k8s-super-client": "^2.0.29",
     "moment": "^2.29.1",
     "the-lodash": "^2.0.9",
     "the-logger": "^2.0.14",
-    "the-promise": "^2.0.13",
+    "the-promise": "^2.0.15",
     "uuid-parse": "^1.1.0"
   },
   "devDependencies": {
@@ -59,15 +59,16 @@
   "resolutions": {
     "the-lodash": "^2.0.9",
     "the-logger": "^2.0.14",
-    "the-promise": "^2.0.13",
+    "the-promise": "^2.0.15",
     "@kubevious/easy-data-store": "^1.0.12",
     "@kubevious/helper-backend": "^1.0.38",
     "@kubevious/websocket-server": "^1.0.28",
-    "@kubevious/worldvious-client": "^1.0.9",
+    "@kubevious/worldvious-client": "^1.0.10",
     "@kubevious/data-models": "^1.0.36",
     "@kubevious/ui-middleware": "^1.0.75",
     "@kubevious/helper-redis": "^1.0.19",
     "@kubevious/http-client": "^1.0.19",
-    "@kubevious/entity-meta": "^1.0.71"
+    "@kubevious/entity-meta": "^1.0.72",
+    "k8s-super-client": "^2.0.29"
   }
 }

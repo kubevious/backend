@@ -81,10 +81,10 @@
     the-logger "^2.0.14"
     the-promise "^2.0.13"
 
-"@kubevious/entity-meta@^1.0.69", "@kubevious/entity-meta@^1.0.71":
-  version "1.0.71"
-  resolved "https://registry.yarnpkg.com/@kubevious/entity-meta/-/entity-meta-1.0.71.tgz#6f87acba188878d3a9ec641722cb85fd16aa3579"
-  integrity sha512-762pLt0TBErebtiiKWPIqtZ4i+lSv0VdayfKz/ofba8hZ3l+P4maYUGgFF0EyicgFMwJwY0AxgMIVLy980x3Hw==
+"@kubevious/entity-meta@^1.0.69", "@kubevious/entity-meta@^1.0.72":
+  version "1.0.72"
+  resolved "https://registry.yarnpkg.com/@kubevious/entity-meta/-/entity-meta-1.0.72.tgz#52d1e9a67a41cace34b6f816afd877ba2b0dec2c"
+  integrity sha512-CkA6H0zSq4oP+giFU6iTHxOoEB4Pvudh+v/gCNQXso47TcuxVn/eolQPYxEnzXHCUviPiE794auUjepMLnxwog==
   dependencies:
     the-lodash "^2.0.9"
 
@@ -146,7 +146,7 @@
     the-promise "^2.0.12"
     uuid "^8.3.2"
 
-"@kubevious/ui-middleware@^1.0.52", "@kubevious/ui-middleware@^1.0.75":
+"@kubevious/ui-middleware@^1.0.75":
   version "1.0.75"
   resolved "https://registry.yarnpkg.com/@kubevious/ui-middleware/-/ui-middleware-1.0.75.tgz#12e1d2ed1fb6f5e0a67e8747ca2a39d4c3e7f8e1"
   integrity sha512-fwS88E4+7Mg4z7hHPjymPUOXxFneZgTDVvmU8YwiRV85YyFGEctjC5OVJmeHqAPmZFHRu3bt/ZeXde7D7bP13A==
@@ -166,13 +166,13 @@
     the-logger "^2.0.14"
     the-promise "^2.0.13"
 
-"@kubevious/worldvious-client@^1.0.9":
-  version "1.0.9"
-  resolved "https://registry.yarnpkg.com/@kubevious/worldvious-client/-/worldvious-client-1.0.9.tgz#3af530e7bdb9eb02820d15415d177f8d6570164e"
-  integrity sha512-KNKpCHrx5PKIb0fgdA6MfOyY9FvxO03+FoRWKdalrISQURzt/xW0Yw9BraprrSYpd1hIuNltWmIHXoywS3zWFQ==
+"@kubevious/worldvious-client@^1.0.10":
+  version "1.0.10"
+  resolved "https://registry.yarnpkg.com/@kubevious/worldvious-client/-/worldvious-client-1.0.10.tgz#434c0f32ff35d54feac4fcd6ee940452606e1125"
+  integrity sha512-GgnfxG5JDL2MLZ8Edtk/AA98/TVBWecf6EwsuEACQqi+hPPKUjR83PmXhZSl0gMO12F52ciEMCqN7V6sGDvSjg==
   dependencies:
     "@kubevious/http-client" "^1.0.19"
-    "@kubevious/ui-middleware" "^1.0.52"
+    "@kubevious/ui-middleware" "^1.0.75"
     dotenv "^8.2.0"
     the-lodash "^2.0.9"
     the-logger "^2.0.14"
@@ -241,10 +241,10 @@
   resolved "https://registry.yarnpkg.com/@tsconfig/node16/-/node16-1.0.2.tgz#423c77877d0569db20e1fc80885ac4118314010e"
   integrity sha512-eZxlbI8GZscaGS7kkc/trHTT5xgrjH3/1n2JDwusC9iahPKWMRvRjJSAN5mCXviuTGQ/lHnhvv8Q1YTpnfz9gA==
 
-"@types/bluebird@3.5.35":
-  version "3.5.35"
-  resolved "https://registry.yarnpkg.com/@types/bluebird/-/bluebird-3.5.35.tgz#3964c48372bf62d60616d8673dd77a9719ebac9b"
-  integrity sha512-2WeeXK7BuQo7yPI4WGOBum90SzF/f8rqlvpaXx4rjeTmNssGRDHWf7fgDUH90xMB3sUOu716fUK5d+OVx0+ncQ==
+"@types/bluebird@3.5.36":
+  version "3.5.36"
+  resolved "https://registry.yarnpkg.com/@types/bluebird/-/bluebird-3.5.36.tgz#00d9301d4dc35c2f6465a8aec634bb533674c652"
+  integrity sha512-HBNx4lhkxN7bx6P0++W8E289foSu8kO8GCk2unhuVggO+cE7rh9DhZUyPhUxNRG9m+5B5BTKxZQ5ZP92x/mx9Q==
 
 "@types/component-emitter@^1.2.10":
   version "1.2.11"
@@ -1502,10 +1502,10 @@ jsonfile@^6.0.1:
   optionalDependencies:
     graceful-fs "^4.1.6"
 
-k8s-super-client@^2.0.25:
-  version "2.0.26"
-  resolved "https://registry.yarnpkg.com/k8s-super-client/-/k8s-super-client-2.0.26.tgz#fc74ce1ffb74b60771105a058582c0841088d473"
-  integrity sha512-l5w5jOXldFBOVU3wK4l+lPvELOn3f2TXJ8F45GQG9n16J5wx51diPKWzHxyoyS9emX1X+k2KI5TIw8hWF4zHcQ==
+k8s-super-client@^2.0.29:
+  version "2.0.29"
+  resolved "https://registry.yarnpkg.com/k8s-super-client/-/k8s-super-client-2.0.29.tgz#b6b87cab5df1fafefa3b637d19731c1855264211"
+  integrity sha512-jFW+HXLHRiLc0d7F+q2hgTADYFvA9MoDG/9P990K/yZlhsIVhWzcYYXXk406Elq4EC5dZ/W3j76PuAb30fM1Kw==
   dependencies:
     "@types/ndjson" "^2.0.0"
     "@types/uuid" "^8.3.0"
@@ -1712,6 +1712,11 @@ moment-timezone@^0.5.x:
   integrity sha512-3zAEHh2hKUs3EXLESx/wsgw6IQdusOT8Bxm3D9UrHPQR7zlMmzwybC8zHEM1tQ4LJwP7fcxrWr8tuBg05fFCbg==
   dependencies:
     moment ">= 2.9.0"
+
+moment@2.29.4:
+  version "2.29.4"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.4.tgz#3dbe052889fe7c1b2ed966fcb3a77328964ef108"
+  integrity sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==
 
 "moment@>= 2.9.0", moment@^2.29.1:
   version "2.29.1"
@@ -2390,14 +2395,14 @@ the-logger@^2.0.14, the-logger@^2.0.9:
     the-lodash "^2.0.9"
     the-promise "^2.0.13"
 
-the-promise@^2.0.12, the-promise@^2.0.13:
-  version "2.0.13"
-  resolved "https://registry.yarnpkg.com/the-promise/-/the-promise-2.0.13.tgz#1e56f577091965b7945ba8f3938a31cce0889558"
-  integrity sha512-/ZzPENiqQvD9wFkiUMefcQavhnnwKU3rnwkKLsVroR1FiOZl6OvaoFkFDNIQUesqCkvTwRAz8UHdupbX/9kPMg==
+the-promise@^2.0.12, the-promise@^2.0.13, the-promise@^2.0.15:
+  version "2.0.15"
+  resolved "https://registry.yarnpkg.com/the-promise/-/the-promise-2.0.15.tgz#f3cfc57676b4e21aeefc32ec9d9eb4b534bfc616"
+  integrity sha512-5nWyNDjjPz76xHx3iTypQyr215+r2SOawKy4UJyTs7r+zjd8oBUNAPIVlW7TUKbvFqMPg4A+FsRPmdCp5vewFw==
   dependencies:
-    "@types/bluebird" "3.5.35"
+    "@types/bluebird" "3.5.36"
     bluebird "3.7.2"
-    moment "^2.29.1"
+    moment "2.29.4"
     the-lodash "^2.0.9"
 
 thread-stream@^0.12.0:
