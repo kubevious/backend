@@ -16,7 +16,7 @@ steps:
     when:
       condition:
         all:
-          mainBranch: '"${{CF_BRANCH}}" == "master"'
+          mainBranch: '"${{CF_BRANCH}}" == "main"'
           noCiCdMessage: 'includes("${{CF_COMMIT_MESSAGE}}", "Version Release") == false'
     commands:
       - cf_export IS_RELEASE=true
@@ -45,6 +45,7 @@ steps:
       - 'echo "Branch: ${{CF_BRANCH}}"'
       - 'echo "Revision: ${{CF_REVISION}}"'
       - 'echo "Author: ${{CF_COMMIT_AUTHOR}}"'
+      - 'echo "Message: ${{CF_COMMIT_MESSAGE}}"'
       - 'echo "Image Name: ${IMAGE_NAME}"'
       - 'echo "UBI Image Name: ${IMAGE_NAME_UBI}"'
 

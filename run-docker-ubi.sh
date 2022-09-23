@@ -10,8 +10,15 @@ docker run \
     --rm \
     --name "${CONTAINER_NAME}" \
     -h ${CONTAINER_NAME} \
+    -p ${SERVER_PORT}:${SERVER_PORT} \
     --network ${NETWORK_NAME} \
-    -p 4050:4000 \
-    -v ${MY_DIR}/docker/Caddyfile:/etc/caddy/Caddyfile \
-    -e KUBEVIOUS_VERSION=1.2.3 \
+    -e NODE_ENV=development \
+    -e SERVER_PORT=${SERVER_PORT} \
+    -e MYSQL_HOST=kubevious-mysql \
+    -e MYSQL_DB=${MYSQL_DB} \
+    -e MYSQL_USER=${MYSQL_USER} \
+    -e MYSQL_PASS=${MYSQL_PASS} \
+    -e REDIS_HOST=kubevious-redisearch \
+    -e COLLECTOR_BASE_URL=http://kubevious-collector:4003 \
+    -e PARSER_BASE_URL=http://kubevious-parser:4004 \
     ${IMAGE_NAME_UBI}
