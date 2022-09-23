@@ -5,7 +5,6 @@ stages:
   - "clone"
   - "build"
   - "push"
-  - "validate"
   - "release"
 
 steps:
@@ -186,18 +185,9 @@ steps:
         all:
           isRelease: '"${{IS_RELEASE}}" == "true"'
 
-  openshift_preflight_check:
-    title: OpenShift Preflight Check
-    stage: validate
-    image: "kubevious/openshift-preflight-checker:latest"
-    working_directory: "/codefresh/volume"
-    commands:
-      - export PREFLIGHT_IMAGE=${{IMAGE_NAME_UBI}}:${{DOCKER_TAG}}
-      - ${{OPENSHIFT_CERT_REPO_PATH}}/scripts/image/validate-only.sh
-
-  openshift_preflight_submit:
-    title: OpenShift Preflight Submit
-    stage: validate
+  openshift_image_submit:
+    title: OpenShift Image Check & Submit
+    stage: push
     image: "kubevious/openshift-preflight-checker:latest"
     working_directory: "/codefresh/volume"
     when:
