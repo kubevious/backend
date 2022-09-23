@@ -7,6 +7,7 @@ export SERVER_PORT=4002
 export CONTAINER_NAME=kubevious-backend
 export NETWORK_NAME=kubevious
 export IMAGE_NAME=kubevious-backend
+export IMAGE_NAME_UBI=${IMAGE_NAME}-ubi
 
 export COLLECTOR_BASE_URL=http://localhost:4003
 export PARSER_BASE_URL=http://localhost:4004

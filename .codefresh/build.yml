@@ -6,6 +6,7 @@ stages:
   - "build"
   - "test"
   - "release"
+  - "openshift"
 
 steps:
 
@@ -35,6 +36,11 @@ steps:
       - export CICD_REPO_NAME=cicd
       - cf_export CICD_REPO_NAME=${CICD_REPO_NAME}
       - cf_export CICD_REPO_PATH=/codefresh/volume/${CICD_REPO_NAME}.git
+      - export OPENSHIFT_CERT_REPO_NAME=openshift-certification
+      - cf_export OPENSHIFT_CERT_REPO_NAME=${OPENSHIFT_CERT_REPO_NAME}
+      - cf_export OPENSHIFT_CERT_REPO_PATH=/codefresh/volume/${OPENSHIFT_CERT_REPO_NAME}.git      
+      - cf_export IMAGE_NAME=kubevious/${PRODUCT_NAME}
+      - cf_export IMAGE_NAME_UBI=kubevious/${PRODUCT_NAME}-ubi
       - 'echo "Is Release: ${IS_RELEASE}"'
       - 'echo "Product: ${PRODUCT_NAME}"'
       - 'echo "Repo: ${{CF_REPO_NAME}}"'
@@ -72,6 +78,20 @@ steps:
       - cd ${{CICD_REPO_PATH}}
       - ls -la
 
+  clone_openshift_cert:
+    title: Clone OpenShift Cert Repo
+    stage: clone
+    image: "alpine/git:latest"
+    working_directory: "/codefresh/volume"
+    commands:
+      - pwd
+      - ls -la
+      - rm -rf ${{OPENSHIFT_CERT_REPO_PATH}}
+      - "git clone https://${{CF_REPO_OWNER}}:${{GITHUB_TOKEN}}@github.com/${{CF_REPO_OWNER}}/${{OPENSHIFT_CERT_REPO_NAME}}.git ${{OPENSHIFT_CERT_REPO_PATH}}"
+      - ls -la
+      - cd ${{OPENSHIFT_CERT_REPO_PATH}}
+      - ls -la      
+
   inject_version:
     title: Inject Version
     stage: build
@@ -93,52 +113,93 @@ steps:
       - git status
       - git diff
 
-  prepare:
-    title: Prepare Dependencies
-    stage: build
-    image: 'kubevious/node-builder:14'
-    working_directory: "${{MAIN_REPO_PATH}}"
-    commands:
-      - yarn install --frozen-lockfile
+  # prepare:
+  #   title: Prepare Dependencies
+  #   stage: build
+  #   image: 'kubevious/node-builder:14'
+  #   working_directory: "${{MAIN_REPO_PATH}}"
+  #   commands:
+  #     - yarn install --frozen-lockfile
 
-  compile:
-    title: Compile
-    stage: build
-    image: 'kubevious/node-builder:14'
-    working_directory: "${{MAIN_REPO_PATH}}"
-    commands:
-      - npm run build
+  # compile:
+  #   title: Compile
+  #   stage: build
+  #   image: 'kubevious/node-builder:14'
+  #   working_directory: "${{MAIN_REPO_PATH}}"
+  #   commands:
+  #     - npm run build
 
-  build:
-    title: "Building Docker Image"
-    stage: build
+  # build:
+  #   title: "Building Docker Image"
+  #   stage: build
+  #   type: build
+  #   image_name: "${{IMAGE_NAME}}"
+  #   working_directory: "${{MAIN_REPO_PATH}}"
+  #   disable_push: true
+
+  # push_dockerhub:
+  #   title: "Pushing image to DockerHub"
+  #   type: push
+  #   stage: release
+  #   image_name: "${{IMAGE_NAME}}"
+  #   registry: "dockerhub"
+  #   candidate: "${{build}}"
+  #   tags:
+  #     - "${{DOCKER_TAG}}"
+  #   when: 
+  #     condition: 
+  #       all: 
+  #         isRelease: '"${{IS_RELEASE}}" == "true"'          
+
+  # commit_main_repo:
+  #   title: Commit Version Changes
+  #   stage: release
+  #   image: codefresh/cli
+  #   working_directory: "${{MAIN_REPO_PATH}}"
+  #   when: 
+  #     condition: 
+  #       all: 
+  #         isRelease: '"${{IS_RELEASE}}" == "true"'
+  #   commands:
+  #     - ${{CICD_REPO_PATH}}/cicd-commit-product-repo.sh
+
+  openshift_build:
+    title: "Building UBI Image"
+    stage: openshift
     type: build
-    image_name: "kubevious/${{PRODUCT_NAME}}"
+    image_name: "${{IMAGE_NAME_UBI}}"
+    dockerfile: Dockerfile.ubi
     working_directory: "${{MAIN_REPO_PATH}}"
     disable_push: true
+    when:
+      condition:
+        all:
+          isRelease: '"${{IS_RELEASE}}" == "true"'
 
-  push_dockerhub:
-    title: "Pushing image to DockerHub"
+  openshift_push_dockerhub:
+    title: "Pushing UBI Image to DockerHub"
+    stage: openshift
     type: push
-    stage: release
-    image_name: "kubevious/${{PRODUCT_NAME}}"
+    image_name: "${{IMAGE_NAME_UBI}}"
     registry: "dockerhub"
-    candidate: "${{build}}"
+    candidate: "${{openshift_build}}"
     tags:
       - "${{DOCKER_TAG}}"
-    when: 
-      condition: 
-        all: 
-          isRelease: '"${{IS_RELEASE}}" == "true"'          
-
-  commit_main_repo:
-    title: Commit Version Changes
-    stage: release
-    image: codefresh/cli
-    working_directory: "${{MAIN_REPO_PATH}}"
-    when: 
-      condition: 
-        all: 
+    when:
+      condition:
+        all:
           isRelease: '"${{IS_RELEASE}}" == "true"'
+
+  openshift_preflight_check:
+    title: OpenShift Preflight Check
+    stage: openshift
+    image: "kubevious/openshift-preflight-checker:latest"
+    working_directory: "/codefresh/volume"
+    when:
+      condition:
+        all:
+          isRelease: '"${{IS_RELEASE}}" == "true"'    
     commands:
-      - ${{CICD_REPO_PATH}}/cicd-commit-product-repo.sh
+      - source ${{OPENSHIFT_CERT_REPO_PATH}}/projects/${{PRODUCT_NAME}}/configuration.sh
+      - export PREFLIGHT_IMAGE=${{IMAGE_NAME_UBI}}:${{DOCKER_TAG}}
+      - ${{OPENSHIFT_CERT_REPO_PATH}}/scripts/image/validate-and-submit.sh
