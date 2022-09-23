@@ -46,8 +46,8 @@ steps:
       - 'echo "Branch: ${{CF_BRANCH}}"'
       - 'echo "Revision: ${{CF_REVISION}}"'
       - 'echo "Author: ${{CF_COMMIT_AUTHOR}}"'
-      - 'echo "Image Name: ${{IMAGE_NAME}}"'
-      - 'echo "UBI Image Name: ${{IMAGE_NAME_UBI}}"'
+      - 'echo "Image Name: ${IMAGE_NAME}"'
+      - 'echo "UBI Image Name: ${IMAGE_NAME_UBI}"'
 
   clone:
     title: Clone Repo
