@@ -10,9 +10,6 @@
 # Install NPM dependencies
 $ npm install
 
-# Run MySQL
-$ ./mysql/recreate.sh
-
 # Run Kubevious Backend
 $ ./run-dev.sh
 ```
