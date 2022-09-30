@@ -37,8 +37,10 @@ steps:
       - export OPENSHIFT_CERT_REPO_NAME=openshift-certification
       - cf_export OPENSHIFT_CERT_REPO_NAME=${OPENSHIFT_CERT_REPO_NAME}
       - cf_export OPENSHIFT_CERT_REPO_PATH=/codefresh/volume/${OPENSHIFT_CERT_REPO_NAME}.git
-      - cf_export IMAGE_NAME=kubevious/${PRODUCT_NAME}
-      - cf_export IMAGE_NAME_UBI=kubevious/${PRODUCT_NAME}-ubi
+      - export IMAGE_NAME=kubevious/${PRODUCT_NAME}
+      - cf_export IMAGE_NAME=${IMAGE_NAME}
+      - export IMAGE_NAME_UBI=kubevious/${PRODUCT_NAME}-ubi
+      - cf_export IMAGE_NAME_UBI=${IMAGE_NAME_UBI}
       - 'echo "Is Release: ${IS_RELEASE}"'
       - 'echo "Product: ${PRODUCT_NAME}"'
       - 'echo "Repo: ${{CF_REPO_NAME}}"'
