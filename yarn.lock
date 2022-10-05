@@ -69,10 +69,10 @@
     the-promise "^2.0.13"
     uuid "^8.3.2"
 
-"@kubevious/easy-data-store@^1.0.12":
-  version "1.0.12"
-  resolved "https://registry.yarnpkg.com/@kubevious/easy-data-store/-/easy-data-store-1.0.12.tgz#eb63275416d128764f3db03c4076c666ea33d7c2"
-  integrity sha512-qhydcSfFb5NkW6T8ECPaSo9+OZg1CM9YWiAqKjAapAIOZU4m5uqjUz14tUrXUWoEmDIEadfTUc+9TIr/GVARCQ==
+"@kubevious/easy-data-store@^1.0.12", "@kubevious/easy-data-store@^1.0.13":
+  version "1.0.13"
+  resolved "https://registry.yarnpkg.com/@kubevious/easy-data-store/-/easy-data-store-1.0.13.tgz#ef323b418d54ee612f83f4130dd8aa5ae907765d"
+  integrity sha512-RfeRFBrmQxTbhr+fgKBpwA+Vhno+NhNzUTjY37Oodl83LuyZhxzsiCqOhxtLBfSgiixbJOx4Hd7XGK7BR37XIA==
   dependencies:
     "@kubevious/helper-cache" "^1.0.4"
     "@kubevious/helper-mysql" "^1.0.11"
@@ -81,10 +81,10 @@
     the-logger "^2.0.14"
     the-promise "^2.0.13"
 
-"@kubevious/entity-meta@^1.0.69", "@kubevious/entity-meta@^1.0.72":
-  version "1.0.72"
-  resolved "https://registry.yarnpkg.com/@kubevious/entity-meta/-/entity-meta-1.0.72.tgz#52d1e9a67a41cace34b6f816afd877ba2b0dec2c"
-  integrity sha512-CkA6H0zSq4oP+giFU6iTHxOoEB4Pvudh+v/gCNQXso47TcuxVn/eolQPYxEnzXHCUviPiE794auUjepMLnxwog==
+"@kubevious/entity-meta@^1.0.69", "@kubevious/entity-meta@^1.0.78":
+  version "1.0.78"
+  resolved "https://registry.yarnpkg.com/@kubevious/entity-meta/-/entity-meta-1.0.78.tgz#a3ed3de565007e59d03e80f3e5cc4c2897f16188"
+  integrity sha512-s6puvNPmn2zFEE2ws+fwdd2hhM3k/SvJrtAJ77sNcQ0WLihOkaisOOhXG3vYBr0QyGKA3bLCd21AUUiZBaO8rw==
   dependencies:
     the-lodash "^2.0.9"
 
