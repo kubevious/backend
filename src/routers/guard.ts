@@ -1,6 +1,5 @@
 import _ from 'the-lodash';
 import { ILogger } from 'the-logger';
-import { Promise } from 'the-promise';
 import { Context } from '../context';
 import { Router } from '@kubevious/helper-backend';
 import { Helpers } from '../server';
@@ -8,6 +7,7 @@ import { QueryOptions } from '@kubevious/easy-data-store/dist/driver';
 import { ChangePackageListItem, ChangePackageListResult, ChangePackageItemDetails } from '@kubevious/ui-middleware/dist/services/guard';
 import { ValidationState } from '@kubevious/ui-middleware/dist/entities/guard';
 import Joi from 'joi';
+import { MyPromise } from 'the-promise';
 
 const LIMIT_COUNT = 25;
 
@@ -58,7 +58,7 @@ export default function (router: Router, context: Context,  logger: ILogger, { d
                             }
                         }
 
-                        return Promise.serial(rows, row => {
+                        return MyPromise.serial(rows, row => {
                             return dataStore.guard.ValidationState.table()
                                 .queryOne({ change_id: row.change_id! })
                                 .then(stateRow => {

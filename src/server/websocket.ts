@@ -1,6 +1,5 @@
 import _ from 'the-lodash';
 import { ILogger } from 'the-logger';
-import { Promise } from 'the-promise';
 import { Context } from '../context';
 import { WebServer } from './';
 
@@ -17,6 +16,7 @@ import { RULE_ENGINE_HANDLERS } from './websocket-handlers/rule-engine';
 import { DIAGRAM_HANDLERS } from './websocket-handlers/diagram';
 import { REPORTING_HANDLERS } from './websocket-handlers/reporting';
 import { WORLDVIOUS_HANDLERS } from './websocket-handlers/worldvious';
+import { MyPromise } from 'the-promise';
 
 type MyWebSocketServer = WebSocketBaseServer<SocketContext, SocketLocals>;
 
@@ -50,7 +50,9 @@ export class WebSocket
         this._socket = new WebSocketBaseServer<SocketContext, SocketLocals>(
             this._logger.sublogger('WebSocket'),
             this._webServer.httpServer,
-            '/socket');
+            { 
+                path: '/socket'
+            });
 
         this._socket.setupSubscriptionMetaFetcher((target, socket) => {
             // this._logger.info('[setupSubscriptionMetaFetcher] target: ', target);
@@ -119,7 +121,7 @@ export class WebSocket
         const allTargets = this._socket!.extractAllTargets() as HasKind[];
         const targets = allTargets.filter(x => x.kind === kind);
 
-        return Promise.serial(targets, target => {
+        return MyPromise.serial(targets, target => {
             return this.invalidateAll(target)
         });
     }
@@ -141,7 +143,7 @@ export class WebSocket
             context: this._context
         }
 
-        return Promise.try(() => fetcher(params));
+        return MyPromise.try(() => fetcher(params));
     }
 
     private _loadHandlers(handlers: WebSocketHandler[])

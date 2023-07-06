@@ -1,5 +1,4 @@
 import _ from 'the-lodash';
-import { Promise } from 'the-promise';
 import { ChangePackageRow, ChangePackageSource } from "@kubevious/data-models/dist/models/guard";
 import { ChangePackageChart, ChangePackageDeletion, ValidationState } from "@kubevious/ui-middleware/dist/entities/guard";
 import { DeltaAction, KubernetesObject, ResourceAccessor } from "k8s-super-client";
@@ -9,6 +8,7 @@ import { Context } from "../context";
 import zlib from "fast-zlib";
 import * as yaml from 'js-yaml';
 import { DateUtils } from '@kubevious/data-models';
+import { MyPromise } from 'the-promise';
 
 const GUARD_STATUS_CLEANUP_TIMER_INTERVAL_MS = 10 * 60 * 1000;
 const GUARD_STATUS_CLEANUP_TIMEOUT_SEC = 60 * 60;
@@ -152,7 +152,7 @@ export class K8sHandler
 
         this._isRetryScheduled = false;
 
-        return Promise.serial(_.keys(this._retryJobs), (jobId) => {
+        return MyPromise.serial(_.keys(this._retryJobs), (jobId) => {
             const data = this._retryJobs[jobId];
             delete this._retryJobs[jobId];
 
@@ -222,7 +222,7 @@ export class K8sHandler
 
                 this._logger.info("[_processStatusCleanup] toBeDeleted: %s", toBeDeleted.length);
 
-                return Promise.serial(toBeDeleted, x => this._deleteValidationState(x));
+                return MyPromise.serial(toBeDeleted, x => this._deleteValidationState(x));
 
             })
     }

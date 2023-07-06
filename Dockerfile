@@ -1,6 +1,6 @@
 ###############################################################################
 # Step 1 : Builder image
-FROM kubevious/node-builder:14
+FROM kubevious/node-builder:18
 RUN node --version
 RUN npm --version
 RUN yarn --version
@@ -14,7 +14,7 @@ RUN npm run build
 
 ###############################################################################
 # Step 2 : Runner image
-FROM node:14-alpine
+FROM node:18-alpine
 WORKDIR /app
 COPY --from=0 /app/package*.json ./
 COPY --from=0 /app/node_modules ./node_modules

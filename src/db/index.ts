@@ -1,5 +1,5 @@
 import _ from 'the-lodash';
-import { Promise, Resolvable } from 'the-promise';
+import { Resolvable } from 'the-promise';
 import { ILogger } from 'the-logger' ;
 
 import * as fs from 'fs';

@@ -1,11 +1,11 @@
 import { ILogger } from "the-logger";
-import { Promise } from "the-promise";
 import { Context } from "../context";
 
 import { BackendMetricItem, BackendMetricsResponse } from '@kubevious/ui-middleware'
 import { HttpClient } from '@kubevious/http-client'
 
 import VERSION from '../version';
+import { MyPromise } from "the-promise";
 
 
 export class BackendMetrics
@@ -57,7 +57,7 @@ export class BackendMetrics
             value: this._context.redis.isConnected
         });
 
-        return Promise.parallel(this._microservices, x => {
+        return MyPromise.parallel(this._microservices, x => {
             return this._fetchFromBackend(x, metrics);
         })
         .then(() => metrics);

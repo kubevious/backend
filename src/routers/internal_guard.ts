@@ -1,5 +1,4 @@
 import _ from 'the-lodash';
-import { Promise } from 'the-promise';
 import { Context } from '../context';
 import { Router } from '@kubevious/helper-backend';
 import { ValidationHistoryRow } from '@kubevious/data-models/dist/models/guard';
