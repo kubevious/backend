@@ -1,6 +1,6 @@
 {
   "name": "kubevious",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Kubevious Backend",
   "main": "dist/index.js",
   "types": "dist",
